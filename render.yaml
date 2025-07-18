@@ -31,7 +31,7 @@ services:
     buildCommand: |
       npm install --legacy-peer-deps
       npm run build
-    staticPublishPath: ./dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         value: https://motionfalcon-backend.onrender.com

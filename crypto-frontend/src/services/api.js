@@ -79,6 +79,8 @@ export const getCurrencyRates = () => api.get('/currency/rates');
 export const register = (data) => api.post('/auth/register', data);
 export const login = (data) => api.post('/auth/login', data);
 export const getCurrentUser = () => api.get('/auth/profile');
+export const forgotPassword = (data) => api.post('/auth/forgot-password', data);
+export const resetPassword = (data) => api.post('/auth/reset-password', data);
 
 // Leaderboard endpoints
 export const getLeaderboard = () => api.get('/leaderboard/global');

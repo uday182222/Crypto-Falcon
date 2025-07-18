@@ -188,11 +188,11 @@ async def buy_crypto(
     # Create trade record
     trade = Trade(
         user_id=current_user.id,
-        symbol=coin_symbol,
-        side="BUY",  # Use enum string directly
+        coin_symbol=coin_symbol,
+        side=ModelTradeType.BUY,
         quantity=trade_request.quantity,
-        price=current_price,
-        total=total_cost
+        price_at_trade=current_price,
+        total_cost=total_cost
     )
     
     # Save to database
@@ -254,13 +254,13 @@ async def sell_crypto(
     # Calculate current holdings for this coin
     buys = db.query(Trade).filter(
         Trade.user_id == current_user.id,
-        Trade.symbol == coin_symbol,
+        Trade.coin_symbol == coin_symbol,
         Trade.side == ModelTradeType.BUY
     ).all()
     
     sells = db.query(Trade).filter(
         Trade.user_id == current_user.id,
-        Trade.symbol == coin_symbol,
+        Trade.coin_symbol == coin_symbol,
         Trade.side == ModelTradeType.SELL
     ).all()
     
@@ -293,11 +293,11 @@ async def sell_crypto(
     # Create trade record
     trade = Trade(
         user_id=current_user.id,
-        symbol=coin_symbol,
+        coin_symbol=coin_symbol,
         side=ModelTradeType.SELL,
         quantity=trade_request.quantity,
-        price=current_price,
-        total=total_value
+        price_at_trade=current_price,
+        total_cost=total_value
     )
     
     # Save to database
@@ -341,7 +341,7 @@ async def get_portfolio(
     holdings_data = {}
     
     for trade in trades:
-        coin = trade.symbol
+        coin = trade.coin_symbol
         if coin not in holdings_data:
             holdings_data[coin] = {
                 'total_bought': Decimal('0'),
@@ -446,7 +446,7 @@ async def execute_trade(
     achievement_service = AchievementService(db)
     
     try:
-        if trade_request.side == TradeType.BUY:
+        if trade_request.side == ModelTradeType.BUY:
             # BUY operation
             total_cost = trade_request.quantity * current_price
             
@@ -465,7 +465,7 @@ async def execute_trade(
             trade = Trade(
                 user_id=current_user.id,
                 coin_symbol=coin_symbol,
-                side=TradeType.BUY,
+                side=ModelTradeType.BUY,
                 quantity=trade_request.quantity,
                 price_at_trade=current_price,
                 total_cost=total_cost
@@ -513,7 +513,7 @@ async def execute_trade(
             trade = Trade(
                 user_id=current_user.id,
                 coin_symbol=coin_symbol,
-                side=TradeType.SELL,
+                side=ModelTradeType.SELL,
                 quantity=trade_request.quantity,
                 price_at_trade=current_price,
                 total_cost=total_value

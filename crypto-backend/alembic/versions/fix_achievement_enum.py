@@ -18,6 +18,19 @@ depends_on = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    # First, update existing data to use uppercase values
+    op.execute("""
+        UPDATE achievements 
+        SET type = CASE 
+            WHEN type = 'trading_milestone' THEN 'TRADING_MILESTONE'
+            WHEN type = 'profit_achievement' THEN 'PROFIT_ACHIEVEMENT'
+            WHEN type = 'diversification' THEN 'DIVERSIFICATION'
+            WHEN type = 'login_streak' THEN 'LOGIN_STREAK'
+            WHEN type = 'volume_reward' THEN 'VOLUME_REWARD'
+            ELSE type
+        END
+    """)
+    
     # Drop the old enum type and recreate with correct values
     op.execute("DROP TYPE IF EXISTS achievementtype CASCADE")
     
@@ -37,6 +50,19 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
+    # First, update existing data to use lowercase values
+    op.execute("""
+        UPDATE achievements 
+        SET type = CASE 
+            WHEN type = 'TRADING_MILESTONE' THEN 'trading_milestone'
+            WHEN type = 'PROFIT_ACHIEVEMENT' THEN 'profit_achievement'
+            WHEN type = 'DIVERSIFICATION' THEN 'diversification'
+            WHEN type = 'LOGIN_STREAK' THEN 'login_streak'
+            WHEN type = 'VOLUME_REWARD' THEN 'volume_reward'
+            ELSE type
+        END
+    """)
+    
     # Recreate the old enum type
     op.execute("DROP TYPE IF EXISTS achievementtype CASCADE")
     

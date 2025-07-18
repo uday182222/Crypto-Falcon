@@ -41,6 +41,75 @@ async def get_user_achievements(
 ):
     """Get current user's achievement progress"""
     try:
+        # First, check if achievements table exists and setup if needed
+        from sqlalchemy import text
+        try:
+            db.execute(text("SELECT 1 FROM achievements LIMIT 1"))
+        except Exception:
+            print("Achievements table doesn't exist, setting up database...")
+            # Call the setup endpoint logic directly
+            try:
+                # Create achievements table
+                db.execute(text("""
+                    CREATE TABLE IF NOT EXISTS achievements (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        description TEXT NOT NULL,
+                        type VARCHAR(50) NOT NULL,
+                        icon VARCHAR(255) NOT NULL,
+                        requirement_value NUMERIC(20, 8) NOT NULL,
+                        requirement_type VARCHAR(50) NOT NULL,
+                        reward_coins NUMERIC(20, 8) NOT NULL DEFAULT 0,
+                        reward_title VARCHAR(255),
+                        is_active BOOLEAN NOT NULL DEFAULT true,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                    )
+                """))
+                
+                # Create user_achievements table
+                db.execute(text("""
+                    CREATE TABLE IF NOT EXISTS user_achievements (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        achievement_id INTEGER NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+                        current_progress NUMERIC(20, 8) NOT NULL DEFAULT 0,
+                        is_completed BOOLEAN NOT NULL DEFAULT false,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        completed_at TIMESTAMP WITH TIME ZONE
+                    )
+                """))
+                
+                # Create user_login_streaks table
+                db.execute(text("""
+                    CREATE TABLE IF NOT EXISTS user_login_streaks (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        current_streak INTEGER NOT NULL DEFAULT 0,
+                        longest_streak INTEGER NOT NULL DEFAULT 0,
+                        last_login_date TIMESTAMP WITH TIME ZONE,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        updated_at TIMESTAMP WITH TIME ZONE
+                    )
+                """))
+                
+                # Insert default achievements if table is empty
+                result = db.execute(text("SELECT COUNT(*) FROM achievements")).scalar()
+                if result == 0:
+                    db.execute(text("""
+                        INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
+                        ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+                        ('Profit Master', 'Make 10% profit on a trade', 'profit_achievement', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
+                        ('Diversifier', 'Hold 5 different cryptocurrencies', 'diversification', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
+                        ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
+                        ('Volume Trader', 'Trade 1000 coins in total', 'volume_reward', '📈', 1000, 'volume', 5000, 'Volume Master', true)
+                    """))
+                
+                db.commit()
+                print("Database setup completed successfully")
+            except Exception as setup_error:
+                print(f"Error setting up database: {setup_error}")
+                db.rollback()
+        
         achievement_service = AchievementService(db)
         
         # Initialize achievements for user if not exists
@@ -164,6 +233,80 @@ async def initialize_achievements(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to initialize achievements: {str(e)}"
+        )
+
+@router.post("/setup-database")
+async def setup_achievement_database(
+    db: Session = Depends(get_db)
+):
+    """Setup achievement database tables and data"""
+    try:
+        # Create tables if they don't exist
+        from sqlalchemy import text
+        
+        # Create achievements table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS achievements (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                icon VARCHAR(255) NOT NULL,
+                requirement_value NUMERIC(20, 8) NOT NULL,
+                requirement_type VARCHAR(50) NOT NULL,
+                reward_coins NUMERIC(20, 8) NOT NULL DEFAULT 0,
+                reward_title VARCHAR(255),
+                is_active BOOLEAN NOT NULL DEFAULT true,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
+        """))
+        
+        # Create user_achievements table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS user_achievements (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                achievement_id INTEGER NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+                current_progress NUMERIC(20, 8) NOT NULL DEFAULT 0,
+                is_completed BOOLEAN NOT NULL DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                completed_at TIMESTAMP WITH TIME ZONE
+            )
+        """))
+        
+        # Create user_login_streaks table
+        db.execute(text("""
+            CREATE TABLE IF NOT EXISTS user_login_streaks (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                current_streak INTEGER NOT NULL DEFAULT 0,
+                longest_streak INTEGER NOT NULL DEFAULT 0,
+                last_login_date TIMESTAMP WITH TIME ZONE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE
+            )
+        """))
+        
+        # Insert default achievements if table is empty
+        result = db.execute(text("SELECT COUNT(*) FROM achievements")).scalar()
+        if result == 0:
+            db.execute(text("""
+                INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
+                ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+                ('Profit Master', 'Make 10% profit on a trade', 'profit_achievement', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
+                ('Diversifier', 'Hold 5 different cryptocurrencies', 'diversification', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
+                ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
+                ('Volume Trader', 'Trade 1000 coins in total', 'volume_reward', '📈', 1000, 'volume', 5000, 'Volume Master', true)
+            """))
+        
+        db.commit()
+        return {"message": "Achievement database setup completed successfully"}
+    except Exception as e:
+        db.rollback()
+        print(f"Error in setup_achievement_database: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to setup achievement database: {str(e)}"
         )
 
 @router.get("/user/{user_id}", response_model=UserAchievementsResponse)

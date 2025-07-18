@@ -191,8 +191,8 @@ async def buy_crypto(
         symbol=coin_symbol,
         side="BUY",  # Use enum string directly
         quantity=trade_request.quantity,
-        price_at_trade=current_price,
-        total_cost=total_cost
+        price=current_price,
+        total=total_cost
     )
     
     # Save to database
@@ -296,8 +296,8 @@ async def sell_crypto(
         symbol=coin_symbol,
         side=ModelTradeType.SELL,
         quantity=trade_request.quantity,
-        price_at_trade=current_price,
-        total_cost=total_value
+        price=current_price,
+        total=total_value
     )
     
     # Save to database

@@ -188,6 +188,12 @@ class AchievementService:
     def initialize_user_achievements(self, user: User):
         """Initialize achievement progress for a new user"""
         try:
+            # Reset any failed transaction
+            try:
+                self.db.rollback()
+            except:
+                pass
+            
             print(f"Getting all achievements for user {user.id}")
             achievements = self.get_all_achievements()
             print(f"Found {len(achievements)} achievements to initialize")
@@ -243,7 +249,10 @@ class AchievementService:
                 print(f"Successfully initialized {initialized_count} achievements for user {user.id}")
             except Exception as e:
                 print(f"Error committing achievements: {e}")
-                self.db.rollback()
+                try:
+                    self.db.rollback()
+                except:
+                    pass
                 
         except Exception as e:
             print(f"Error in initialize_user_achievements: {e}")

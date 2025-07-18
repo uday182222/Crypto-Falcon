@@ -43,6 +43,13 @@ async def get_user_achievements(
     try:
         # First, check if achievements table exists and setup if needed
         from sqlalchemy import text
+        
+        # Reset any failed transaction
+        try:
+            db.rollback()
+        except:
+            pass
+        
         try:
             db.execute(text("SELECT 1 FROM achievements LIMIT 1"))
         except Exception:
@@ -108,7 +115,10 @@ async def get_user_achievements(
                 print("Database setup completed successfully")
             except Exception as setup_error:
                 print(f"Error setting up database: {setup_error}")
-                db.rollback()
+                try:
+                    db.rollback()
+                except:
+                    pass
         
         achievement_service = AchievementService(db)
         
@@ -241,6 +251,12 @@ async def setup_achievement_database(
 ):
     """Setup achievement database tables and data"""
     try:
+        # Reset any failed transaction
+        try:
+            db.rollback()
+        except:
+            pass
+        
         # Create tables if they don't exist
         from sqlalchemy import text
         
@@ -302,7 +318,10 @@ async def setup_achievement_database(
         db.commit()
         return {"message": "Achievement database setup completed successfully"}
     except Exception as e:
-        db.rollback()
+        try:
+            db.rollback()
+        except:
+            pass
         print(f"Error in setup_achievement_database: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

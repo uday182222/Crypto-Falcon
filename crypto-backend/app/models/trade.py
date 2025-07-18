@@ -13,7 +13,7 @@ class Trade(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    coin_symbol = Column(String(10), nullable=False)  # e.g., "BTC", "ETH"
+    symbol = Column(String(10), nullable=False)  # e.g., "BTC", "ETH"
     side = Column(SQLEnum(TradeType), nullable=False)  # BUY or SELL
     quantity = Column(Numeric(20, 8), nullable=False)  # Amount of crypto
     price_at_trade = Column(Numeric(20, 8), nullable=False)  # Live price snapshot

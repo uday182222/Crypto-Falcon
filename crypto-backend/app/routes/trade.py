@@ -188,7 +188,7 @@ async def buy_crypto(
     # Create trade record
     trade = Trade(
         user_id=current_user.id,
-        coin_symbol=coin_symbol,
+        symbol=coin_symbol,
         side="BUY",  # Use enum string directly
         quantity=trade_request.quantity,
         price_at_trade=current_price,
@@ -254,13 +254,13 @@ async def sell_crypto(
     # Calculate current holdings for this coin
     buys = db.query(Trade).filter(
         Trade.user_id == current_user.id,
-        Trade.coin_symbol == coin_symbol,
+        Trade.symbol == coin_symbol,
         Trade.side == ModelTradeType.BUY
     ).all()
     
     sells = db.query(Trade).filter(
         Trade.user_id == current_user.id,
-        Trade.coin_symbol == coin_symbol,
+        Trade.symbol == coin_symbol,
         Trade.side == ModelTradeType.SELL
     ).all()
     
@@ -293,7 +293,7 @@ async def sell_crypto(
     # Create trade record
     trade = Trade(
         user_id=current_user.id,
-        coin_symbol=coin_symbol,
+        symbol=coin_symbol,
         side=ModelTradeType.SELL,
         quantity=trade_request.quantity,
         price_at_trade=current_price,
@@ -341,7 +341,7 @@ async def get_portfolio(
     holdings_data = {}
     
     for trade in trades:
-        coin = trade.coin_symbol
+        coin = trade.symbol
         if coin not in holdings_data:
             holdings_data[coin] = {
                 'total_bought': Decimal('0'),

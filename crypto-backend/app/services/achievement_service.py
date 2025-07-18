@@ -627,7 +627,7 @@ class AchievementService:
                         'user_id': login_streak.user_id,
                         'current_streak': login_streak.current_streak,
                         'longest_streak': login_streak.longest_streak,
-                        'last_login_date': login_streak.last_login_date,
+                        'last_login_date': login_streak.last_login_date if login_streak.last_login_date else None,
                         'created_at': login_streak.created_at,
                         'updated_at': login_streak.updated_at
                     }

@@ -1,0 +1,48 @@
+services:
+  # Backend API Service
+  - type: web
+    name: motionfalcon-backend
+    env: python
+    plan: starter
+    buildCommand: |
+      cd crypto-backend
+      pip install -r requirements.txt
+      alembic upgrade head
+    startCommand: |
+      cd crypto-backend
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+
+  # Frontend Static Site
+  - type: web
+    name: motionfalcon-frontend
+    env: static
+    plan: starter
+    buildCommand: |
+      cd crypto-frontend
+      npm install
+      npm run build
+    staticPublishPath: ./crypto-frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://motionfalcon-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: motionfalcon-db
+    databaseName: motionfalcon
+    user: motionfalcon_user
+    plan: starter 

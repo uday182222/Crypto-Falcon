@@ -4,12 +4,11 @@ services:
     name: motionfalcon-backend
     env: python
     plan: starter
+    rootDir: crypto-backend
     buildCommand: |
-      cd crypto-backend
       pip install -r requirements.txt
       alembic upgrade head
     startCommand: |
-      cd crypto-backend
       uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
@@ -28,11 +27,11 @@ services:
     name: motionfalcon-frontend
     env: static
     plan: starter
+    rootDir: crypto-frontend
     buildCommand: |
-      cd crypto-frontend
       npm install
       npm run build
-    staticPublishPath: ./crypto-frontend/dist
+    staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
         value: https://motionfalcon-backend.onrender.com

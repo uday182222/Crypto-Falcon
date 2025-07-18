@@ -163,19 +163,59 @@ class AchievementService:
     def get_all_achievements(self) -> List[Achievement]:
         """Get all active achievements"""
         try:
+            # Reset any failed transaction
+            try:
+                self.db.rollback()
+            except:
+                pass
+            
             achievements = self.db.query(Achievement).filter(
                 Achievement.is_active == True
             ).all()
             
-            # If no achievements exist, initialize default ones
+            print(f"Found {len(achievements)} achievements in database")
+            
+            # If no achievements exist, try to initialize default ones
             if not achievements:
-                self.initialize_default_achievements()
-                achievements = self.db.query(Achievement).filter(
-                    Achievement.is_active == True
-                ).all()
+                print("No achievements found, trying to initialize...")
+                try:
+                    from sqlalchemy import text
+                    
+                    # Insert default achievements directly
+                    self.db.execute(text("""
+                        INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
+                        ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+                        ('Trading Novice', 'Complete 10 trades', 'trading_milestone', '📈', 10, 'trades', 2000, 'Novice Trader', true),
+                        ('Active Trader', 'Complete 50 trades', 'trading_milestone', '🚀', 50, 'trades', 5000, 'Active Trader', true),
+                        ('Expert Trader', 'Complete 100 trades', 'trading_milestone', '💎', 100, 'trades', 10000, 'Expert Trader', true),
+                        ('First Profit', 'Achieve your first profitable trade', 'profit_achievement', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
+                        ('Rising Star', 'Achieve 5% portfolio profit', 'profit_achievement', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
+                        ('Profit Master', 'Achieve 25% portfolio profit', 'profit_achievement', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
+                        ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', 'diversification', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
+                        ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
+                        ('High Volume', 'Trade over 100,000 DemoCoins in value', 'volume_reward', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
+                        ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', 'volume_reward', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
+                    ON CONFLICT (name) DO NOTHING
+                    """))
+                    
+                    self.db.commit()
+                    print("Default achievements inserted successfully")
+                    
+                    # Get achievements again
+                    achievements = self.db.query(Achievement).filter(
+                        Achievement.is_active == True
+                    ).all()
+                    print(f"Now found {len(achievements)} achievements")
+                except Exception as init_error:
+                    print(f"Error initializing achievements: {init_error}")
+                    try:
+                        self.db.rollback()
+                    except:
+                        pass
             
             return achievements
         except Exception as e:
+            print(f"Error in get_all_achievements: {e}")
             # Return empty list if there's an error
             return []
     

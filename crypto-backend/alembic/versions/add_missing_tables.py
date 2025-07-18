@@ -54,9 +54,33 @@ def upgrade() -> None:
         ('Pro Pack', 'Great value for active traders', 499.00, 5500.00, 10, true),
         ('Elite Pack', 'Maximum value for serious traders', 999.00, 12000.00, 20, true)
     """)
+    
+    # Create purchases table if it doesn't exist
+    op.create_table('purchases',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('package_id', sa.Integer(), nullable=True),
+        sa.Column('amount', sa.Numeric(precision=10, scale=2), nullable=False),
+        sa.Column('coins_received', sa.Numeric(precision=20, scale=8), nullable=True),
+        sa.Column('razorpay_order_id', sa.String(), nullable=False),
+        sa.Column('razorpay_payment_id', sa.String(), nullable=True),
+        sa.Column('status', sa.String(), nullable=False, server_default='pending'),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['package_id'], ['demo_coin_packages.id'], ondelete='SET NULL'),
+        sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_purchases_id'), 'purchases', ['id'], unique=False)
+    op.create_index(op.f('ix_purchases_user_id'), 'purchases', ['user_id'], unique=False)
+    op.create_index(op.f('ix_purchases_razorpay_order_id'), 'purchases', ['razorpay_order_id'], unique=True)
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.drop_index(op.f('ix_purchases_razorpay_order_id'), table_name='purchases')
+    op.drop_index(op.f('ix_purchases_user_id'), table_name='purchases')
+    op.drop_index(op.f('ix_purchases_id'), table_name='purchases')
+    op.drop_table('purchases')
     op.drop_index(op.f('ix_demo_coin_packages_id'), table_name='demo_coin_packages')
     op.drop_table('demo_coin_packages')
     op.drop_index(op.f('ix_user_login_streaks_id'), table_name='user_login_streaks')

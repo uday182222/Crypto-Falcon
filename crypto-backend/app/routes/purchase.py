@@ -203,18 +203,33 @@ async def verify_payment(
                     coins_to_add = float(notes.get('coins_to_add', 0))
                     
                     if amount_inr > 0 and coins_to_add > 0:
-                        # Update user's demo balance using wallet service
-                        wallet_service = WalletService(db)
-                        wallet_result = wallet_service.top_up_wallet(current_user.id, Decimal(str(coins_to_add)))
-                        
-                        return {
-                            "success": True,
-                            "message": "Direct top-up payment verified successfully",
-                            "amount_paid_inr": amount_inr,
-                            "coins_received": coins_to_add,
-                            "new_balance": float(wallet_result['new_balance']),
-                            "conversion_rate": "₹1 = 50 coins"
-                        }
+                        try:
+                            # Update user's demo balance using wallet service
+                            wallet_service = WalletService(db)
+                            wallet_result = wallet_service.top_up_wallet(current_user.id, Decimal(str(coins_to_add)))
+                            
+                            return {
+                                "success": True,
+                                "message": "Direct top-up payment verified successfully",
+                                "amount_paid_inr": amount_inr,
+                                "coins_received": coins_to_add,
+                                "new_balance": float(wallet_result['new_balance']),
+                                "conversion_rate": "₹1 = 50 coins"
+                            }
+                        except Exception as wallet_error:
+                            print(f"Wallet service error: {wallet_error}")
+                            # Fallback: update user's demo balance directly
+                            current_user.demo_balance += Decimal(str(coins_to_add))
+                            db.commit()
+                            
+                            return {
+                                "success": True,
+                                "message": "Direct top-up payment verified successfully (fallback mode)",
+                                "amount_paid_inr": amount_inr,
+                                "coins_received": coins_to_add,
+                                "new_balance": float(current_user.demo_balance),
+                                "conversion_rate": "₹1 = 50 coins"
+                            }
                     else:
                         raise HTTPException(
                             status_code=status.HTTP_400_BAD_REQUEST,
@@ -252,9 +267,17 @@ async def verify_payment(
             bonus_coins = base_coins * (package.bonus_percentage / 100)
             total_coins = base_coins + bonus_coins
             
-            # Update user's demo balance using wallet service
-            wallet_service = WalletService(db)
-            wallet_result = wallet_service.top_up_wallet(current_user.id, Decimal(str(total_coins)))
+            try:
+                # Update user's demo balance using wallet service
+                wallet_service = WalletService(db)
+                wallet_result = wallet_service.top_up_wallet(current_user.id, Decimal(str(total_coins)))
+                new_balance = float(wallet_result['new_balance'])
+            except Exception as wallet_error:
+                print(f"Wallet service error: {wallet_error}")
+                # Fallback: update user's demo balance directly
+                current_user.demo_balance += Decimal(str(total_coins))
+                db.commit()
+                new_balance = float(current_user.demo_balance)
             
             purchase.coins_received = total_coins
         else:
@@ -269,12 +292,13 @@ async def verify_payment(
             "success": True,
             "message": "Payment verified successfully",
             "coins_received": float(purchase.coins_received),
-            "new_balance": float(wallet_result['new_balance']),
+            "new_balance": new_balance,
             "bonus_coins": float(bonus_coins) if package else 0
         }
         
     except Exception as e:
         db.rollback()
+        print(f"Error in verify_payment: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Payment verification failed: {str(e)}"

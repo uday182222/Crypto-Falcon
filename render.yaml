@@ -29,7 +29,7 @@ services:
     plan: starter
     rootDir: crypto-frontend
     buildCommand: |
-      npm install
+      npm install --legacy-peer-deps
       npm run build
     staticPublishPath: ./dist
     envVars:

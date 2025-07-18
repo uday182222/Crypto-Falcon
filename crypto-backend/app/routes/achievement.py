@@ -40,15 +40,38 @@ async def get_user_achievements(
     db: Session = Depends(get_db)
 ):
     """Get current user's achievement progress"""
-    achievement_service = AchievementService(db)
-    
-    # Initialize achievements for user if not exists
-    achievement_service.initialize_user_achievements(current_user)
-    
-    # Get comprehensive achievement summary
-    summary = achievement_service.get_user_achievements_summary(current_user)
-    
-    return UserAchievementsResponse(**summary)
+    try:
+        achievement_service = AchievementService(db)
+        
+        # Initialize achievements for user if not exists
+        print(f"Initializing achievements for user {current_user.id}")
+        achievement_service.initialize_user_achievements(current_user)
+        
+        # Get comprehensive achievement summary
+        summary = achievement_service.get_user_achievements_summary(current_user)
+        print(f"User {current_user.id} has {len(summary.get('achievements', []))} achievements")
+        
+        return UserAchievementsResponse(**summary)
+    except Exception as e:
+        print(f"Error in get_user_achievements: {e}")
+        # Return default response if there's an error
+        return UserAchievementsResponse(
+            user_id=current_user.id,
+            username=current_user.username,
+            total_achievements=0,
+            completed_achievements=0,
+            completion_percentage=0,
+            total_reward_coins_earned=0,
+            login_streak={
+                'user_id': current_user.id,
+                'current_streak': 0,
+                'longest_streak': 0,
+                'last_login_date': None,
+                'created_at': None,
+                'updated_at': None
+            },
+            achievements=[]
+        )
 
 @router.post("/check", response_model=List[AchievementRewardResponse])
 async def check_achievements(

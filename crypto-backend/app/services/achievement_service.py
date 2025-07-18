@@ -188,8 +188,11 @@ class AchievementService:
     def initialize_user_achievements(self, user: User):
         """Initialize achievement progress for a new user"""
         try:
+            print(f"Getting all achievements for user {user.id}")
             achievements = self.get_all_achievements()
+            print(f"Found {len(achievements)} achievements to initialize")
             
+            initialized_count = 0
             for achievement in achievements:
                 try:
                     # Check if user already has this achievement
@@ -208,7 +211,10 @@ class AchievementService:
                             is_completed=False
                         )
                         self.db.add(user_achievement)
-                except Exception:
+                        initialized_count += 1
+                        print(f"Initialized achievement {achievement.name} for user {user.id}")
+                except Exception as e:
+                    print(f"Error initializing achievement {achievement.name}: {e}")
                     # Skip this achievement if there's an error
                     continue
             
@@ -226,16 +232,21 @@ class AchievementService:
                         last_login_date=datetime.utcnow().date()
                     )
                     self.db.add(login_streak)
-            except Exception:
+                    print(f"Initialized login streak for user {user.id}")
+            except Exception as e:
+                print(f"Error initializing login streak: {e}")
                 # Skip login streak if there's an error
                 pass
             
             try:
                 self.db.commit()
-            except Exception:
+                print(f"Successfully initialized {initialized_count} achievements for user {user.id}")
+            except Exception as e:
+                print(f"Error committing achievements: {e}")
                 self.db.rollback()
                 
         except Exception as e:
+            print(f"Error in initialize_user_achievements: {e}")
             # If everything fails, just return without initializing
             pass
     
@@ -512,9 +523,12 @@ class AchievementService:
     def get_user_achievements_summary(self, user: User) -> Dict:
         """Get comprehensive summary of user's achievements"""
         try:
+            print(f"Getting user achievements for user {user.id}")
             user_achievements = self.db.query(UserAchievement).filter(
                 UserAchievement.user_id == user.id
             ).all()
+            
+            print(f"Found {len(user_achievements)} user achievements")
             
             achievements_data = []
             total_achievements = 0
@@ -548,6 +562,7 @@ class AchievementService:
                     
                     total_achievements += 1
                 except Exception as e:
+                    print(f"Error processing user achievement: {e}")
                     # Skip this achievement if there's an error
                     continue
             
@@ -582,6 +597,33 @@ class AchievementService:
             if total_achievements > 0:
                 completion_percentage = (Decimal(completed_achievements) / Decimal(total_achievements)) * 100
             
+            # If no user achievements found, show all available achievements with 0 progress
+            if total_achievements == 0:
+                print("No user achievements found, showing all available achievements")
+                all_achievements = self.get_all_achievements()
+                for achievement in all_achievements:
+                    try:
+                        achievements_data.append(UserAchievementSummary(
+                            achievement_id=achievement.id,
+                            name=achievement.name,
+                            description=achievement.description,
+                            type=achievement.type,
+                            icon=achievement.icon,
+                            current_progress=0,
+                            requirement_value=achievement.requirement_value,
+                            requirement_type=achievement.requirement_type,
+                            progress_percentage=Decimal('0'),
+                            is_completed=False,
+                            reward_coins=achievement.reward_coins,
+                            reward_title=achievement.reward_title,
+                            completed_at=None
+                        ))
+                        total_achievements += 1
+                    except Exception as e:
+                        print(f"Error adding achievement to fallback: {e}")
+                        continue
+            
+            print(f"Returning {len(achievements_data)} achievements for user {user.id}")
             return {
                 'user_id': user.id,
                 'username': user.username,

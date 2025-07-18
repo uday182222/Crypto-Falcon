@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'https://crypto-falcon-backend.onrender.com';
 
 // Create axios instance with base URL
 const api = axios.create({

@@ -93,27 +93,39 @@ async def get_achievement_stats(
     db: Session = Depends(get_db)
 ):
     """Get overall achievement statistics"""
-    achievement_service = AchievementService(db)
-    stats = achievement_service.get_achievement_stats()
-    
-    # Convert to response format
-    most_earned = None
-    rarest = None
-    
-    if stats.get('most_earned_achievement'):
-        most_earned = AchievementResponse.from_orm(stats['most_earned_achievement'])
-    
-    if stats.get('rarest_achievement'):
-        rarest = AchievementResponse.from_orm(stats['rarest_achievement'])
-    
-    return AchievementStatsResponse(
-        total_achievements=stats.get('total_achievements', 0),
-        total_users_with_achievements=stats.get('total_users_with_achievements', 0),
-        most_earned_achievement=most_earned,
-        rarest_achievement=rarest,
-        average_completion_rate=stats.get('average_completion_rate', 0),
-        total_rewards_distributed=stats.get('total_rewards_distributed', 0)
-    )
+    try:
+        achievement_service = AchievementService(db)
+        stats = achievement_service.get_achievement_stats()
+        
+        # Convert to response format
+        most_earned = None
+        rarest = None
+        
+        if stats.get('most_earned_achievement'):
+            most_earned = AchievementResponse.from_orm(stats['most_earned_achievement'])
+        
+        if stats.get('rarest_achievement'):
+            rarest = AchievementResponse.from_orm(stats['rarest_achievement'])
+        
+        return AchievementStatsResponse(
+            total_achievements=stats.get('total_achievements', 0),
+            total_users_with_achievements=stats.get('total_users_with_achievements', 0),
+            most_earned_achievement=most_earned,
+            rarest_achievement=rarest,
+            average_completion_rate=stats.get('average_completion_rate', 0),
+            total_rewards_distributed=stats.get('total_rewards_distributed', 0)
+        )
+    except Exception as e:
+        print(f"Error in get_achievement_stats: {e}")
+        # Return default stats if there's an error
+        return AchievementStatsResponse(
+            total_achievements=0,
+            total_users_with_achievements=0,
+            most_earned_achievement=None,
+            rarest_achievement=None,
+            average_completion_rate=0,
+            total_rewards_distributed=0
+        )
 
 @router.post("/initialize")
 async def initialize_achievements(

@@ -623,11 +623,20 @@ class AchievementService:
                 ).first()
                 
                 if login_streak:
+                    # Ensure proper datetime conversion
+                    last_login_date = None
+                    if login_streak.last_login_date:
+                        if hasattr(login_streak.last_login_date, 'date'):
+                            # If it's a date object, convert to datetime
+                            last_login_date = datetime.combine(login_streak.last_login_date, datetime.min.time())
+                        else:
+                            last_login_date = login_streak.last_login_date
+                    
                     login_streak_data = {
                         'user_id': login_streak.user_id,
                         'current_streak': login_streak.current_streak,
                         'longest_streak': login_streak.longest_streak,
-                        'last_login_date': login_streak.last_login_date if login_streak.last_login_date else None,
+                        'last_login_date': last_login_date,
                         'created_at': login_streak.created_at,
                         'updated_at': login_streak.updated_at
                     }

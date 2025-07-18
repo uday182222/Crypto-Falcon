@@ -185,10 +185,15 @@ async def verify_payment(
             )
         
         # Find and update purchase
-        purchase = db.query(Purchase).filter(
-            Purchase.razorpay_order_id == razorpay_order_id,
-            Purchase.user_id == current_user.id
-        ).first()
+        try:
+            purchase = db.query(Purchase).filter(
+                Purchase.razorpay_order_id == razorpay_order_id,
+                Purchase.user_id == current_user.id
+            ).first()
+        except Exception as table_error:
+            print(f"Purchase table error: {table_error}")
+            # If table doesn't exist, treat as direct top-up
+            purchase = None
         
         # Check if this is a direct top-up order (no purchase record)
         if not purchase:

@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: motionfalcon-postgres
+    environment:
+      POSTGRES_DB: crypto_db
+      POSTGRES_USER: motionfalcon
+      POSTGRES_PASSWORD: motionfalcon123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - motionfalcon-network
+
+  # Redis Cache (Optional)
+  redis:
+    image: redis:7-alpine
+    container_name: motionfalcon-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - motionfalcon-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./crypto-backend
+      dockerfile: Dockerfile
+    container_name: motionfalcon-backend
+    environment:
+      - DATABASE_URL=postgresql://motionfalcon:motionfalcon123@postgres:5432/crypto_db
+      - REDIS_URL=redis://redis:6379
+      - SECRET_KEY=your-secret-key-change-in-production
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - RAZORPAY_KEY_ID=your-razorpay-key
+      - RAZORPAY_KEY_SECRET=your-razorpay-secret
+      - EMAIL_HOST=smtp.gmail.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=your-email@gmail.com
+      - EMAIL_PASSWORD=your-app-password
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./crypto-backend:/app
+    networks:
+      - motionfalcon-network
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # Frontend
+  frontend:
+    build:
+      context: ./crypto-frontend
+      dockerfile: Dockerfile
+    container_name: motionfalcon-frontend
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - motionfalcon-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: motionfalcon-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - motionfalcon-network
+
+volumes:
+  postgres_data:
+
+networks:
+  motionfalcon-network:
+    driver: bridge 

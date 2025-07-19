@@ -1,71 +1,54 @@
 # MotionFalcon - Crypto Trading Simulation Platform
 
-MotionFalcon is a comprehensive cryptocurrency trading simulation platform that allows users to practice trading with demo coins in a risk-free environment. The platform features real-time market data, portfolio management, leaderboards, achievements, and integrated payment processing.
+A full-stack cryptocurrency trading simulation platform built with React frontend and FastAPI backend, featuring real-time price data, portfolio management, achievements, and leaderboards.
 
 ## 🚀 Features
 
 ### Core Trading Features
 - **Real-time Crypto Prices**: Live price data from CoinGecko API
-- **Demo Trading**: Buy and sell cryptocurrencies with demo coins
-- **Portfolio Management**: Track holdings, profits/losses, and performance
-- **Multiple Cryptocurrencies**: Support for 20+ popular cryptocurrencies
+- **Portfolio Management**: Track holdings, P&L, and performance
+- **Buy/Sell Operations**: Simulate crypto trading with demo balance
+- **Trade History**: Complete transaction history and analytics
 
-### User Management
-- **User Authentication**: Secure JWT-based authentication
-- **User Profiles**: Personal trading statistics and preferences
-- **Demo Wallet System**: Manage demo coin balance
-- **Currency Preferences**: Support for multiple currencies (INR, USD, etc.)
+### User Experience
+- **User Authentication**: Secure login/register with JWT tokens
+- **Password Reset**: Email-based password recovery system
+- **Demo Balance**: Start with $100,000 demo balance
+- **Multiple Cryptocurrencies**: Support for BTC, ETH, ADA, DOT, and more
+
+### Gamification
+- **Achievement System**: Unlock achievements for trading milestones
+- **Leaderboards**: Global and weekly rankings
+- **Login Streaks**: Track consecutive login days
+- **Progress Tracking**: Visual progress bars for achievements
 
 ### Payment Integration
-- **Razorpay Integration**: Real payment processing for demo coin packages
-- **Direct Top-up**: Simple rate-based top-up (₹100 = 5000 coins)
-- **Coin Packages**: Various packages with bonus coins
-- **Payment Verification**: Secure payment verification with webhooks
-
-### Social Features
-- **Global Leaderboard**: Rank users by portfolio performance
-- **Weekly Leaderboard**: Weekly performance rankings
-- **Achievement System**: Unlock achievements for trading milestones
-- **Trading Statistics**: Comprehensive trading analytics
-
-### Technical Features
-- **Real-time Updates**: Live price updates and portfolio changes
-- **Responsive Design**: Mobile-friendly React frontend
-- **RESTful API**: FastAPI backend with comprehensive endpoints
-- **Database Management**: PostgreSQL with Alembic migrations
+- **Razorpay Integration**: Real money purchases for demo coins
+- **Package System**: Multiple coin packages with bonuses
+- **Payment Verification**: Secure payment processing
 
 ## 🏗️ Architecture
 
-### Backend (FastAPI + PostgreSQL)
-```
-crypto-backend/
-├── app/
-│   ├── main.py              # FastAPI application entry point
-│   ├── auth.py              # JWT authentication
-│   ├── db.py                # Database configuration
-│   ├── models/              # SQLAlchemy models
-│   ├── routes/              # API endpoints
-│   ├── schemas/             # Pydantic schemas
-│   └── services/            # Business logic services
-├── alembic/                 # Database migrations
-├── requirements.txt         # Python dependencies
-└── venv/                   # Virtual environment
-```
-
 ### Frontend (React + Vite)
-```
-crypto-frontend/
-├── src/
-│   ├── components/          # Reusable UI components
-│   ├── pages/              # Page components
-│   ├── context/            # React context providers
-│   ├── services/           # API service functions
-│   └── utils/              # Utility functions
-├── package.json            # Node.js dependencies
-└── vite.config.js          # Vite configuration
-```
+- **React 18** with modern hooks and context
+- **Tailwind CSS** for styling
+- **React Router** for navigation
+- **Axios** for API communication
+- **Responsive Design** for mobile and desktop
 
-## 🛠️ Installation & Setup
+### Backend (FastAPI + PostgreSQL)
+- **FastAPI** for high-performance API
+- **PostgreSQL** with SQLAlchemy ORM
+- **Alembic** for database migrations
+- **JWT Authentication** with bcrypt password hashing
+- **Redis** for caching (optional)
+
+### External APIs
+- **CoinGecko API**: Real-time cryptocurrency prices
+- **Razorpay**: Payment processing
+- **TradingView**: Chart integration
+
+## 📦 Installation
 
 ### Prerequisites
 - Python 3.8+
@@ -77,164 +60,207 @@ crypto-frontend/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd motionfalcon
+   git clone https://github.com/uday182222/Crypto-Falcon.git
+   cd Crypto-Falcon/crypto-backend
    ```
 
-2. **Set up Python environment**
+2. **Create virtual environment**
    ```bash
-   cd crypto-backend
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**
+   ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure database**
+4. **Environment Configuration**
    ```bash
-   # Create PostgreSQL database
-   createdb crypto_db
-   
-   # Set up environment variables
    cp .env.example .env
-   # Edit .env with your database credentials
+   # Edit .env with your database and API keys
    ```
 
-4. **Run database migrations**
+5. **Database Setup**
    ```bash
+   # Set DATABASE_URL in .env
    alembic upgrade head
    ```
 
-5. **Seed initial data**
+6. **Run the backend**
    ```bash
-   python seed_packages.py
-   ```
-
-6. **Start the backend server**
-   ```bash
-   python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 ### Frontend Setup
 
-1. **Install dependencies**
+1. **Navigate to frontend directory**
    ```bash
-   cd crypto-frontend
+   cd ../crypto-frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
    npm install
    ```
 
-2. **Start the development server**
+3. **Configure API URL**
+   ```bash
+   # Edit src/services/api.js to point to your backend
+   const API_URL = 'http://localhost:8000';
+   ```
+
+4. **Run the frontend**
    ```bash
    npm run dev
    ```
 
-## 🔧 Configuration
+## 🌐 Deployment
+
+### Render Deployment (Recommended)
+
+The app is configured for easy deployment on Render:
+
+1. **Backend Service**
+   - Connect your GitHub repository
+   - Set environment variables
+   - Deploy automatically on push
+
+2. **Frontend Service**
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Environment: Node.js
 
 ### Environment Variables
 
-Create a `.env` file in the `crypto-backend` directory:
-
+#### Backend (.env)
 ```env
-# Database
-DATABASE_URL=postgresql://username:password@localhost:5432/crypto_db
-
-# JWT
-SECRET_KEY=your-secret-key-here
+DATABASE_URL=postgresql://user:password@localhost:5432/crypto_db
+SECRET_KEY=your-secret-key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Razorpay (for payments)
-RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_ID=your-razorpay-key
 RAZORPAY_KEY_SECRET=your-razorpay-secret
-
-# API Keys
-COINGECKO_API_KEY=your-coingecko-api-key
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
 ```
 
-### Database Configuration
+#### Frontend
+```javascript
+// src/services/api.js
+const API_URL = 'https://your-backend-url.onrender.com';
+```
 
-The application uses PostgreSQL with the following main tables:
-- `users` - User accounts and preferences
-- `wallets` - User demo coin balances
-- `trades` - Trading history
-- `purchases` - Payment and package purchases
-- `leaderboard_entries` - User rankings
-- `achievements` - Achievement definitions
-- `user_achievements` - User achievement progress
+## 📊 API Endpoints
 
-## 📚 API Documentation
-
-Once the backend is running, visit:
-- **Interactive API Docs**: http://127.0.0.1:8000/docs
-- **ReDoc Documentation**: http://127.0.0.1:8000/redoc
-
-### Key Endpoints
-
-#### Authentication
+### Authentication
 - `POST /auth/register` - User registration
 - `POST /auth/login` - User login
-- `GET /auth/profile` - Get user profile
+- `POST /auth/forgot-password` - Password reset request
+- `POST /auth/reset-password` - Password reset
+- `GET /auth/profile` - Get current user
 
-#### Trading
-- `GET /trade/prices` - Get current crypto prices
+### Trading
+- `GET /trade/prices` - Get all crypto prices
+- `GET /trade/price/{coin}` - Get specific coin price
 - `POST /trade/buy` - Buy cryptocurrency
 - `POST /trade/sell` - Sell cryptocurrency
 - `GET /trade/portfolio` - Get user portfolio
+- `GET /trade/history` - Get trade history
 
-#### Payments
-- `GET /purchases/packages` - Get available coin packages
-- `POST /purchases/create-order` - Create payment order
-- `POST /purchases/verify-payment` - Verify payment
-- `POST /purchases/create-direct-topup-order` - Create direct top-up order
+### Achievements
+- `GET /achievements/user` - Get user achievements
+- `GET /achievements/stats` - Get achievement statistics
 
-#### Leaderboard
+### Leaderboard
 - `GET /leaderboard/global` - Global leaderboard
 - `GET /leaderboard/weekly` - Weekly leaderboard
-- `GET /leaderboard/my-rank` - User's rank
-
-## 🎯 Usage
-
-### Getting Started
-1. Register a new account
-2. Receive 100,000 demo coins as starting balance
-3. Browse available cryptocurrencies
-4. Start trading with real-time market data
-5. Track your portfolio performance
-6. Compete on leaderboards
-7. Unlock achievements
-
-### Trading
-- View real-time prices for 20+ cryptocurrencies
-- Place buy/sell orders with demo coins
-- Track your portfolio value and performance
-- View detailed trading history
 
 ### Payments
-- Purchase demo coin packages with real money
-- Use direct top-up for simple coin purchases
-- Secure payment processing with Razorpay
-- Automatic coin delivery after payment verification
+- `POST /purchases/create-order` - Create payment order
+- `POST /purchases/verify-payment` - Verify payment
 
-## 🔒 Security Features
+## 🗄️ Database Schema
 
-- JWT-based authentication
-- Password hashing with bcrypt
-- Payment signature verification
-- SQL injection protection with SQLAlchemy
-- CORS configuration
-- Input validation with Pydantic
+### Core Tables
+- **users**: User accounts and authentication
+- **wallets**: User demo balance management
+- **trades**: All trading transactions
+- **achievements**: Available achievements
+- **user_achievements**: User achievement progress
+- **user_login_streaks**: Login streak tracking
+- **leaderboard_entries**: Leaderboard rankings
+- **purchases**: Payment transactions
+- **demo_coin_packages**: Available coin packages
 
-## 🚀 Deployment
+## 🔧 Development
 
-### Backend Deployment
-1. Set up a PostgreSQL database
-2. Configure environment variables
-3. Run database migrations
-4. Deploy with Gunicorn or similar WSGI server
+### Running Tests
+```bash
+# Backend tests
+cd crypto-backend
+pytest
 
-### Frontend Deployment
-1. Build the production version: `npm run build`
-2. Deploy the `dist` folder to your web server
-3. Configure API endpoint URLs for production
+# Frontend tests
+cd crypto-frontend
+npm test
+```
+
+### Database Migrations
+```bash
+cd crypto-backend
+alembic revision -m "description"
+alembic upgrade head
+```
+
+### Code Formatting
+```bash
+# Backend
+black app/
+isort app/
+
+# Frontend
+npm run format
+```
+
+## 🚀 Quick Start
+
+1. **Clone and setup backend**
+   ```bash
+   git clone https://github.com/uday182222/Crypto-Falcon.git
+   cd Crypto-Falcon/crypto-backend
+   python -m venv venv && source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **Setup database**
+   ```bash
+   # Configure DATABASE_URL in .env
+   alembic upgrade head
+   ```
+
+3. **Start backend**
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+4. **Setup frontend**
+   ```bash
+   cd ../crypto-frontend
+   npm install
+   npm run dev
+   ```
+
+5. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🤝 Contributing
 
@@ -244,31 +270,24 @@ Once the backend is running, visit:
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
+## 📞 Support
 
 For support and questions:
-- Create an issue in the GitHub repository
-- Check the API documentation at `/docs`
-- Review the code comments for implementation details
+- Create an issue on GitHub
+- Email: support@motionfalcon.com
+- Documentation: https://docs.motionfalcon.com
 
-## 🔄 Recent Updates
+## 🎯 Roadmap
 
-### Latest Features
-- ✅ Direct top-up payment system
-- ✅ Real-time price updates
-- ✅ Comprehensive wallet management
-- ✅ Achievement system
-- ✅ Global and weekly leaderboards
-- ✅ Payment verification with webhooks
-- ✅ Database migration system
-- ✅ Responsive frontend design
+- [ ] Mobile app (React Native)
+- [ ] Advanced charting with TradingView
+- [ ] Social features and following
+- [ ] Paper trading competitions
+- [ ] Real-time notifications
+- [ ] API rate limiting and caching
+- [ ] Multi-language support
+- [ ] Dark mode theme
 
-### Bug Fixes
-- ✅ Fixed payment verification 500 errors
-- ✅ Resolved database migration conflicts
-- ✅ Fixed wallet table creation issues
-- ✅ Improved error handling in payment processing 
+---
+
+**MotionFalcon** - Learn crypto trading in a safe, simulated environment! 🚀 

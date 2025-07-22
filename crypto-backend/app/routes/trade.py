@@ -153,6 +153,14 @@ async def buy_crypto(
 ):
     """Buy cryptocurrency with DemoCoins"""
     
+    # Get current user from database to ensure it's attached to this session
+    current_user = db.query(User).filter(User.id == current_user.id).first()
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
     # Validate coin symbol
     coin_symbol = trade_request.coin_symbol.upper()
     if coin_symbol not in get_supported_coins():
@@ -199,6 +207,16 @@ async def buy_crypto(
     db.add(trade)
     db.commit()
     db.refresh(trade)
+
+    # XP system: Grant XP for trading
+    def xp_needed(level):
+        return 100 + (level - 1) * 50
+    current_user.xp += 25  # +25 XP for making a trade
+    while current_user.xp >= xp_needed(current_user.level):
+        current_user.xp -= xp_needed(current_user.level)
+        current_user.level += 1
+    db.commit()
+    db.refresh(current_user)
     
     # Update leaderboard entry for user
     try:
@@ -304,6 +322,16 @@ async def sell_crypto(
     db.add(trade)
     db.commit()
     db.refresh(trade)
+
+    # XP system: Grant XP for trading
+    def xp_needed(level):
+        return 100 + (level - 1) * 50
+    current_user.xp += 25  # +25 XP for making a trade
+    while current_user.xp >= xp_needed(current_user.level):
+        current_user.xp -= xp_needed(current_user.level)
+        current_user.level += 1
+    db.commit()
+    db.refresh(current_user)
     
     # Update leaderboard entry for user
     try:
@@ -333,6 +361,14 @@ async def get_portfolio(
     db: Session = Depends(get_db)
 ):
     """Get user's portfolio with current holdings and P&L"""
+    
+    # Get current user from database to ensure it's attached to this session
+    current_user = db.query(User).filter(User.id == current_user.id).first()
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
     
     # Get all user trades
     trades = db.query(Trade).filter(Trade.user_id == current_user.id).all()
@@ -406,6 +442,31 @@ async def get_portfolio(
     # Get wallet balance
     wallet_service = WalletService(db)
     wallet = wallet_service.get_or_create_wallet(current_user.id)
+
+    # XP system: First portfolio gain (+50 XP, only once)
+    if not current_user.xp_first_gain_awarded:
+        if total_profit_loss > 0:
+            current_user.xp += 50
+            def xp_needed(level):
+                return 100 + (level - 1) * 50
+            while current_user.xp >= xp_needed(current_user.level):
+                current_user.xp -= xp_needed(current_user.level)
+                current_user.level += 1
+            current_user.xp_first_gain_awarded = True
+            db.commit()
+            db.refresh(current_user)
+    # XP system: Lose all demo money (+20 XP, only once)
+    if not current_user.xp_lost_all_awarded:
+        if wallet.balance <= 0:
+            current_user.xp += 20
+            def xp_needed(level):
+                return 100 + (level - 1) * 50
+            while current_user.xp >= xp_needed(current_user.level):
+                current_user.xp -= xp_needed(current_user.level)
+                current_user.level += 1
+            current_user.xp_lost_all_awarded = True
+            db.commit()
+            db.refresh(current_user)
     
     return PortfolioResponse(
         demo_balance=wallet.balance,

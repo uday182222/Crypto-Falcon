@@ -1,6 +1,10 @@
+import warnings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import auth, trade, leaderboard, achievement, purchase, currency, wallet
+
+# Suppress deprecation warnings for production
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resources")
 
 app = FastAPI()
 

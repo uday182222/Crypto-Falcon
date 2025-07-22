@@ -88,7 +88,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         username=user.username, 
         email=user.email, 
         hashed_password=hashed_password,
-        demo_balance=100000.0  # Seed with 100000 DemoCoins
+        demo_balance=100000.0,  # Seed with 100000 DemoCoins
+        level=1,                # Start at level 1
+        xp=0                    # Start with 0 XP
     )
     
     db.add(db_user)
@@ -133,6 +135,17 @@ async def login(login_data: UserLogin, db: Session = Depends(get_db)):
     except Exception as e:
         # Log error but don't fail login
         print(f"Error updating login streak: {e}")
+
+    # XP system: Grant XP for login
+    def xp_needed(level):
+        return 100 + (level - 1) * 50
+    
+    user.xp += 10  # +10 XP for login
+    while user.xp >= xp_needed(user.level):
+        user.xp -= xp_needed(user.level)
+        user.level += 1
+    db.commit()
+    db.refresh(user)
     
     # Create access token
     access_token = create_access_token(data={"sub": user.email})
@@ -212,7 +225,12 @@ def get_profile(current_user: User = Depends(get_current_user)):
         demo_balance=float(current_user.demo_balance),
         is_active=current_user.is_active,
         created_at=current_user.created_at,
-        updated_at=current_user.updated_at
+        updated_at=current_user.updated_at,
+        level=current_user.level,
+        xp=current_user.xp,
+        xp_first_gain_awarded=current_user.xp_first_gain_awarded,
+        xp_lost_all_awarded=current_user.xp_lost_all_awarded,
+        xp_best_rank=current_user.xp_best_rank
     )
 
 @router.get("/test")

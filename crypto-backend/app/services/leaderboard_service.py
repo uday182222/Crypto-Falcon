@@ -238,6 +238,7 @@ class LeaderboardService:
             self.db.add(entry)
         
         # Update entry with calculated metrics
+        entry.username = user.username  # Set username to fix NOT NULL constraint
         entry.total_portfolio_value = performance['total_portfolio_value']
         entry.total_invested = performance['total_invested']
         entry.total_profit_loss = performance['total_profit_loss']

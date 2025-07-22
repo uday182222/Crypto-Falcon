@@ -6,6 +6,8 @@ from decimal import Decimal
 class UserBase(BaseModel):
     username: str
     email: EmailStr
+    level: int = 1  # XP system: user level
+    xp: int = 0     # XP system: experience points
 
 class UserCreate(UserBase):
     password: str
@@ -20,6 +22,11 @@ class UserResponse(UserBase):
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
+    level: int
+    xp: int
+    xp_first_gain_awarded: bool
+    xp_lost_all_awarded: bool
+    xp_best_rank: Optional[int]
 
     class Config:
         orm_mode = True

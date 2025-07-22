@@ -72,7 +72,39 @@ const Settings = () => {
         }}>
           Profile Information
         </h3>
-        
+        {/* Level & XP Bar */}
+        {user && (
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontWeight: 700, fontSize: '1.1rem', color: '#f59e0b' }}>Level {user.level}</span>
+              <span style={{ color: '#94a3b8', fontSize: '0.95rem' }}>XP</span>
+            </div>
+            <div style={{ width: '100%', background: '#334155', borderRadius: '0.5rem', height: '0.75rem', marginBottom: '0.25rem', overflow: 'hidden' }}>
+              <div style={{
+                width: `${(user.xp / (100 + (user.level - 1) * 50)) * 100}%`,
+                background: 'linear-gradient(90deg, #22c55e 0%, #3b82f6 100%)',
+                height: '100%',
+                borderRadius: '0.5rem',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+            <span style={{ color: '#a3e635', fontSize: '0.9rem' }}>{user.xp} / {100 + (user.level - 1) * 50} XP to next level</span>
+          </div>
+        )}
+        {/* Milestone Badges */}
+        {user && (
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+            {user.xp_first_gain_awarded && (
+              <span style={{ background: '#f59e0b', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '1rem', fontWeight: 600 }}>First Gain ��</span>
+            )}
+            {user.xp_lost_all_awarded && (
+              <span style={{ background: '#ef4444', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '1rem', fontWeight: 600 }}>Comeback 💪</span>
+            )}
+            {user.xp_best_rank !== null && (
+              <span style={{ background: '#3b82f6', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '1rem', fontWeight: 600 }}>Leaderboard #{user.xp_best_rank + 1}</span>
+            )}
+          </div>
+        )}
         <div style={{ display: 'grid', gap: '1rem' }}>
           <div>
             <label style={{ 

@@ -85,11 +85,31 @@ async def get_my_rank(
 ):
     """Get current user's rank in global and weekly leaderboards"""
     
+    # Get current user from database to ensure it's attached to this session
+    current_user = db.query(User).filter(User.id == current_user.id).first()
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
     leaderboard_service = LeaderboardService(db)
     
     # Get user's ranks
     global_rank = leaderboard_service.get_user_global_rank(current_user.id)
     weekly_rank = leaderboard_service.get_user_weekly_rank(current_user.id)
+
+    # XP system: Leaderboard rank up (+100 XP, only for new highest rank)
+    if current_user.xp_best_rank is None or global_rank < current_user.xp_best_rank:
+        current_user.xp += 100
+        def xp_needed(level):
+            return 100 + (level - 1) * 50
+        while current_user.xp >= xp_needed(current_user.level):
+            current_user.xp -= xp_needed(current_user.level)
+            current_user.level += 1
+        current_user.xp_best_rank = global_rank
+        db.commit()
+        db.refresh(current_user)
     
     return {
         "global_rank": global_rank,

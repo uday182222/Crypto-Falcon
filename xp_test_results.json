@@ -1,0 +1,56 @@
+[
+  {
+    "test": "User Login",
+    "status": "PASSED",
+    "details": "Logged in as testuser",
+    "timestamp": "2025-07-23T04:16:40.612995"
+  },
+  {
+    "test": "Login XP",
+    "status": "PASSED",
+    "details": "Gained 10 XP, Level: 5 \u2192 5",
+    "timestamp": "2025-07-23T04:16:41.939316"
+  },
+  {
+    "test": "Trade XP",
+    "status": "PASSED",
+    "details": "Gained 25 XP, Level: 5 \u2192 5",
+    "timestamp": "2025-07-23T04:16:42.995452"
+  },
+  {
+    "test": "First Gain Milestone",
+    "status": "SKIPPED",
+    "details": "Already awarded",
+    "timestamp": "2025-07-23T04:16:43.002351"
+  },
+  {
+    "test": "Lost All Milestone",
+    "status": "SKIPPED",
+    "details": "User still has demo balance",
+    "timestamp": "2025-07-23T04:16:43.007577"
+  },
+  {
+    "test": "Leaderboard Milestone",
+    "status": "SKIPPED",
+    "details": "Current rank 1 not better than best 1",
+    "timestamp": "2025-07-23T04:16:43.017105"
+  },
+  {
+    "test": "Milestone Duplication",
+    "status": "PASSED",
+    "details": "No duplicate milestone XP awarded. Gained: 0",
+    "timestamp": "2025-07-23T04:16:44.035664"
+  },
+  {
+    "test": "Level Progression",
+    "status": "INFO",
+    "details": "Level 5, XP: 85/300 (28.3%)",
+    "timestamp": "2025-07-23T04:16:44.042097"
+  },
+  {
+    "test": "Level Progression",
+    "status": "PASSED",
+    "details": "Level: 5 \u2192 5, XP gained: 125",
+    "timestamp": "2025-07-23T04:16:47.741153"
+  }
+]

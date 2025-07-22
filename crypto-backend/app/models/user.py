@@ -13,6 +13,11 @@ class User(Base):
     demo_balance = Column(Numeric(20, 8), default=100000.0, nullable=False)
     preferred_currency = Column(String(3), default='INR', nullable=False)
     is_active = Column(Boolean, default=True)
+    level = Column(Integer, default=1, nullable=False)  # XP system: user level
+    xp = Column(Integer, default=0, nullable=False)     # XP system: experience points
+    xp_first_gain_awarded = Column(Boolean, default=False, nullable=False)  # XP milestone: first gain
+    xp_lost_all_awarded = Column(Boolean, default=False, nullable=False)    # XP milestone: lost all demo
+    xp_best_rank = Column(Integer, nullable=True)                          # XP milestone: best leaderboard rank
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

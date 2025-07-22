@@ -60,11 +60,17 @@ class LeaderboardService:
     
     def get_user_global_rank(self, user_id: int) -> Optional[int]:
         """Get user's global rank"""
-        return 1  # Default rank
+        entry = self.db.query(LeaderboardEntry).filter(
+            LeaderboardEntry.user_id == user_id
+        ).first()
+        return entry.global_rank if entry else None
     
     def get_user_weekly_rank(self, user_id: int) -> Optional[int]:
         """Get user's weekly rank"""
-        return 1  # Default rank
+        entry = self.db.query(LeaderboardEntry).filter(
+            LeaderboardEntry.user_id == user_id
+        ).first()
+        return entry.weekly_rank if entry else None
     
     async def get_leaderboard_stats(self) -> Dict:
         """Get leaderboard statistics with real data"""

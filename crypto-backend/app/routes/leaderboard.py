@@ -95,10 +95,16 @@ async def get_my_rank(
                 detail="User not found"
             )
         
-        # Get user's ranks directly from database
-        entry = db.query(LeaderboardEntry).filter(LeaderboardEntry.user_id == current_user.id).first()
-        global_rank = entry.global_rank if entry else 1
-        weekly_rank = entry.weekly_rank if entry else 1
+        # Get user's ranks directly from database (with fallback for missing table)
+        try:
+            entry = db.query(LeaderboardEntry).filter(LeaderboardEntry.user_id == current_user.id).first()
+            global_rank = entry.global_rank if entry else 1
+            weekly_rank = entry.weekly_rank if entry else 1
+        except Exception as e:
+            print(f"Leaderboard table not available: {e}")
+            # Fallback to default ranks if table doesn't exist
+            global_rank = 1
+            weekly_rank = 1
 
         # XP system: Leaderboard rank up (+100 XP, only for new highest rank)
         if current_user.xp_best_rank is None or global_rank < current_user.xp_best_rank:

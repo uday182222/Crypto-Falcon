@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>API Test - MotionFalcon</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>MotionFalcon API Connection Test</h1>
+    
+    <div class="test-section">
+        <h3>Backend Status</h3>
+        <button onclick="testBackendHealth()">Test Backend Health</button>
+        <div id="health-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Authentication</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Prices API</h3>
+        <button onclick="testPrices()">Test Prices</button>
+        <div id="prices-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Portfolio API</h3>
+        <button onclick="testPortfolio()">Test Portfolio</button>
+        <div id="portfolio-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>All Tests</h3>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <div id="all-tests-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000';
+        let authToken = null;
+
+        function showResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<pre>${content}</pre>`;
+            element.className = `test-section ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<p>Loading...</p>';
+            element.className = 'test-section loading';
+        }
+
+        async function testBackendHealth() {
+            showLoading('health-result');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                showResult('health-result', JSON.stringify(data, null, 2), response.ok);
+            } catch (error) {
+                showResult('health-result', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function testLogin() {
+            showLoading('login-result');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/test-login?email=test@example.com&password=testpass123`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                if (response.ok && data.access_token) {
+                    authToken = data.access_token;
+                    showResult('login-result', `✅ Login successful!\nToken: ${data.access_token.substring(0, 50)}...\nUser: ${JSON.stringify(data.user, null, 2)}`);
+                } else {
+                    showResult('login-result', `❌ Login failed: ${JSON.stringify(data, null, 2)}`, false);
+                }
+            } catch (error) {
+                showResult('login-result', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function testPrices() {
+            showLoading('prices-result');
+            try {
+                const response = await fetch(`${API_BASE_URL}/trade/prices`);
+                const data = await response.json();
+                if (response.ok) {
+                    const prices = data.prices || [];
+                    const summary = `✅ Prices loaded successfully!\nTotal coins: ${prices.length}\nSample: ${prices.slice(0, 3).map(p => `${p.symbol}: $${p.price}`).join(', ')}`;
+                    showResult('prices-result', summary);
+                } else {
+                    showResult('prices-result', `❌ Prices failed: ${JSON.stringify(data, null, 2)}`, false);
+                }
+            } catch (error) {
+                showResult('prices-result', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function testPortfolio() {
+            showLoading('portfolio-result');
+            if (!authToken) {
+                showResult('portfolio-result', '❌ Please login first!', false);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/trade/portfolio`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    const summary = `✅ Portfolio loaded successfully!\nBalance: $${data.demo_balance}\nPortfolio Value: $${data.total_portfolio_value}\nHoldings: ${data.holdings.length} coins`;
+                    showResult('portfolio-result', summary);
+                } else {
+                    showResult('portfolio-result', `❌ Portfolio failed: ${JSON.stringify(data, null, 2)}`, false);
+                }
+            } catch (error) {
+                showResult('portfolio-result', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function runAllTests() {
+            showLoading('all-tests-result');
+            const results = [];
+            
+            // Test 1: Backend Health
+            try {
+                const healthResponse = await fetch(`${API_BASE_URL}/health`);
+                const healthData = await healthResponse.json();
+                results.push(`✅ Backend Health: ${healthData.status}`);
+            } catch (error) {
+                results.push(`❌ Backend Health: ${error.message}`);
+            }
+            
+            // Test 2: Login
+            try {
+                const loginResponse = await fetch(`${API_BASE_URL}/auth/test-login?email=test@example.com&password=testpass123`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const loginData = await loginResponse.json();
+                if (loginResponse.ok && loginData.access_token) {
+                    authToken = loginData.access_token;
+                    results.push(`✅ Login: Success (User: ${loginData.user.username})`);
+                } else {
+                    results.push(`❌ Login: Failed`);
+                }
+            } catch (error) {
+                results.push(`❌ Login: ${error.message}`);
+            }
+            
+            // Test 3: Prices
+            try {
+                const pricesResponse = await fetch(`${API_BASE_URL}/trade/prices`);
+                const pricesData = await pricesResponse.json();
+                if (pricesResponse.ok) {
+                    results.push(`✅ Prices: ${pricesData.prices?.length || 0} coins loaded`);
+                } else {
+                    results.push(`❌ Prices: Failed`);
+                }
+            } catch (error) {
+                results.push(`❌ Prices: ${error.message}`);
+            }
+            
+            // Test 4: Portfolio
+            if (authToken) {
+                try {
+                    const portfolioResponse = await fetch(`${API_BASE_URL}/trade/portfolio`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    const portfolioData = await portfolioResponse.json();
+                    if (portfolioResponse.ok) {
+                        results.push(`✅ Portfolio: $${portfolioData.total_portfolio_value} value`);
+                    } else {
+                        results.push(`❌ Portfolio: Failed`);
+                    }
+                } catch (error) {
+                    results.push(`❌ Portfolio: ${error.message}`);
+                }
+            } else {
+                results.push(`❌ Portfolio: No auth token`);
+            }
+            
+            const allSuccess = results.every(r => r.startsWith('✅'));
+            showResult('all-tests-result', results.join('\n'), allSuccess);
+        }
+
+        // Auto-run health test on page load
+        window.onload = function() {
+            testBackendHealth();
+        };
+    </script>
+</body>
+</html> 

@@ -1,87 +1,64 @@
 import React from 'react';
 
-const CardHeader = ({ children, className = '', ...props }) => (
-  <div 
-    style={{
-      padding: '0 0 16px 0',
-      borderBottom: '1px solid rgba(71, 85, 105, 0.3)',
-      marginBottom: '16px'
-    }}
-    className={className} 
-    {...props}
-  >
-    {children}
-  </div>
-);
-
-const CardContent = ({ children, className = '', ...props }) => (
-  <div className={className} {...props}>
-    {children}
-  </div>
-);
-
-const CardFooter = ({ children, className = '', ...props }) => (
-  <div 
-    style={{
-      padding: '16px 0 0 0',
-      borderTop: '1px solid rgba(71, 85, 105, 0.3)',
-      marginTop: '16px'
-    }}
-    className={className} 
-    {...props}
-  >
-    {children}
-  </div>
-);
-
-const Card = ({ 
-  children, 
-  variant = 'default', 
-  className = '', 
-  ...props 
-}) => {
+const Card = ({ children, variant = 'default', className = '', style = {}, ...props }) => {
   const baseStyles = {
-    borderRadius: '12px',
-    padding: '24px'
+    background: '#ffffff',
+    borderRadius: '15px',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+    padding: '1.5rem',
+    border: '1px solid #e5e7eb',
+    transition: 'all 0.3s ease',
+    ...style
   };
 
-  const variantStyles = {
+  const variants = {
     default: {
-      background: 'rgba(15, 23, 42, 0.8)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(71, 85, 105, 0.3)'
-    },
-    glass: {
-      background: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)'
+      ...baseStyles
     },
     'glass-dark': {
-      background: 'rgba(15, 23, 42, 0.8)',
+      background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(71, 85, 105, 0.3)'
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
     },
-    gradient: {
-      background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
-      border: '1px solid rgba(59, 130, 246, 0.3)'
+    primary: {
+      ...baseStyles,
+      background: 'linear-gradient(135deg, #9568FF 0%, #7135ff 100%)',
+      color: 'white',
+      border: 'none'
     },
-    glow: {
-      background: 'rgba(15, 23, 42, 0.8)',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(59, 130, 246, 0.5)',
-      boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
+    secondary: {
+      ...baseStyles,
+      background: 'linear-gradient(135deg, #362465 0%, #22173f 100%)',
+      color: 'white',
+      border: 'none'
+    },
+    success: {
+      ...baseStyles,
+      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      color: 'white',
+      border: 'none'
+    },
+    warning: {
+      ...baseStyles,
+      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+      color: 'white',
+      border: 'none'
+    },
+    info: {
+      ...baseStyles,
+      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+      color: 'white',
+      border: 'none'
     }
   };
 
-  const combinedStyles = {
-    ...baseStyles,
-    ...variantStyles[variant]
-  };
+  const cardStyles = variants[variant] || variants.default;
 
   return (
-    <div
-      style={combinedStyles}
+    <div 
       className={`card ${className}`}
+      style={cardStyles}
       {...props}
     >
       {children}
@@ -89,6 +66,4 @@ const Card = ({
   );
 };
 
-// Export all components
-export { CardHeader as Header, CardContent as Content, CardFooter as Footer };
-export default Card; 
+export default Card;

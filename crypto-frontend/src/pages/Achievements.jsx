@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { achievementAPI } from '../services/api';
+import { achievementsAPI } from '../services/api';
 import { Trophy, Award, Target, TrendingUp, Calendar, Volume2, Users, Star, RefreshCw } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -140,8 +140,8 @@ const Achievements = () => {
       setError(null);
       
       const [achievementsResponse, statsResponse] = await Promise.all([
-        achievementAPI.getUserAchievements(),
-        achievementAPI.getAchievementStats()
+        achievementsAPI.getUserAchievements(),
+        achievementsAPI.getAllAchievements()
       ]);
 
       setAchievements(achievementsResponse.data.achievements || []);

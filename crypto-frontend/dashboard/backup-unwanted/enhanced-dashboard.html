@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MotionFalcon - Enhanced Crypto Trading Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png">
+    
+    <!-- CSS Files -->
+    <link href="./vendor/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="./vendor/swiper/css/swiper-bundle.min.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
+    <link href="./icons/fontawesome6/css/all.min.css" rel="stylesheet">
+    <link href="./icons/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="loader"></div>
+
+    <!-- Main Wrapper -->
+    <div id="main-wrapper">
+        <!-- Nav Header -->
+        <div class="nav-header">
+            <a href="index.html" class="brand-logo">
+                <img src="images/logo/logo.png" class="logo-abbr" alt="">
+                <img src="images/logo/logo-text.png" class="brand-title" alt="">
+            </a>
+            <div class="nav-control">
+                <div class="hamburger">
+                    <span class="line"></span><span class="line"></span><span class="line"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <nav class="navbar navbar-expand">
+                    <div class="collapse navbar-collapse justify-content-between">
+                        <div class="header-left">
+                            <div class="dashboard_bar">
+                                <h2>MotionFalcon Trading Dashboard</h2>
+                            </div>
+                        </div>
+                        <ul class="navbar-nav header-right">
+                            <li class="nav-item dropdown header-profile">
+                                <a class="nav-link" href="#" role="button" data-toggle="dropdown">
+                                    <img src="images/avatar/1.jpg" width="20" alt="">
+                                    <div class="header-info">
+                                        <span class="text-black"><strong class="user-name">User</strong></span>
+                                        <p class="mb-0 user-level">Level 1</p>
+                                    </div>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a href="#" class="dropdown-item ai-icon">
+                                        <i class="fas fa-user"></i>
+                                        <span class="ml-2">Profile</span>
+                                    </a>
+                                    <a href="#" class="dropdown-item ai-icon" id="logout-btn">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span class="ml-2">Logout</span>
+                                    </a>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="deznav">
+            <div class="deznav-scroll">
+                <ul class="metismenu" id="menu">
+                    <li class="menu-title">Trading</li>
+                    <li><a href="#portfolio" class="ai-icon" data-toggle="tab">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="nav-text">Portfolio</span>
+                    </a></li>
+                    <li><a href="#trading" class="ai-icon" data-toggle="tab">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span class="nav-text">Trading</span>
+                    </a></li>
+                    <li><a href="#prices" class="ai-icon" data-toggle="tab">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span class="nav-text">Market Prices</span>
+                    </a></li>
+                    <li><a href="#history" class="ai-icon" data-toggle="tab">
+                        <i class="fas fa-history"></i>
+                        <span class="nav-text">Trade History</span>
+                    </a></li>
+                    
+                    <li class="menu-title">Social</li>
+                    <li><a href="#achievements" class="ai-icon" data-toggle="tab">
+                        <i class="fas fa-trophy"></i>
+                        <span class="nav-text">Achievements</span>
+                    </a></li>
+                    <li><a href="#leaderboard" class="ai-icon" data-toggle="tab">
+                        <i class="fas fa-medal"></i>
+                        <span class="nav-text">Leaderboard</span>
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Content Body -->
+        <div class="content-body">
+            <div class="container-fluid">
+                <!-- Portfolio Summary Cards -->
+                <div class="row">
+                    <div class="col-xl-3 col-lg-6 col-sm-6">
+                        <div class="widget-stat card">
+                            <div class="card-body p-4">
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-primary text-primary">
+                                        <i class="fas fa-wallet"></i>
+                                    </span>
+                                    <div class="media-body">
+                                        <h3 class="mb-0 text-black" id="portfolio-total-value">$0.00</h3>
+                                        <p class="mb-0">Total Portfolio Value</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-lg-6 col-sm-6">
+                        <div class="widget-stat card">
+                            <div class="card-body p-4">
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-warning text-warning">
+                                        <i class="fas fa-chart-line"></i>
+                                    </span>
+                                    <div class="media-body">
+                                        <h3 class="mb-0 text-black" id="portfolio-total-invested">$0.00</h3>
+                                        <p class="mb-0">Total Invested</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-lg-6 col-sm-6">
+                        <div class="widget-stat card">
+                            <div class="card-body p-4">
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-success text-success">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                    <div class="media-body">
+                                        <h3 class="mb-0 text-black" id="portfolio-total-pnl">$0.00 (0.00%)</h3>
+                                        <p class="mb-0">Total P&L</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-lg-6 col-sm-6">
+                        <div class="widget-stat card">
+                            <div class="card-body p-4">
+                                <div class="media ai-icon">
+                                    <span class="mr-3 bgl-info text-info">
+                                        <i class="fas fa-sync-alt"></i>
+                                    </span>
+                                    <div class="media-body">
+                                        <button class="btn btn-primary btn-sm" id="refresh-btn">
+                                            <i class="fas fa-sync-alt"></i> Refresh Data
+                                        </button>
+                                        <p class="mb-0">Last Updated: <span id="last-updated">Just now</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Portfolio Tab -->
+                    <div class="tab-pane fade show active" id="portfolio">
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Portfolio Holdings</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped" id="holdings-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Asset</th>
+                                                        <th>Quantity</th>
+                                                        <th>Current Price</th>
+                                                        <th>Current Value</th>
+                                                        <th>Avg Buy Price</th>
+                                                        <th>P&L</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Holdings will be populated by JavaScript -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trading Tab -->
+                    <div class="tab-pane fade" id="trading">
+                        <div class="row">
+                            <div class="col-xl-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Buy Crypto</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="buy-form">
+                                            <div class="form-group">
+                                                <label>Cryptocurrency</label>
+                                                <select name="coin_symbol" class="form-control" required>
+                                                    <option value="">Select cryptocurrency</option>
+                                                    <option value="BTC">Bitcoin (BTC)</option>
+                                                    <option value="ETH">Ethereum (ETH)</option>
+                                                    <option value="BNB">Binance Coin (BNB)</option>
+                                                    <option value="ADA">Cardano (ADA)</option>
+                                                    <option value="SOL">Solana (SOL)</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Amount</label>
+                                                <input type="number" name="amount" class="form-control" step="0.000001" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Buy</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xl-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Sell Crypto</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="sell-form">
+                                            <div class="form-group">
+                                                <label>Cryptocurrency</label>
+                                                <select name="coin_symbol" class="form-control" required>
+                                                    <option value="">Select cryptocurrency</option>
+                                                    <option value="BTC">Bitcoin (BTC)</option>
+                                                    <option value="ETH">Ethereum (ETH)</option>
+                                                    <option value="BNB">Binance Coin (BNB)</option>
+                                                    <option value="ADA">Cardano (ADA)</option>
+                                                    <option value="SOL">Solana (SOL)</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Amount</label>
+                                                <input type="number" name="amount" class="form-control" step="0.000001" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-danger">Sell</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prices Tab -->
+                    <div class="tab-pane fade" id="prices">
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Live Market Prices</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped" id="prices-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Asset</th>
+                                                        <th>Price</th>
+                                                        <th>24h Change</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Prices will be populated by JavaScript -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- History Tab -->
+                    <div class="tab-pane fade" id="history">
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Trade History</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped" id="trade-history-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Type</th>
+                                                        <th>Asset</th>
+                                                        <th>Quantity</th>
+                                                        <th>Price</th>
+                                                        <th>Total</th>
+                                                        <th>Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Trade history will be populated by JavaScript -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievements Tab -->
+                    <div class="tab-pane fade" id="achievements">
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Achievements</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row" id="achievements-container">
+                                            <!-- Achievements will be populated by JavaScript -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard Tab -->
+                    <div class="tab-pane fade" id="leaderboard">
+                        <div class="row">
+                            <div class="col-xl-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Leaderboard</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped" id="leaderboard-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Rank</th>
+                                                        <th>Level</th>
+                                                        <th>Portfolio Value</th>
+                                                        <th>Total Trades</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Leaderboard will be populated by JavaScript -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="./vendor/global/global.min.js"></script>
+    <script src="./vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="./vendor/chart.js/Chart.bundle.min.js"></script>
+    <script src="./js/custom.js"></script>
+    <script src="./js/deznav-init.js"></script>
+    
+    <!-- MotionFalcon API -->
+    <script src="./js/api.js"></script>
+    <script src="./js/enhanced-dashboard.js"></script>
+
+    <script>
+        // Update last updated time
+        function updateLastUpdated() {
+            const now = new Date();
+            document.getElementById('last-updated').textContent = now.toLocaleTimeString();
+        }
+        
+        // Update time every minute
+        setInterval(updateLastUpdated, 60000);
+        updateLastUpdated();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html lang="en" class="h-100">
+
+<head>
+    <meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="keywords" content="">
+	<meta name="author" content="">
+	<meta name="robots" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="CryptoZone : Crypto Trading Admin Bootstrap 5 Template">
+	<meta property="og:title" content="CryptoZone  :Crypto Trading Admin Bootstrap 5 Template">
+	<meta property="og:description" content="CryptoZone  :Crypto Trading Admin  Admin Bootstrap 5 Template">
+	<meta property="og:image" content="https://cryptozone.dexignzone.com/xhtml/social-image.png">
+	<meta name="format-detection" content="telephone=no">
+	
+	<!-- PAGE TITLE HERE -->
+	<title>MotionFalcon - Quick Login</title>
+	
+	<!-- FAVICONS ICON -->
+	<link rel="shortcut icon" type="image/png" href="images/favicon.png">
+	<link href="./vendor/jquery-nice-select/css/nice-select.css" rel="stylesheet">
+    <link href="./css/style.css" rel="stylesheet">
+
+</head>
+
+<body class="vh-100">
+	<div class="page-wraper">
+
+		<!-- Content -->
+		<div class="browse-job login-style3">
+			<!-- Coming Soon -->
+			<div class="bg-img-fix overflow-hidden" style="background:#fff url(images/background/bg6.jpg); height: 100vh;">
+				<div class="row gx-0">
+					<div class="col-xl-4 col-lg-5 col-md-6 col-sm-12 vh-100 bg-white ">
+						<div id="mCSB_1" class="mCustomScrollBox mCS-light mCSB_vertical mCSB_inside" style="max-height: 653px;" tabindex="0">
+							<div id="mCSB_1_container" class="mCSB_container" style="position:relative; top:0; left:0;" dir="ltr">
+								<div class="login-form style-2">
+									
+									
+									<div class="card-body">
+										<div class="logo-header">
+											<a href="index.html" class="logo"><img src="images/logo/logo-full.png" alt="" class="width-230 mCS_img_loaded"></a>
+										</div>
+									
+										<nav>
+											<div class="nav nav-tabs border-bottom-0" id="nav-tab" role="tablist">
+												
+										<div class="tab-content w-100" id="nav-tabContent">
+										  <div class="tab-pane fade show active" id="nav-personal" role="tabpanel" aria-labelledby="nav-personal-tab">
+											<div class="dz-form pb-3">
+													<h3 class="form-title m-t0">Quick Login</h3>
+													<div class="dz-separator-outer m-b5">
+														<div class="dz-separator bg-primary style-liner"></div>
+													</div>
+													<p>Use the demo credentials to quickly access the dashboard.</p>
+													
+													<div class="alert alert-info mb-4">
+														<strong>Demo Credentials:</strong><br>
+														Email: integration@test.com<br>
+														Password: testpass123
+													</div>
+													
+													<div class="form-group mb-3">
+														<button type="button" onclick="autoLogin()" class="btn btn-primary dz-xs-flex m-r5 btn-block">🔐 Auto Login (Demo)</button>
+													</div>
+													<div class="form-group mb-3">
+														<button type="button" onclick="testLogin()" class="btn btn-outline-primary dz-xs-flex m-r5 btn-block">🧪 Test Login</button>
+													</div>
+													<div class="form-group mb-3">
+														<button type="button" onclick="clearAuth()" class="btn btn-outline-secondary dz-xs-flex m-r5 btn-block">🗑️ Clear Auth</button>
+													</div>
+													<div class="form-group mb-3">
+														<button type="button" onclick="goToDashboard()" class="btn btn-outline-info dz-xs-flex m-r5 btn-block">📊 Go to Dashboard</button>
+													</div>
+													
+													<div id="status" class="alert alert-info" style="display: none;"></div>
+													<div id="result"></div>
+													
+													<div class="text-center bottom"> 
+														<a href="page-login.html" class="btn btn-primary button-md btn-block">Go to Full Login Page</a> 
+													</div>
+										  </div>
+
+    <script src="./js/api.js"></script>
+    <script>
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.display = 'block';
+            
+            // Update alert classes based on type
+            status.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : type === 'loading' ? 'warning' : 'info'}`;
+        }
+
+        function showResult(content, isSuccess = true) {
+            const result = document.getElementById('result');
+            result.innerHTML = `<div class="alert alert-${isSuccess ? 'success' : 'danger'} mb-3" style="font-family: monospace; white-space: pre-wrap; font-size: 12px;">${content}</div>`;
+        }
+
+        async function autoLogin() {
+            updateStatus('Logging in automatically...', 'loading');
+            
+            try {
+                const response = await api.login('integration@test.com', 'testpass123');
+                updateStatus('✅ Login successful! Redirecting to dashboard...', 'success');
+                showResult(`Login successful!\nToken: ${response.access_token ? 'Received' : 'None'}\nUser: ${JSON.stringify(response.user || {}, null, 2)}`);
+                
+                // Redirect to dashboard after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                
+            } catch (error) {
+                updateStatus('❌ Login failed', 'error');
+                showResult(`Login failed: ${error.message}`, false);
+            }
+        }
+
+        async function testLogin() {
+            updateStatus('Testing login...', 'loading');
+            
+            try {
+                const response = await api.login('integration@test.com', 'testpass123');
+                updateStatus('✅ Login test successful!', 'success');
+                showResult(`Login test successful!\nToken: ${response.access_token ? 'Received' : 'None'}\nUser: ${JSON.stringify(response.user || {}, null, 2)}`);
+            } catch (error) {
+                updateStatus('❌ Login test failed', 'error');
+                showResult(`Login test failed: ${error.message}`, false);
+            }
+        }
+
+        function clearAuth() {
+            api.clearToken();
+            localStorage.clear();
+            sessionStorage.clear();
+            updateStatus('✅ Authentication cleared', 'success');
+            showResult('All authentication data has been cleared.');
+        }
+
+        function goToDashboard() {
+            window.location.href = 'index.html';
+        }
+
+        // Check current auth status on page load
+        window.onload = function() {
+            const isAuth = MotionFalconUI.isAuthenticated();
+            if (isAuth) {
+                updateStatus('✅ Already authenticated! You can go to the dashboard.', 'success');
+                showResult('You are already logged in. You can go to the dashboard.');
+            } else {
+                updateStatus('❌ Not authenticated. Use the buttons above to login.', 'error');
+                showResult('You are not logged in. Use the buttons above to login.');
+            }
+        };
+    </script>
+</body>
+</html> 

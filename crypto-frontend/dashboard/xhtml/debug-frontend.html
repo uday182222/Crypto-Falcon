@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Frontend Debug - MotionFalcon</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+        .debug-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: white; }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .warning { border-left: 4px solid #ffc107; }
+        .info { border-left: 4px solid #17a2b8; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .status { padding: 8px 12px; border-radius: 4px; color: white; font-weight: bold; }
+        .status.success { background: #28a745; }
+        .status.error { background: #dc3545; }
+        .status.warning { background: #ffc107; color: #212529; }
+        .status.info { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>🔍 MotionFalcon Frontend Debug</h1>
+    
+    <div class="debug-section info">
+        <h3>📋 Debug Information</h3>
+        <p>This page will help us diagnose what's happening with the frontend integration.</p>
+        <button onclick="runDebugTests()">Run All Debug Tests</button>
+        <button onclick="checkAuthentication()">Check Authentication</button>
+        <button onclick="testAPIConnection()">Test API Connection</button>
+        <button onclick="checkJavaScriptFiles()">Check JS Files</button>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🔐 Authentication Status</h3>
+        <div id="auth-status">Checking...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🌐 API Connection</h3>
+        <div id="api-status">Checking...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>📁 JavaScript Files</h3>
+        <div id="js-status">Checking...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>📊 Data Loading</h3>
+        <div id="data-status">Waiting...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🐛 Console Logs</h3>
+        <div id="console-logs">No logs yet...</div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        const logs = [];
+        
+        function captureLog(level, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            
+            logs.push({ timestamp, level, message });
+            updateConsoleLogs();
+        }
+        
+        console.log = (...args) => {
+            captureLog('log', ...args);
+            originalLog.apply(console, args);
+        };
+        
+        console.error = (...args) => {
+            captureLog('error', ...args);
+            originalError.apply(console, args);
+        };
+        
+        console.warn = (...args) => {
+            captureLog('warn', ...args);
+            originalWarn.apply(console, args);
+        };
+        
+        function updateConsoleLogs() {
+            const logsDiv = document.getElementById('console-logs');
+            logsDiv.innerHTML = logs.map(log => 
+                `<div class="status ${log.level}">[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}</div>`
+            ).join('');
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function checkAuthentication() {
+            showStatus('auth-status', 'Checking authentication...', 'info');
+            
+            try {
+                // Check if API object exists
+                if (typeof api === 'undefined') {
+                    showStatus('auth-status', '❌ API object not found - api.js not loaded', 'error');
+                    return;
+                }
+                
+                // Check if user is authenticated
+                const isAuth = api.isAuthenticated();
+                if (isAuth) {
+                    showStatus('auth-status', '✅ User is authenticated', 'success');
+                    
+                    // Try to get user profile
+                    try {
+                        const profile = await api.getProfile();
+                        showStatus('auth-status', `✅ Authenticated as: ${profile.username || profile.email}`, 'success');
+                    } catch (error) {
+                        showStatus('auth-status', `⚠️ Authenticated but profile fetch failed: ${error.message}`, 'warning');
+                    }
+                } else {
+                    showStatus('auth-status', '❌ User not authenticated - redirecting to login', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'page-login.html';
+                    }, 2000);
+                }
+            } catch (error) {
+                showStatus('auth-status', `❌ Authentication check failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testAPIConnection() {
+            showStatus('api-status', 'Testing API connection...', 'info');
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('api-status', `✅ Backend connected: ${data.status}`, 'success');
+                } else {
+                    showStatus('api-status', `❌ Backend error: ${data.detail || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showStatus('api-status', `❌ Backend connection failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkJavaScriptFiles() {
+            showStatus('js-status', 'Checking JavaScript files...', 'info');
+            
+            const requiredFiles = [
+                'js/api.js',
+                'js/production-dashboard.js',
+                'js/dashboard-light-integration.js'
+            ];
+            
+            const results = [];
+            
+            requiredFiles.forEach(file => {
+                const script = document.createElement('script');
+                script.src = file;
+                script.onload = () => results.push(`✅ ${file} loaded`);
+                script.onerror = () => results.push(`❌ ${file} failed to load`);
+                
+                // Check if already loaded
+                const existingScript = document.querySelector(`script[src="${file}"]`);
+                if (existingScript) {
+                    results.push(`✅ ${file} already loaded`);
+                }
+            });
+            
+            setTimeout(() => {
+                showStatus('js-status', results.join('<br>'), results.some(r => r.includes('❌')) ? 'error' : 'success');
+            }, 1000);
+        }
+        
+        async function runDebugTests() {
+            console.log('🔍 Starting comprehensive debug tests...');
+            
+            // Run all tests
+            await checkAuthentication();
+            await testAPIConnection();
+            checkJavaScriptFiles();
+            
+            // Test data loading
+            showStatus('data-status', 'Testing data loading...', 'info');
+            
+            try {
+                if (typeof api !== 'undefined' && api.isAuthenticated()) {
+                    const promises = [
+                        api.getPrices().catch(e => ({ error: e.message })),
+                        api.getPortfolio().catch(e => ({ error: e.message })),
+                        api.getProfile().catch(e => ({ error: e.message }))
+                    ];
+                    
+                    const results = await Promise.allSettled(promises);
+                    const successCount = results.filter(r => r.status === 'fulfilled' && !r.value.error).length;
+                    
+                    showStatus('data-status', `✅ ${successCount}/3 data endpoints working`, 'success');
+                } else {
+                    showStatus('data-status', '⚠️ Skipping data tests - not authenticated', 'warning');
+                }
+            } catch (error) {
+                showStatus('data-status', `❌ Data loading failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run basic checks on page load
+        window.onload = function() {
+            console.log('🚀 Frontend debug page loaded');
+            checkJavaScriptFiles();
+            testAPIConnection();
+        };
+    </script>
+    
+    <!-- Load the API scripts -->
+    <script src="./js/api.js"></script>
+    <script src="./js/production-dashboard.js"></script>
+    <script src="./js/dashboard-light-integration.js"></script>
+</body>
+</html> 

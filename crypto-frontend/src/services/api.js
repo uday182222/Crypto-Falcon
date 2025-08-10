@@ -1,104 +1,179 @@
-import axios from 'axios';
+// MotionFalcon API Service for React Components
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
-const API_URL = 'https://crypto-falcon-backend.onrender.com';
+class MotionFalconAPI {
+  constructor() {
+    this.baseURL = API_BASE_URL;
+    this.token = localStorage.getItem('motionfalcon_token');
+  }
 
-// Create axios instance with base URL
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+  // Set authentication token
+  setToken(token) {
+    this.token = token;
+    localStorage.setItem('motionfalcon_token', token);
+  }
 
-// Add token to requests if available
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+  // Clear authentication token
+  clearToken() {
+    this.token = null;
+    localStorage.removeItem('motionfalcon_token');
+  }
+
+  // Get headers for API requests
+  getHeaders() {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
-    return config;
-});
+    
+    return headers;
+  }
 
-// Error handling utility
-export const handleApiError = (error) => {
-    if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        const data = error.response.data;
-        if (data.detail) {
-            return data.detail;
-        } else if (typeof data === 'string') {
-            return data;
+  // Generic API request method
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const config = {
+      headers: this.getHeaders(),
+      ...options
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
+    }
+  }
+
+  // Convenience methods
+  async get(endpoint) {
+    return await this.request(endpoint, { method: 'GET' });
+  }
+
+  async post(endpoint, body) {
+    return await this.request(endpoint, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  async put(endpoint, body) {
+    return await this.request(endpoint, {
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
+
+  async delete(endpoint) {
+    return await this.request(endpoint, { method: 'DELETE' });
+  }
+
+  // Check if user is authenticated
+  isAuthenticated() {
+    return !!this.token;
+  }
+
+  // Login method
+  async login(email, password) {
+    const url = `${this.baseURL}/simple-login?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         }
-        return 'An error occurred while processing your request';
-    } else if (error.request) {
-        // The request was made but no response was received
-        return 'No response received from server. Please check your connection';
-    } else {
-        // Something happened in setting up the request that triggered an Error
-        return error.message || 'An unexpected error occurred';
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.access_token) {
+        this.setToken(data.access_token);
+        return { success: true, data };
+      } else {
+        throw new Error('No access token received');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
+  }
+
+  // Logout method
+  logout() {
+    this.clearToken();
+    // Redirect to login page
+    window.location.href = '/login';
+  }
+}
+
+// Create and export API instances
+export const api = new MotionFalconAPI();
+
+// Export specific API services
+export const achievementsAPI = {
+  // Get user's achievements
+  getUserAchievements: async () => {
+    try {
+      const response = await api.get('/achievements/user');
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Get all available achievements
+  getAllAchievements: async () => {
+    try {
+      const response = await api.get('/achievements/stats');
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Update login streak
+  updateLoginStreak: async () => {
+    try {
+      const response = await api.post('/achievements/login-streak');
+      return { success: true, data: response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 };
 
-// Trading API object
-export const tradingAPI = {
-    getPortfolio: () => api.get('/trade/portfolio'),
-    getCryptoPrices: () => api.get('/trade/prices'),
-    executeTrade: (data) => api.post('/trade/buy', data),
-    getSupportedCoins: () => api.get('/trade/supported-coins'),
-    getPrice: (symbol) => api.get(`/trade/price/${symbol}`),
-    buyTrade: (data) => api.post('/trade/buy', data),
-    sellTrade: (data) => api.post('/trade/sell', data),
+export const authAPI = {
+  login: async (email, password) => {
+    try {
+      const response = await api.login(email, password);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  logout: () => {
+    api.logout();
+  },
+
+  isAuthenticated: () => {
+    return api.isAuthenticated();
+  }
 };
 
-// Achievement API object
-export const achievementAPI = {
-    getUserAchievements: () => api.get('/achievements/user'),
-    getAchievements: () => api.get('/achievements'),
-    checkAchievements: () => api.post('/achievements/check'),
-    getAchievementStats: () => api.get('/achievements/stats'),
-    initializeAchievements: () => api.post('/achievements/initialize'),
-};
-
-// Leaderboard API object
-export const leaderboardAPI = {
-    getGlobalLeaderboard: () => api.get('/leaderboard/global'),
-    getWeeklyLeaderboard: () => api.get('/leaderboard/weekly'),
-    getMyRank: () => api.get('/leaderboard/my-rank'),
-    getLeaderboardStats: () => api.get('/leaderboard/stats'),
-    updateRankings: () => api.post('/leaderboard/update-rankings'),
-    getUserRank: (userId) => api.get(`/leaderboard/user/${userId}/rank`),
-};
-
-// Currency API functions
-export const getSupportedCurrencies = () => api.get('/currency/supported');
-export const updatePreferredCurrency = (data) => api.post('/currency/preference', data);
-export const getCurrencyRates = () => api.get('/currency/rates');
-
-// Auth endpoints
-export const register = (data) => api.post('/auth/register', data);
-export const login = (data) => api.post('/auth/login', data);
-export const getCurrentUser = () => api.get('/auth/profile');
-export const forgotPassword = (data) => api.post('/auth/forgot-password', data);
-export const resetPassword = (data) => api.post('/auth/reset-password', data);
-
-// Leaderboard endpoints
-export const getLeaderboard = () => api.get('/leaderboard/global');
-export const getWeeklyLeaderboard = () => api.get('/leaderboard/weekly');
-export const getMyRank = () => api.get('/leaderboard/my-rank');
-
-// Achievement endpoints (legacy - use achievementAPI instead)
-export const getAchievements = () => api.get('/achievements');
-export const getUserAchievements = () => api.get('/achievements/user');
-export const checkAchievements = () => api.post('/achievements/check');
-
-// Purchase API object
-export const purchaseAPI = {
-    getPackages: () => api.get('/purchases/packages'),
-    createOrder: (data) => api.post('/purchases/create-order', data),
-    createDirectTopupOrder: (data) => api.post('/purchases/create-direct-topup-order', data),
-    verifyPayment: (data) => api.post('/purchases/verify-payment', data),
-    getPurchaseHistory: () => api.get('/purchases/history'),
-};
-
-export default api; 
+export default api;

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>API Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .loading { background-color: #fff3cd; border-color: #ffeaa7; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Debug Test</h1>
+    
+    <div class="test-section">
+        <h3>Backend Status</h3>
+        <button onclick="testBackendStatus()">Test Backend</button>
+        <div id="backend-status"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Market Data</h3>
+        <button onclick="testMarketData()">Test Market Data</button>
+        <div id="market-data"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Authentication</h3>
+        <button onclick="testAuth()">Test Auth</button>
+        <div id="auth-test"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>API.js Test</h3>
+        <button onclick="testAPIjs()">Test API.js</button>
+        <div id="api-test"></div>
+    </div>
+
+    <script>
+        function showResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<pre>${content}</pre>`;
+            element.className = `test-section ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '<p>Loading...</p>';
+            element.className = 'test-section loading';
+        }
+
+        async function testBackendStatus() {
+            showLoading('backend-status');
+            try {
+                const response = await fetch('http://127.0.0.1:8000/');
+                const data = await response.json();
+                showResult('backend-status', `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('backend-status', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function testMarketData() {
+            showLoading('market-data');
+            try {
+                const response = await fetch('http://127.0.0.1:8000/trade/prices');
+                const data = await response.json();
+                showResult('market-data', `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('market-data', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function testAuth() {
+            showLoading('auth-test');
+            try {
+                const response = await fetch('http://127.0.0.1:8000/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'debugtest',
+                        email: 'debug@test.com',
+                        password: 'testpass123'
+                    })
+                });
+                const data = await response.json();
+                showResult('auth-test', `Status: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`);
+            } catch (error) {
+                showResult('auth-test', `Error: ${error.message}`, false);
+            }
+        }
+
+        async function testAPIjs() {
+            showLoading('api-test');
+            try {
+                // Load the API.js file
+                const script = document.createElement('script');
+                script.src = './js/api.js';
+                script.onload = () => {
+                    if (typeof api !== 'undefined') {
+                        showResult('api-test', 'API.js loaded successfully!\nAPI object available: ' + typeof api);
+                    } else {
+                        showResult('api-test', 'API.js loaded but api object not found', false);
+                    }
+                };
+                script.onerror = () => {
+                    showResult('api-test', 'Failed to load API.js', false);
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                showResult('api-test', `Error: ${error.message}`, false);
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            setTimeout(testBackendStatus, 500);
+            setTimeout(testMarketData, 1000);
+        };
+    </script>
+</body>
+</html> 

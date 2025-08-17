@@ -27,6 +27,14 @@ class UserResponse(UserBase):
     xp_first_gain_awarded: bool
     xp_lost_all_awarded: bool
     xp_best_rank: Optional[int]
+    
+    # Additional profile fields
+    bio: Optional[str] = None
+    location: Optional[str] = None
+    website: Optional[str] = None
+    phone: Optional[str] = None
+    preferred_currency: str = 'USD'
+    preferences: Optional[str] = None
 
     class Config:
         orm_mode = True

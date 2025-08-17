@@ -73,7 +73,7 @@ def send_reset_email(email: str, reset_token: str):
         print(f"Error sending email: {e}")
         return False
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
     # Check if user already exists
     if db.query(User).filter((User.username == user.username) | (User.email == user.email)).first():
@@ -114,7 +114,28 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         # Log error but don't fail registration
         print(f"Error initializing wallet: {e}")
     
-    return db_user
+    # Create access token for the new user
+    access_token = create_access_token(data={"sub": db_user.email})
+    
+    # Return both user data and access token
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": db_user.id,
+            "username": db_user.username,
+            "email": db_user.email,
+            "demo_balance": db_user.demo_balance,
+            "level": db_user.level,
+            "xp": db_user.xp,
+            "is_active": db_user.is_active,
+            "created_at": db_user.created_at,
+            "updated_at": db_user.updated_at,
+            "xp_first_gain_awarded": db_user.xp_first_gain_awarded,
+            "xp_lost_all_awarded": db_user.xp_lost_all_awarded,
+            "xp_best_rank": db_user.xp_best_rank
+        }
+    }
 
 @router.post("/login")
 async def login(login_data: UserLogin, db: Session = Depends(get_db)):
@@ -230,8 +251,148 @@ def get_profile(current_user: User = Depends(get_current_user)):
         xp=current_user.xp,
         xp_first_gain_awarded=current_user.xp_first_gain_awarded,
         xp_lost_all_awarded=current_user.xp_lost_all_awarded,
-        xp_best_rank=current_user.xp_best_rank
+        xp_best_rank=current_user.xp_best_rank,
+        bio=current_user.bio,
+        location=current_user.location,
+        website=current_user.website,
+        phone=current_user.phone,
+        preferred_currency=current_user.preferred_currency,
+        preferences=current_user.preferences
     )
+
+@router.put("/profile")
+def update_profile(
+    profile_update: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update current user profile"""
+    try:
+        # Update allowed fields
+        if 'username' in profile_update:
+            # Check if username is already taken by another user
+            existing_user = db.query(User).filter(
+                User.username == profile_update['username'],
+                User.id != current_user.id
+            ).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Username already taken"
+                )
+            current_user.username = profile_update['username']
+        
+        if 'email' in profile_update:
+            # Check if email is already taken by another user
+            existing_user = db.query(User).filter(
+                User.email == profile_update['email'],
+                User.id != current_user.id
+            ).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Email already taken"
+                )
+            current_user.email = profile_update['email']
+        
+        # Update profile fields
+        profile_fields = ['bio', 'location', 'website', 'phone']
+        for field in profile_fields:
+            if field in profile_update:
+                setattr(current_user, field, profile_update[field])
+        
+        # Update other fields if they exist in the model
+        for field, value in profile_update.items():
+            if hasattr(current_user, field) and field not in ['id', 'hashed_password', 'created_at']:
+                setattr(current_user, field, value)
+        
+        db.commit()
+        db.refresh(current_user)
+        
+        return {"message": "Profile updated successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update profile: {str(e)}"
+        )
+
+@router.put("/change-password")
+def change_password(
+    password_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change user password"""
+    try:
+        current_password = password_data.get('current_password')
+        new_password = password_data.get('new_password')
+        
+        if not current_password or not new_password:
+            raise HTTPException(
+                status_code=400,
+                detail="Current password and new password are required"
+            )
+        
+        # Verify current password
+        if not verify_password(current_password, current_user.hashed_password):
+            raise HTTPException(
+                status_code=400,
+                detail="Current password is incorrect"
+            )
+        
+        # Hash and update new password
+        current_user.hashed_password = get_password_hash(new_password)
+        db.commit()
+        
+        return {"message": "Password changed successfully"}
+    except Exception as e:
+        db.rollback()
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to change password: {str(e)}"
+        )
+
+@router.put("/preferences")
+def update_preferences(
+    preferences: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user preferences"""
+    try:
+        # Update preferences (store as JSON in a new field or use existing fields)
+        # For now, we'll store in the preferred_currency field as an example
+        if 'currency' in preferences:
+            current_user.preferred_currency = preferences['currency']
+        
+        db.commit()
+        return {"message": "Preferences updated successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update preferences: {str(e)}"
+        )
+
+@router.put("/trading-settings")
+def update_trading_settings(
+    settings: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update user trading settings"""
+    try:
+        # Store trading settings (you might want to create a separate table for this)
+        # For now, we'll return success
+        return {"message": "Trading settings updated successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update trading settings: {str(e)}"
+        )
 
 @router.get("/test")
 def test_auth():

@@ -14,7 +14,7 @@ class WalletService:
         """Get user's wallet"""
         return self.db.query(Wallet).filter(Wallet.user_id == user_id).first()
     
-    def create_wallet(self, user_id: int, initial_balance: Decimal = Decimal('100000.0')) -> Wallet:
+    def create_wallet(self, user_id: int, initial_balance: Decimal = Decimal('1000.0')) -> Wallet:
         """Create a new wallet for user with initial balance"""
         wallet = Wallet(
             user_id=user_id,
@@ -89,7 +89,7 @@ class WalletService:
             'is_active': True
         }
     
-    def reset_wallet(self, user_id: int, new_balance: Decimal = Decimal('100000.0')) -> dict:
+    def reset_wallet(self, user_id: int, new_balance: Decimal = Decimal('1000.0')) -> dict:
         """Reset wallet to initial balance (admin function)"""
         wallet = self.get_or_create_wallet(user_id)
         previous_balance = wallet.balance

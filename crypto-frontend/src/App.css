@@ -1,0 +1,183 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%);
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Utility Classes */
+.glow-effect {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass {
+  background: rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease;
+}
+
+/* Hover effects */
+.glow-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .App {
+    padding: 1rem;
+  }
+  
+  /* Landing page responsive */
+  .landing-page nav {
+    padding: 1rem;
+  }
+  
+  .landing-page nav > div {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .landing-page section {
+    padding: 4rem 1rem 2rem;
+  }
+  
+  .landing-page h1 {
+    font-size: 2.5rem !important;
+  }
+  
+  .landing-page h2 {
+    font-size: 2rem !important;
+  }
+  
+  /* Form responsive */
+  .landing-page form {
+    padding: 1.5rem;
+  }
+  
+  /* Grid responsive */
+  .landing-page .features-grid,
+  .landing-page .stats-grid,
+  .landing-page .testimonials-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Registration page responsive */
+  .register-page .benefits-section {
+    display: none !important;
+  }
+  
+  .register-page .form-container {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Additional responsive utilities */
+@media (max-width: 480px) {
+  .landing-page h1 {
+    font-size: 2rem !important;
+  }
+  
+  .landing-page h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  .landing-page .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .landing-page .hero-buttons button {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Error states */
+.error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Success states */
+.success {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}

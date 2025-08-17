@@ -52,7 +52,7 @@ def simple_login(email: str, password: str):
             "id": 1,
             "username": username,
             "email": email,
-            "demo_balance": 100000.0
+            "demo_balance": 1000.0
         }
     }
 
@@ -73,7 +73,7 @@ def test_login(email: str, password: str):
             "id": 1,
             "username": username,
             "email": email,
-            "demo_balance": 100000.0,
+            "demo_balance": 1000.0,
             "level": 1,
             "xp": 0
         }
@@ -87,7 +87,7 @@ def test_register(username: str, email: str, password: str):
         "id": 2,
         "username": username,
         "email": email,
-        "demo_balance": 100000.0,
+        "demo_balance": 1000.0,
         "level": 1,
         "xp": 0,
         "message": "User registered successfully"

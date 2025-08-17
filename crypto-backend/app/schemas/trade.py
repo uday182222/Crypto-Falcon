@@ -49,7 +49,7 @@ class PortfolioHolding(BaseModel):
     profit_loss_percent: Decimal
 
 class PortfolioResponse(BaseModel):
-    demo_balance: Decimal
+    wallet_balance: Decimal
     total_portfolio_value: Decimal
     total_invested: Decimal
     total_profit_loss: Decimal

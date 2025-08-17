@@ -55,6 +55,8 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     # Special handling for test token
     if token == "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwidXNlcl9pZCI6MSwiZXhwIjoxNzM1NzQ0MDAwfQ.test-signature":
         # Return a mock user for testing
+        from datetime import datetime
+        
         class MockUser:
             def __init__(self):
                 self.id = 1
@@ -64,6 +66,18 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 self.level = 1
                 self.xp = 0
                 self.is_active = True
+                # Add missing attributes to prevent AttributeError
+                self.created_at = datetime(2024, 1, 1, 0, 0, 0)
+                self.updated_at = datetime(2024, 1, 1, 0, 0, 0)
+                self.xp_first_gain_awarded = False
+                self.xp_lost_all_awarded = False
+                self.xp_best_rank = 0
+                self.bio = "Test user bio"
+                self.location = "Test Location"
+                self.website = "https://example.com"
+                self.phone = "+1234567890"
+                self.preferred_currency = "USD"
+                self.preferences = "{}"  # JSON string as expected by schema
         
         return MockUser()
     

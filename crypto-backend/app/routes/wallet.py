@@ -2,10 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from decimal import Decimal
 from datetime import datetime
+import razorpay
+import os
+import hmac
+import hashlib
 
 from app.auth import get_current_user
 from app.db import SessionLocal
 from app.models.user import User
+from app.models.wallet_transaction import WalletTransaction
 from app.services.wallet_service import WalletService
 from app.schemas.wallet import (
     WalletResponse,
@@ -14,7 +19,27 @@ from app.schemas.wallet import (
     WalletTransactionResponse
 )
 
+# Add new schema for top-up order
+from pydantic import BaseModel
+
+class WalletTopUpOrderRequest(BaseModel):
+    amount: float
+    package_id: str = None  # Optional package ID for game USD conversion
+
+class WalletTopUpVerifyRequest(BaseModel):
+    razorpay_payment_id: str
+    razorpay_order_id: str
+    razorpay_signature: str
+    amount: float
+    package_id: str = None  # Optional package ID for game USD conversion
+
 router = APIRouter(prefix="/wallet", tags=["wallet"])
+
+# Initialize Razorpay client
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_rjWYPFN2F7k22B")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "NPN4XO7rYHETmevYRTUu0UWO")
+
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 def get_db():
     db = SessionLocal()
@@ -217,3 +242,221 @@ async def get_balance(
         "currency": "USD",
         "last_updated": wallet.updated_at or wallet.created_at
     } 
+
+@router.post("/create-topup-order")
+async def create_wallet_topup_order(
+    request: WalletTopUpOrderRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a Razorpay order for wallet top-up"""
+    
+    if request.amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Amount must be greater than 0"
+        )
+    
+    # Add reasonable limits for test mode
+    if request.amount > 10000:  # Max ₹10,000 for test mode
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Amount cannot exceed ₹10,000 for test mode"
+        )
+    
+    if request.amount < 1:  # Min ₹1
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Amount must be at least ₹1"
+        )
+    
+    try:
+        # Amount is already in INR (sent from frontend)
+        amount_inr = request.amount
+        
+        # Create Razorpay order
+        order_data = {
+            "amount": int(amount_inr * 100),  # Amount in paise
+            "currency": "INR",
+            "receipt": f"wallet_topup_{current_user.id}_{int(datetime.utcnow().timestamp())}",
+            "notes": {
+                "user_id": str(current_user.id),
+                "amount_inr": str(request.amount),
+                "type": "wallet_topup"
+            }
+        }
+        
+        order = razorpay_client.order.create(data=order_data)
+        
+        return {
+            "success": True,
+            "order_id": order["id"],
+            "amount": request.amount,
+            "amount_inr": amount_inr,
+            "currency": "INR",
+            "receipt": order["receipt"]
+        }
+        
+    except Exception as e:
+        error_msg = str(e)
+        if "maximum amount" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Amount too high for test mode. Please try ₹1000 or less."
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create order: {error_msg}"
+            )
+
+@router.post("/verify-topup-payment")
+async def verify_wallet_topup_payment(
+    request: WalletTopUpVerifyRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Verify Razorpay payment and top up wallet"""
+    
+    try:
+        # Verify payment signature
+        text = f"{request.razorpay_order_id}|{request.razorpay_payment_id}"
+        generated_signature = hmac.new(
+            RAZORPAY_KEY_SECRET.encode(),
+            text.encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if generated_signature != request.razorpay_signature:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid payment signature"
+            )
+        
+        # Verify payment with Razorpay
+        payment = razorpay_client.payment.fetch(request.razorpay_payment_id)
+        
+        if payment["status"] != "captured":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Payment not completed"
+            )
+        
+        if payment["order_id"] != request.razorpay_order_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Order ID mismatch"
+            )
+        
+        # Top up wallet with game USD amount based on package
+        # Use package ID to determine the exact USD amount to give
+        game_usd_amount = 0
+        
+        if request.package_id:
+            # Package-based top-up
+            if request.package_id == 'starter':
+                game_usd_amount = 50000  # ₹100 = 50,000 USD
+            elif request.package_id == 'pro':
+                game_usd_amount = 150000  # ₹250 = 150,000 USD
+            elif request.package_id == 'premium':
+                game_usd_amount = 350000  # ₹500 = 350,000 USD
+            elif request.package_id == 'ultimate':
+                game_usd_amount = 800000  # ₹1000 = 800,000 USD
+            elif request.package_id == 'starter-premium':
+                game_usd_amount = 50000  # ₹99 = 50,000 USD
+            elif request.package_id == 'pro-premium':
+                game_usd_amount = 150000  # ₹299 = 150,000 USD
+            elif request.package_id == 'premium-pack':
+                game_usd_amount = 350000  # ₹599 = 350,000 USD
+            elif request.package_id == 'ultimate-premium':
+                game_usd_amount = 800000  # ₹999 = 800,000 USD
+            elif request.package_id == 'custom':
+                # Custom top-up amount - amount is in INR
+                # For custom top-up, assume ₹1 = 500 USD in game
+                game_usd_amount = request.amount * 500  # Direct conversion
+            else:
+                # Fallback: calculate based on amount
+                game_usd_amount = request.amount * 500  # Default: ₹1 = 500 USD
+        else:
+            # Direct top-up (custom amount)
+            game_usd_amount = request.amount * 500  # Default: ₹1 = 500 USD
+        
+        wallet_service = WalletService(db)
+        result = wallet_service.top_up_wallet(current_user.id, Decimal(str(game_usd_amount)))
+        
+        # Store the transaction in the database
+        transaction = WalletTransaction(
+            user_id=current_user.id,
+            transaction_type='topup' if request.package_id == 'custom' else 'package',
+            amount=Decimal(str(game_usd_amount)),
+            currency='USD',
+            payment_id=request.razorpay_payment_id,
+            order_id=request.razorpay_order_id,
+            package_id=request.package_id,
+            description=f"Added ${game_usd_amount:,} USD to wallet",
+            status='completed'
+        )
+        
+        db.add(transaction)
+        db.commit()
+        db.refresh(transaction)
+        
+        return {
+            "success": True,
+            "payment_id": request.razorpay_payment_id,
+            "order_id": request.razorpay_order_id,
+            "amount_added": game_usd_amount,
+            "new_balance": float(result['new_balance']),
+            "previous_balance": float(result['previous_balance']),
+            "message": f"Successfully added ${game_usd_amount:,} USD to wallet",
+            "timestamp": result['timestamp']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Payment verification failed: {str(e)}"
+        )
+
+@router.get("/transactions")
+async def get_wallet_transactions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's wallet transaction history"""
+    
+    try:
+        # Query wallet transactions for the current user
+        transactions = db.query(WalletTransaction).filter(
+            WalletTransaction.user_id == current_user.id
+        ).order_by(WalletTransaction.created_at.desc()).all()
+        
+        # Convert to response format
+        transaction_list = []
+        for tx in transactions:
+            transaction_list.append({
+                "id": tx.id,
+                "type": tx.transaction_type,
+                "amount": float(tx.amount),
+                "currency": tx.currency,
+                "payment_id": tx.payment_id,
+                "order_id": tx.order_id,
+                "package_id": tx.package_id,
+                "description": tx.description,
+                "status": tx.status,
+                "timestamp": tx.created_at.isoformat() if tx.created_at else None
+            })
+        
+        return {
+            "success": True,
+            "data": transaction_list,
+            "count": len(transaction_list)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch transactions: {str(e)}"
+        ) 

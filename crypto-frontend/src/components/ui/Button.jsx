@@ -105,9 +105,21 @@ const Button = ({
     ghost: {
       background: 'transparent',
       color: '#6b7280',
+      border: 'none',
       '&:hover': {
         background: 'rgba(107, 114, 128, 0.1)',
-        color: '#374151'
+        color: '#374151',
+        transform: 'translateY(-2px)'
+      }
+    },
+    white: {
+      background: 'white',
+      color: '#1e293b',
+      boxShadow: '0 4px 15px rgba(255, 255, 255, 0.3)',
+      '&:hover': {
+        background: '#f8fafc',
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 20px rgba(255, 255, 255, 0.4)'
       }
     }
   };

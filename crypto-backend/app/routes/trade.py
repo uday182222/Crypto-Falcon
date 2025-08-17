@@ -404,7 +404,7 @@ async def get_portfolio(
             total_profit_loss_percent = (total_profit_loss / total_invested * 100) if total_invested > 0 else Decimal('0')
             
             return PortfolioResponse(
-                demo_balance=Decimal('100000.0'),
+                wallet_balance=Decimal('1000.0'),
                 total_portfolio_value=total_value,
                 total_invested=total_invested,
                 total_profit_loss=total_profit_loss,
@@ -479,7 +479,7 @@ async def get_portfolio(
         wallet = wallet_service.get_or_create_wallet(current_user.id)
         
         return PortfolioResponse(
-            demo_balance=wallet.balance,
+            wallet_balance=wallet.balance,
             total_portfolio_value=total_value,
             total_invested=total_cost,
             total_profit_loss=total_pnl,

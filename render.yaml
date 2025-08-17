@@ -1,38 +1,20 @@
 services:
-  # ---------- Database ----------
-  - type: pserv
-    name: motionfalcon-postgres
-    runtime: postgres
-    plan: starter
-    disk:
-      name: data
-      mountPath: /var/lib/postgresql/data
-      sizeGB: 10
-    envVars:
-      - key: POSTGRES_USER
-        value: motionfalcon
-      - key: POSTGRES_DB
-        value: motionfalcon
-
-  # ---------- Backend (FastAPI) ----------
+  # --- Backend API (FastAPI) ---
   - type: web
     name: motionfalcon-backend
     env: python
-    rootDir: crypto-backend
-    plan: starter
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
-    preDeployCommand: |
-      alembic upgrade head
     startCommand: |
-      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+      alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    workingDirectory: crypto-backend
     healthCheckPath: /healthz
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: motionfalcon-postgres
+          name: crypto-db
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
@@ -43,25 +25,31 @@ services:
       - key: ENV
         value: production
       - key: ALLOWED_ORIGINS
-        value: https://motionfalcon-frontend.onrender.com
+        value: https://crypto-frontend.onrender.com
+      - key: PYTHONUNBUFFERED
+        value: "1"
       # Razorpay (add via dashboard)
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
 
-  # ---------- Frontend (React + Vite) ----------
+  # --- Frontend (React + Vite) ---
   - type: web
-    name: motionfalcon-frontend
+    name: crypto-frontend
     env: static
-    rootDir: crypto-frontend
-    plan: starter
     buildCommand: |
       npm ci
       npm run build
-    staticPublishPath: dist
+    publishPath: dist
+    workingDirectory: crypto-frontend
+    autoDeploy: true
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://motionfalcon-backend.onrender.com
+        value: https://crypto-backend.onrender.com
       - key: VITE_APP_ENV
-        value: production 
+        value: production
+
+databases:
+  - name: crypto-db
+    plan: free 

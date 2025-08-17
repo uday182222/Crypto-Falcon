@@ -171,7 +171,25 @@ async def login(login_data: UserLogin, db: Session = Depends(get_db)):
     # Create access token
     access_token = create_access_token(data={"sub": user.email})
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Return both access token and user data (matching register endpoint)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "demo_balance": user.demo_balance,
+            "level": user.level,
+            "xp": user.xp,
+            "is_active": user.is_active,
+            "created_at": user.created_at,
+            "updated_at": user.updated_at,
+            "xp_first_gain_awarded": user.xp_first_gain_awarded,
+            "xp_lost_all_awarded": user.xp_lost_all_awarded,
+            "xp_best_rank": user.xp_best_rank
+        }
+    }
 
 @router.post("/forgot-password")
 async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):

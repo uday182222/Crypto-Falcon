@@ -1,5 +1,5 @@
 // MotionFalcon API Service for React Components
-const API_BASE_URL = '/api';
+const API_BASE_URL = '';
 
 class MotionFalconAPI {
   constructor() {

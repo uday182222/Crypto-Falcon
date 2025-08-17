@@ -37,7 +37,7 @@ services:
 
   # Frontend Web Service (converted from static site)
   - type: web
-    name: motionfalcon-frontend
+    name: motionfalcon-frontend-v2
     env: node
     plan: starter
     rootDir: crypto-frontend

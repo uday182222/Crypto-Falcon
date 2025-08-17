@@ -42,9 +42,19 @@ services:
     plan: starter
     rootDir: crypto-frontend
     buildCommand: |
-      npm install --legacy-peer-deps
+      npm ci --legacy-peer-deps
       npm run build
-    staticPublishPath: dist
+      echo "Build completed. Contents of dist directory:"
+      ls -la dist/
+      echo "Current working directory:"
+      pwd
+      echo "Verifying dist directory exists:"
+      test -d dist && echo "dist directory exists" || echo "dist directory does not exist"
+      echo "Copying dist contents to root for alternative deployment:"
+      cp -r dist/* ./
+      echo "Root directory contents after copy:"
+      ls -la
+    staticPublishPath: .
     envVars:
       - key: VITE_API_URL
         value: https://motionfalcon-backend.onrender.com

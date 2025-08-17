@@ -75,121 +75,173 @@ def send_reset_email(email: str, reset_token: str):
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    # Check if user already exists
-    if db.query(User).filter((User.username == user.username) | (User.email == user.email)).first():
-        raise HTTPException(
-            status_code=400, 
-            detail="Username or email already registered"
+    print(f"Registration attempt for user: {user.username}, email: {user.email}")
+    
+    try:
+        # Check if user already exists
+        existing_user = db.query(User).filter((User.username == user.username) | (User.email == user.email)).first()
+        if existing_user:
+            print(f"User already exists: {existing_user.username}")
+            raise HTTPException(
+                status_code=400, 
+                detail="Username or email already registered"
+            )
+        
+        print("User does not exist, proceeding with registration")
+        
+        # Hash password and create user with 100000 DemoCoins
+        hashed_password = get_password_hash(user.password)
+        db_user = User(
+            username=user.username, 
+            email=user.email, 
+            hashed_password=hashed_password,
+            demo_balance=100000.0,  # Seed with 100000 DemoCoins
+            level=1,                # Start at level 1
+            xp=0                    # Start with 0 XP
         )
-    
-    # Hash password and create user with 100000 DemoCoins
-    hashed_password = get_password_hash(user.password)
-    db_user = User(
-        username=user.username, 
-        email=user.email, 
-        hashed_password=hashed_password,
-        demo_balance=100000.0,  # Seed with 100000 DemoCoins
-        level=1,                # Start at level 1
-        xp=0                    # Start with 0 XP
-    )
-    
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    # Initialize achievements for new user
-    try:
-        achievement_service = AchievementService(db)
-        achievement_service.initialize_user_achievements(db_user)
-    except Exception as e:
-        # Log error but don't fail registration
-        print(f"Error initializing achievements: {e}")
-    
-    # Initialize wallet for new user
-    try:
-        from app.services.wallet_service import WalletService
-        wallet_service = WalletService(db)
-        wallet_service.create_wallet(db_user.id)
-    except Exception as e:
-        # Log error but don't fail registration
-        print(f"Error initializing wallet: {e}")
-    
-    # Create access token for the new user
-    access_token = create_access_token(data={"sub": db_user.email})
-    
-    # Return both user data and access token
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": db_user.id,
-            "username": db_user.username,
-            "email": db_user.email,
-            "demo_balance": db_user.demo_balance,
-            "level": db_user.level,
-            "xp": db_user.xp,
-            "is_active": db_user.is_active,
-            "created_at": db_user.created_at,
-            "updated_at": db_user.updated_at,
-            "xp_first_gain_awarded": db_user.xp_first_gain_awarded,
-            "xp_lost_all_awarded": db_user.xp_lost_all_awarded,
-            "xp_best_rank": db_user.xp_best_rank
+        
+        print("User object created, adding to database")
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        print(f"User saved to database with ID: {db_user.id}")
+        
+        # Initialize achievements for new user
+        try:
+            achievement_service = AchievementService(db)
+            achievement_service.initialize_user_achievements(db_user)
+            print("Achievements initialized successfully")
+        except Exception as e:
+            # Log error but don't fail registration
+            print(f"Error initializing achievements: {e}")
+        
+        # Initialize wallet for new user
+        try:
+            from app.services.wallet_service import WalletService
+            wallet_service = WalletService(db)
+            wallet_service.create_wallet(db_user.id)
+            print("Wallet initialized successfully")
+        except Exception as e:
+            # Log error but don't fail registration
+            print(f"Error initializing wallet: {e}")
+        
+        # Create access token for the new user
+        access_token = create_access_token(data={"sub": db_user.email})
+        print("Access token created successfully")
+        
+        # Prepare response
+        response_data = {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": db_user.id,
+                "username": db_user.username,
+                "email": db_user.email,
+                "demo_balance": float(db_user.demo_balance),
+                "level": db_user.level,
+                "xp": db_user.xp,
+                "is_active": db_user.is_active,
+                "created_at": db_user.created_at,
+                "updated_at": db_user.updated_at,
+                "xp_first_gain_awarded": db_user.xp_first_gain_awarded,
+                "xp_lost_all_awarded": db_user.xp_lost_all_awarded,
+                "xp_best_rank": db_user.xp_best_rank
+            }
         }
-    }
+        
+        print(f"Registration successful, returning response: {response_data}")
+        return response_data
+        
+    except Exception as e:
+        print(f"Registration error: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Registration failed: {str(e)}"
+        )
 
 @router.post("/login")
 async def login(login_data: UserLogin, db: Session = Depends(get_db)):
-    # Find user by email
-    user = db.query(User).filter(User.email == login_data.email).first()
+    print(f"Login attempt for email: {login_data.email}")
     
-    if not user or not verify_password(login_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Update login streak
     try:
-        achievement_service = AchievementService(db)
-        await achievement_service.update_login_streak(user)
-    except Exception as e:
-        # Log error but don't fail login
-        print(f"Error updating login streak: {e}")
+        # Find user by email
+        user = db.query(User).filter(User.email == login_data.email).first()
+        
+        if not user:
+            print(f"User not found for email: {login_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if not verify_password(login_data.password, user.hashed_password):
+            print(f"Invalid password for user: {user.username}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        print(f"User authenticated successfully: {user.username}")
+        
+        # Update login streak
+        try:
+            achievement_service = AchievementService(db)
+            await achievement_service.update_login_streak(user)
+            print("Login streak updated successfully")
+        except Exception as e:
+            # Log error but don't fail login
+            print(f"Error updating login streak: {e}")
 
-    # XP system: Grant XP for login
-    def xp_needed(level):
-        return 100 + (level - 1) * 50
-    
-    user.xp += 10  # +10 XP for login
-    while user.xp >= xp_needed(user.level):
-        user.xp -= xp_needed(user.level)
-        user.level += 1
-    db.commit()
-    db.refresh(user)
-    
-    # Create access token
-    access_token = create_access_token(data={"sub": user.email})
-    
-    # Return both access token and user data (matching register endpoint)
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "demo_balance": user.demo_balance,
-            "level": user.level,
-            "xp": user.xp,
-            "is_active": user.is_active,
-            "created_at": user.created_at,
-            "updated_at": user.updated_at,
-            "xp_first_gain_awarded": user.xp_first_gain_awarded,
-            "xp_lost_all_awarded": user.xp_lost_all_awarded,
-            "xp_best_rank": user.xp_best_rank
+        # XP system: Grant XP for login
+        def xp_needed(level):
+            return 100 + (level - 1) * 50
+        
+        user.xp += 10  # +10 XP for login
+        while user.xp >= xp_needed(user.level):
+            user.xp -= xp_needed(user.level)
+            user.level += 1
+        db.commit()
+        db.refresh(user)
+        print(f"XP updated: {user.xp}, Level: {user.level}")
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user.email})
+        print("Access token created successfully")
+        
+        # Prepare response
+        response_data = {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "demo_balance": float(user.demo_balance),
+                "level": user.level,
+                "xp": user.xp,
+                "is_active": user.is_active,
+                "created_at": user.created_at,
+                "updated_at": user.updated_at,
+                "xp_first_gain_awarded": user.xp_first_gain_awarded,
+                "xp_lost_all_awarded": user.xp_lost_all_awarded,
+                "xp_best_rank": user.xp_best_rank
+            }
         }
-    }
+        
+        print(f"Login successful, returning response: {response_data}")
+        return response_data
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(
+            status_code=500,
+            detail=f"Login failed: {str(e)}"
+        )
 
 @router.post("/forgot-password")
 async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):

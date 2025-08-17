@@ -37,6 +37,15 @@ def read_root():
 def test_endpoint():
     return {"message": "Test endpoint working"}
 
+@app.post("/test-register")
+def test_register_endpoint():
+    """Test endpoint to verify registration is working"""
+    return {
+        "message": "Test registration endpoint working",
+        "timestamp": "2024-01-01T00:00:00Z",
+        "status": "success"
+    }
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "message": "Backend is running"}

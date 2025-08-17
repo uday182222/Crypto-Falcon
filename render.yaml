@@ -28,7 +28,7 @@ services:
         value: https://crypto-frontend.onrender.com
       - key: PYTHONUNBUFFERED
         value: "1"
-      # Razorpay (add via dashboard)
+      # Razorpay (set manually in dashboard)
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
@@ -46,10 +46,12 @@ services:
     autoDeploy: true
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://crypto-backend.onrender.com
+        value: https://motionfalcon-backend.onrender.com
       - key: VITE_APP_ENV
         value: production
 
 databases:
   - name: crypto-db
-    plan: free 
+    databaseName: crypto
+    user: crypto
+    plan: free

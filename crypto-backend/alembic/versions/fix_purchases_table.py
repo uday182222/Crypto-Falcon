@@ -51,7 +51,7 @@ def upgrade() -> None:
             sa.Column('id', sa.Integer(), nullable=False),
             sa.Column('name', sa.String(length=255), nullable=False),
             sa.Column('description', sa.Text(), nullable=False),
-                            sa.Column('type', sa.Enum('TRADING_MILESTONE', 'PROFIT_ACHIEVEMENT', 'DIVERSIFICATION', 'LOGIN_STREAK', 'VOLUME_REWARD', name='achievementtype'), nullable=False),
+            sa.Column('type', sa.Enum('trading_milestone', 'profit_achievement', 'diversification', 'login_streak', 'volume_reward', name='achievementtype'), nullable=False),
             sa.Column('icon', sa.String(length=255), nullable=False),
             sa.Column('requirement_value', sa.Numeric(precision=20, scale=8), nullable=False),
             sa.Column('requirement_type', sa.String(length=50), nullable=False),
@@ -93,11 +93,11 @@ def upgrade() -> None:
         if achievement_count == 0:
             op.execute("""
                 INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
-                                    ('First Trade', 'Complete your first trade', 'TRADING_MILESTONE', '🎯', 1, 'trades', 1000, 'Trader', true),
-                                    ('Profit Master', 'Make 10% profit on a trade', 'PROFIT_ACHIEVEMENT', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
-                    ('Diversifier', 'Hold 5 different cryptocurrencies', 'DIVERSIFICATION', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
-                    ('Login Streak', 'Login for 7 consecutive days', 'LOGIN_STREAK', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
-                    ('Volume Trader', 'Trade 1000 coins in total', 'VOLUME_REWARD', '📈', 1000, 'volume', 5000, 'Volume Master', true)
+                                    ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+                                    ('Profit Master', 'Make 10% profit on a trade', 'profit_achievement', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
+                    ('Diversifier', 'Hold 5 different cryptocurrencies', 'diversification', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
+                    ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
+                    ('Volume Trader', 'Trade 1000 coins in total', 'volume_reward', '📈', 1000, 'volume', 5000, 'Volume Master', true)
             """)
             print("Inserted default achievements")
     except Exception as e:

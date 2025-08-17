@@ -18,24 +18,36 @@ depends_on = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # The enum values should match the model definition (lowercase)
-    # No need to update existing data since the values are already correct
+    # Check if the achievements table exists and has the correct enum type
+    inspector = op.get_bind().dialect.inspector(op.get_bind())
+    tables = inspector.get_table_names()
     
-    # Drop the old enum type and recreate with correct lowercase values
-    op.execute("DROP TYPE IF EXISTS achievementtype CASCADE")
-    
-    # Create the enum with correct lowercase values (matching the model)
-    achievement_type = postgresql.ENUM('trading_milestone', 'profit_achievement', 'diversification', 'login_streak', 'volume_reward', name='achievementtype')
-    achievement_type.create(op.get_bind())
-    
-    # Update the achievements table to use the new enum
-    op.execute("""
-        ALTER TABLE achievements 
-        ALTER COLUMN type TYPE achievementtype 
-        USING type::text::achievementtype
-    """)
-    
-    print("Fixed achievement enum type")
+    if 'achievements' in tables:
+        # Check if the column type needs to be updated
+        columns = inspector.get_columns('achievements')
+        type_column = next((col for col in columns if col['name'] == 'type'), None)
+        
+        if type_column and 'achievementtype' in str(type_column['type']):
+            # The enum type already exists and is correct, no action needed
+            print("Achievement enum type is already correct")
+        else:
+            # Need to update the column type
+            # Drop the old enum type if it exists
+            op.execute("DROP TYPE IF EXISTS achievementtype CASCADE")
+            
+            # Create the enum with correct lowercase values
+            achievement_type = postgresql.ENUM('trading_milestone', 'profit_achievement', 'diversification', 'login_streak', 'volume_reward', name='achievementtype')
+            achievement_type.create(op.get_bind())
+            
+            # Update the achievements table to use the new enum
+            op.execute("""
+                ALTER TABLE achievements 
+                ALTER COLUMN type TYPE achievementtype 
+                USING type::text::achievementtype
+            """)
+            print("Updated achievement enum type")
+    else:
+        print("Achievements table does not exist, skipping enum fix")
 
 
 def downgrade() -> None:

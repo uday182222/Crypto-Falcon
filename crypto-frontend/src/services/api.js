@@ -42,12 +42,27 @@ class MotionFalconAPI {
 
     try {
       console.log(`Making API request to: ${url}`);
+      console.log('Request config:', config);
       const response = await fetch(url, config);
       
       console.log(`Response status: ${response.status} ${response.statusText}`);
+      console.log('Response headers:', response.headers);
+      
+      // Check if response has content
+      const responseText = await response.text();
+      console.log('Raw response text:', responseText);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        let errorData = {};
+        try {
+          if (responseText) {
+            errorData = JSON.parse(responseText);
+          }
+        } catch (e) {
+          console.error('Failed to parse error response as JSON:', e);
+          errorData = { detail: responseText || 'Unknown error' };
+        }
+        
         console.error('Error response data:', errorData);
         
         // Handle different types of errors
@@ -62,7 +77,19 @@ class MotionFalconAPI {
         }
       }
       
-      const responseData = await response.json();
+      // Parse response as JSON
+      let responseData;
+      try {
+        if (responseText) {
+          responseData = JSON.parse(responseText);
+        } else {
+          throw new Error('Empty response body');
+        }
+      } catch (e) {
+        console.error('Failed to parse response as JSON:', e);
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
+      
       console.log('Response data:', responseData);
       return responseData;
     } catch (error) {

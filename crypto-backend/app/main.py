@@ -31,7 +31,12 @@ app.include_router(wallet.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to MotionFalcon Crypto Trading API"}
+    return {"message": "Welcome to MotionFalcon Crypto Trading API", "status": "running", "timestamp": "2024-01-01T00:00:00Z"}
+
+@app.get("/ping")
+def ping():
+    """Simple ping endpoint to test if backend is responding"""
+    return {"pong": True, "message": "Backend is responding", "timestamp": "2024-01-01T00:00:00Z"}
 
 @app.get("/test")
 def test_endpoint():
@@ -44,6 +49,28 @@ def test_register_endpoint():
         "message": "Test registration endpoint working",
         "timestamp": "2024-01-01T00:00:00Z",
         "status": "success"
+    }
+
+@app.post("/test-register-simple")
+def test_register_simple():
+    """Simple test endpoint that doesn't require database access"""
+    return {
+        "access_token": "test-token-123",
+        "token_type": "bearer",
+        "user": {
+            "id": 999,
+            "username": "testuser",
+            "email": "test@example.com",
+            "demo_balance": 100000.0,
+            "level": 1,
+            "xp": 0,
+            "is_active": True,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+            "xp_first_gain_awarded": False,
+            "xp_lost_all_awarded": False,
+            "xp_best_rank": 0
+        }
     }
 
 @app.get("/health")

@@ -1,7 +1,7 @@
 """fix_trades_table_schema_mismatch
 
 Revision ID: d6f48f3131ea
-Revises: fix_achievement_enum
+Revises: fix_purchases_table
 Create Date: 2025-07-18 21:54:27.492342
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'd6f48f3131ea'
-down_revision: Union[str, Sequence[str], None] = 'fix_achievement_enum'
+down_revision: Union[str, Sequence[str], None] = 'fix_purchases_table'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

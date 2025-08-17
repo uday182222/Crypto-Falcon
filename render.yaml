@@ -50,11 +50,12 @@ services:
       pwd
       echo "Verifying dist directory exists:"
       test -d dist && echo "dist directory exists" || echo "dist directory does not exist"
-      echo "Copying dist contents to root for alternative deployment:"
-      cp -r dist/* ./
-      echo "Root directory contents after copy:"
-      ls -la
-    staticPublishPath: .
+      echo "Creating public directory and copying files:"
+      mkdir -p public
+      cp -r dist/* public/
+      echo "Public directory contents:"
+      ls -la public/
+    staticPublishPath: public
     envVars:
       - key: VITE_API_URL
         value: https://motionfalcon-backend.onrender.com

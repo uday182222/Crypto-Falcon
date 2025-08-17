@@ -18,24 +18,14 @@ depends_on = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # First, update existing data to use uppercase values
-    op.execute("""
-        UPDATE achievements 
-        SET type = CASE 
-            WHEN type = 'trading_milestone' THEN 'TRADING_MILESTONE'
-            WHEN type = 'profit_achievement' THEN 'PROFIT_ACHIEVEMENT'
-            WHEN type = 'diversification' THEN 'DIVERSIFICATION'
-            WHEN type = 'login_streak' THEN 'LOGIN_STREAK'
-            WHEN type = 'volume_reward' THEN 'VOLUME_REWARD'
-            ELSE type
-        END
-    """)
+    # The enum values should match the model definition (lowercase)
+    # No need to update existing data since the values are already correct
     
-    # Drop the old enum type and recreate with correct values
+    # Drop the old enum type and recreate with correct lowercase values
     op.execute("DROP TYPE IF EXISTS achievementtype CASCADE")
     
-    # Create the enum with correct uppercase values
-    achievement_type = postgresql.ENUM('TRADING_MILESTONE', 'PROFIT_ACHIEVEMENT', 'DIVERSIFICATION', 'LOGIN_STREAK', 'VOLUME_REWARD', name='achievementtype')
+    # Create the enum with correct lowercase values (matching the model)
+    achievement_type = postgresql.ENUM('trading_milestone', 'profit_achievement', 'diversification', 'login_streak', 'volume_reward', name='achievementtype')
     achievement_type.create(op.get_bind())
     
     # Update the achievements table to use the new enum
@@ -50,27 +40,16 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Downgrade schema."""
-    # First, update existing data to use lowercase values
-    op.execute("""
-        UPDATE achievements 
-        SET type = CASE 
-            WHEN type = 'TRADING_MILESTONE' THEN 'trading_milestone'
-            WHEN type = 'PROFIT_ACHIEVEMENT' THEN 'profit_achievement'
-            WHEN type = 'DIVERSIFICATION' THEN 'diversification'
-            WHEN type = 'LOGIN_STREAK' THEN 'login_streak'
-            WHEN type = 'VOLUME_REWARD' THEN 'volume_reward'
-            ELSE type
-        END
-    """)
+    # Since we're using lowercase values in both versions, no data update needed
     
-    # Recreate the old enum type
+    # Drop the current enum type
     op.execute("DROP TYPE IF EXISTS achievementtype CASCADE")
     
-    # Create the old enum with lowercase values
+    # Recreate the enum with the same lowercase values
     achievement_type = postgresql.ENUM('trading_milestone', 'profit_achievement', 'diversification', 'login_streak', 'volume_reward', name='achievementtype')
     achievement_type.create(op.get_bind())
     
-    # Update the achievements table to use the old enum
+    # Update the achievements table to use the enum
     op.execute("""
         ALTER TABLE achievements 
         ALTER COLUMN type TYPE achievementtype 

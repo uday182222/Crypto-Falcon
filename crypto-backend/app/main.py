@@ -1,4 +1,5 @@
 import warnings
+import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -10,9 +11,10 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resou
 app = FastAPI()
 
 # Configure CORS
+allowed = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=allowed,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -92,3 +94,7 @@ def test_register(username: str, email: str, password: str):
         "xp": 0,
         "message": "User registered successfully"
     }
+
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}

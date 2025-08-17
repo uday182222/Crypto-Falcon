@@ -1,57 +1,65 @@
 services:
-  # Backend API Service
+  # ---------- Database ----------
+  - type: pserv
+    name: motionfalcon-postgres
+    runtime: postgres
+    plan: starter
+    disk:
+      name: data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
+    envVars:
+      - key: POSTGRES_USER
+        value: motionfalcon
+      - key: POSTGRES_DB
+        value: motionfalcon
+
+  # ---------- Backend (FastAPI) ----------
   - type: web
     name: motionfalcon-backend
-    env: python
-    plan: starter
+    runtime: python
     rootDir: crypto-backend
+    plan: starter
     buildCommand: |
+      pip install --upgrade pip
       pip install -r requirements.txt
+    preDeployCommand: |
+      alembic upgrade head
     startCommand: |
-      alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    autoDeploy: true
     envVars:
       - key: DATABASE_URL
-        sync: false
-      - key: SECRET_KEY
+        fromDatabase:
+          name: motionfalcon-postgres
+          property: connectionString
+      - key: JWT_SECRET
         generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
+      - key: ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://motionfalcon-frontend.onrender.com
+      # Razorpay (add via dashboard)
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
-      - key: EMAIL_HOST
-        value: smtp.gmail.com
-      - key: EMAIL_PORT
-        value: 587
-      - key: EMAIL_USER
-        sync: false
-      - key: EMAIL_PASSWORD
-        sync: false
-      - key: ENVIRONMENT
-        value: production
-      - key: ALGORITHM
-        value: HS256
-      - key: ACCESS_TOKEN_EXPIRE_MINUTES
-        value: 30
-    healthCheckPath: /health
-    autoDeploy: true
 
-  # Frontend Web Service (converted from static site)
-  - type: web
-    name: motionfalcon-frontend-v2
-    env: node
-    plan: starter
+  # ---------- Frontend (React + Vite) ----------
+  - type: static_site
+    name: motionfalcon-frontend
     rootDir: crypto-frontend
-    buildCommand: npm ci --legacy-peer-deps && npm run build
-    startCommand: npx serve -s dist -l $PORT
+    buildCommand: |
+      npm ci
+      npm run build
+    publishPath: dist
     envVars:
-      - key: VITE_API_URL
+      - key: VITE_API_BASE_URL
         value: https://motionfalcon-backend.onrender.com
       - key: VITE_APP_ENV
-        value: production
-    autoDeploy: true
-
-databases:
-  - name: motionfalcon-db
-    databaseName: motionfalcon
-    user: motionfalcon_user
-    plan: starter 
+        value: production 

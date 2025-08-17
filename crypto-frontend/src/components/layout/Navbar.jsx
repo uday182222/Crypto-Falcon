@@ -349,8 +349,6 @@ const Navbar = () => {
         zIndex: 50,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
         padding: '1rem 2rem',
-        position: 'relative',
-        zIndex: 2,
         height: '100%',
         display: 'flex',
         alignItems: 'center'

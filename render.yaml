@@ -41,26 +41,8 @@ services:
     env: node
     plan: starter
     rootDir: crypto-frontend
-    buildCommand: |
-      npm ci --legacy-peer-deps
-      npm run build
-      echo "Build completed. Contents of dist directory:"
-      ls -la dist/
-      echo "Current working directory:"
-      pwd
-      echo "Verifying dist directory exists:"
-      test -d dist && echo "dist directory exists" || echo "dist directory does not exist"
-      echo "Creating public directory and copying files:"
-      mkdir -p public
-      cp -r dist/* public/
-      echo "Public directory contents:"
-      ls -la public/
-      echo "Installing serve package for static file serving:"
-      npm install -g serve
-    startCommand: |
-      echo "Starting static file server from public directory:"
-      ls -la public/
-      serve -s public -l $PORT
+    buildCommand: npm ci --legacy-peer-deps && npm run build
+    startCommand: npx serve -s dist -l $PORT
     envVars:
       - key: VITE_API_URL
         value: https://motionfalcon-backend.onrender.com

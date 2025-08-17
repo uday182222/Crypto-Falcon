@@ -1,0 +1,27 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[[services]]
+name = "motionfalcon-backend"
+sourceDir = "crypto-backend"
+environment = "production"
+
+[services.variables]
+ENVIRONMENT = "production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = "30"
+
+[[services]]
+name = "motionfalcon-frontend"
+sourceDir = "crypto-frontend"
+environment = "production"
+
+[services.variables]
+VITE_APP_ENV = "production"

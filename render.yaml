@@ -35,10 +35,10 @@ services:
     healthCheckPath: /health
     autoDeploy: true
 
-  # Frontend Static Site
+  # Frontend Web Service (converted from static site)
   - type: web
     name: motionfalcon-frontend
-    env: static
+    env: node
     plan: starter
     rootDir: crypto-frontend
     buildCommand: |
@@ -55,16 +55,17 @@ services:
       cp -r dist/* public/
       echo "Public directory contents:"
       ls -la public/
-    staticPublishPath: public
+      echo "Installing serve package for static file serving:"
+      npm install -g serve
+    startCommand: |
+      echo "Starting static file server from public directory:"
+      ls -la public/
+      serve -s public -l $PORT
     envVars:
       - key: VITE_API_URL
         value: https://motionfalcon-backend.onrender.com
       - key: VITE_APP_ENV
         value: production
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
     autoDeploy: true
 
 databases:

@@ -134,3 +134,22 @@ def test_register(username: str, email: str, password: str):
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
+
+@app.get("/health/db")
+def health_db():
+    """Check database connection health"""
+    from app.db import test_database_connection
+    
+    try:
+        is_healthy, message = test_database_connection()
+        return {
+            "database": "healthy" if is_healthy else "unhealthy",
+            "message": message,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "database": "error",
+            "message": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }

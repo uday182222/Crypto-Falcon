@@ -17,7 +17,7 @@ services:
   # ---------- Backend (FastAPI) ----------
   - type: web
     name: motionfalcon-backend
-    runtime: python
+    env: python
     rootDir: crypto-backend
     plan: starter
     buildCommand: |
@@ -51,13 +51,15 @@ services:
         sync: false
 
   # ---------- Frontend (React + Vite) ----------
-  - type: static_site
+  - type: web
     name: motionfalcon-frontend
+    env: static
     rootDir: crypto-frontend
+    plan: starter
     buildCommand: |
       npm ci
       npm run build
-    publishPath: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
         value: https://motionfalcon-backend.onrender.com

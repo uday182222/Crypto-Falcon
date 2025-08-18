@@ -188,8 +188,15 @@ const Trading = () => {
       return;
     }
 
+    // Refresh price data before trade to ensure accuracy
+    await fetchCoins();
+    
+    // Get the most current price for the selected coin
+    const currentCoinData = coins.find(coin => coin.symbol === selectedCoin);
+    const currentPrice = currentCoinData ? currentCoinData.price : price;
+    
     const tradeAmount = parseFloat(amount);
-    const totalCost = tradeAmount * price;
+    const totalCost = tradeAmount * currentPrice;
 
     if (tradeType === 'buy' && totalCost > balance) {
       alert('Insufficient balance!');
@@ -294,6 +301,12 @@ const Trading = () => {
       // Update local state
       setAmount('');
       
+      // Update balance immediately with the new balance from the trade
+      if (tradeResult.new_balance !== undefined) {
+        setBalance(tradeResult.new_balance);
+        console.log('Balance updated to:', tradeResult.new_balance);
+      }
+      
       // Refresh data
       fetchBalance();
       fetchCoins();
@@ -331,8 +344,18 @@ const Trading = () => {
   useEffect(() => {
     if (selectedCoinData) {
       setPrice(selectedCoinData.price);
+      console.log(`Price updated for ${selectedCoin}: $${selectedCoinData.price}`);
     }
   }, [selectedCoinData]);
+
+  // Auto-refresh prices every 30 seconds to keep them current
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchCoins();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Initialize TradingView widget
   useEffect(() => {

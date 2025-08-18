@@ -36,6 +36,26 @@ async def register_options():
     """Handle preflight CORS request for register"""
     return {"message": "Register CORS preflight OK"}
 
+@app.options("/trade/buy")
+async def trade_buy_options():
+    """Handle preflight CORS request for trade buy"""
+    return {"message": "Trade buy CORS preflight OK"}
+
+@app.options("/trade/sell")
+async def trade_sell_options():
+    """Handle preflight CORS request for trade sell"""
+    return {"message": "Trade sell CORS preflight OK"}
+
+@app.options("/wallet/{path:path}")
+async def wallet_options():
+    """Handle preflight CORS request for wallet endpoints"""
+    return {"message": "Wallet CORS preflight OK"}
+
+@app.options("/achievements/{path:path}")
+async def achievements_options():
+    """Handle preflight CORS request for achievements"""
+    return {"message": "Achievements CORS preflight OK"}
+
 # Include routers
 app.include_router(auth.router)
 app.include_router(trade.router)

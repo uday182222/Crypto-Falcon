@@ -83,7 +83,7 @@ const Dashboard = () => {
 
       // Process portfolio data
       if (portfolioResponse.success) {
-        const portfolio = portfolioResponse.data;
+        const portfolio = portfolioResponse;
         setPortfolioData({
           totalValue: parseFloat(portfolio.total_portfolio_value || 0),
           dailyChange: parseFloat(portfolio.total_profit_loss_percent || 0),
@@ -103,7 +103,7 @@ const Dashboard = () => {
 
       // Process wallet data
       if (walletResponse.success) {
-        const wallet = walletResponse.data;
+        const wallet = walletResponse;
         setWalletData({
           balance: parseFloat(wallet.balance || 0),
           currency: wallet.currency || 'USD'

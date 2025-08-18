@@ -173,19 +173,61 @@ def healthz():
 @app.get("/health/db")
 def health_db():
     """Check database connection health"""
-    from app.db import test_database_connection
+    from app.db import test_database_connection, get_database_info
     
     try:
         is_healthy, message = test_database_connection()
+        db_info = get_database_info()
+        
         return {
             "database": "healthy" if is_healthy else "unhealthy",
             "message": message,
+            "details": db_info,
             "timestamp": "2024-01-01T00:00:00Z"
         }
     except Exception as e:
         return {
             "database": "error",
             "message": str(e),
+            "details": {"status": "exception", "error": str(e)},
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+
+@app.get("/health/db/detailed")
+def health_db_detailed():
+    """Get detailed database health information"""
+    from app.db import get_database_info, test_database_connection
+    import os
+    
+    try:
+        # Test connection
+        is_healthy, message = test_database_connection()
+        
+        # Get database info
+        db_info = get_database_info()
+        
+        # Environment info
+        env_info = {
+            "environment": os.getenv("ENVIRONMENT", "NOT SET"),
+            "is_render": bool(os.getenv("RENDER")),
+            "database_url_set": bool(os.getenv("DATABASE_URL")),
+            "database_url_preview": os.getenv("DATABASE_URL", "NOT SET")[:50] + "..." if os.getenv("DATABASE_URL") else "NOT SET"
+        }
+        
+        return {
+            "status": "healthy" if is_healthy else "unhealthy",
+            "connection_test": {
+                "success": is_healthy,
+                "message": message
+            },
+            "database_info": db_info,
+            "environment": env_info,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
             "timestamp": "2024-01-01T00:00:00Z"
         }
 

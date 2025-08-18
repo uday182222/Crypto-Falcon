@@ -4,24 +4,31 @@ import os
 from dotenv import load_dotenv
 import logging
 
-# Load environment variables
-load_dotenv()
+# Load environment variables - load local first, then .env
+load_dotenv("env.local", override=True)  # Load local environment file first
+load_dotenv()  # Load .env file (will be overridden by local if exists)
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     print("WARNING: DATABASE_URL environment variable is not set")
-    DATABASE_URL = "postgresql://dummy:dummy@localhost/dummy"  # Fallback for testing
+    print("Using in-memory SQLite for local development")
+    DATABASE_URL = "sqlite:///./motionfalcon_local.db"  # Local SQLite fallback
 
 print(f"Database URL configured: {DATABASE_URL[:20]}...")  # Log partial URL for security
 
 # Create engine with error handling
 try:
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+    if DATABASE_URL.startswith("sqlite"):
+        engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    else:
+        engine = create_engine(DATABASE_URL, pool_pre_ping=True)
     print("Database engine created successfully")
 except Exception as e:
     print(f"Error creating database engine: {e}")
-    engine = None
+    print("Falling back to in-memory SQLite")
+    DATABASE_URL = "sqlite:///./motionfalcon_local.db"
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) if engine else None
 Base = declarative_base()

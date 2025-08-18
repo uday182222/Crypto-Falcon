@@ -2,6 +2,7 @@ services:
   - type: web
     name: motionfalcon-backend
     env: python
+    rootDir: crypto-backend
     region: oregon
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
@@ -19,6 +20,7 @@ services:
 
   - type: static
     name: crypto-frontend
+    rootDir: crypto-frontend
     region: oregon
     buildCommand: "npm install && npm run build"
     publishPath: dist

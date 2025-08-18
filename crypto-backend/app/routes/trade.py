@@ -362,59 +362,16 @@ async def get_portfolio(
 ):
     """Get user's portfolio with holdings and performance"""
     try:
-        # Special handling for test user
-        if hasattr(current_user, 'email') and current_user.email == "test@example.com":
-            # Return mock portfolio data for test user
-            mock_holdings = [
-                PortfolioHolding(
-                    coin_symbol="BTC",
-                    quantity=Decimal('0.5'),
-                    current_price=Decimal('116544.0'),
-                    current_value=Decimal('58272.0'),
-                    avg_buy_price=Decimal('45000.0'),
-                    total_invested=Decimal('22500.0'),
-                    profit_loss=Decimal('35772.0'),
-                    profit_loss_percent=Decimal('159.0')
-                ),
-                PortfolioHolding(
-                    coin_symbol="ETH",
-                    quantity=Decimal('2.0'),
-                    current_price=Decimal('4020.08'),
-                    current_value=Decimal('8040.16'),
-                    avg_buy_price=Decimal('2500.0'),
-                    total_invested=Decimal('5000.0'),
-                    profit_loss=Decimal('3040.16'),
-                    profit_loss_percent=Decimal('60.8')
-                ),
-                PortfolioHolding(
-                    coin_symbol="SOL",
-                    quantity=Decimal('10.0'),
-                    current_price=Decimal('177.83'),
-                    current_value=Decimal('1778.3'),
-                    avg_buy_price=Decimal('100.0'),
-                    total_invested=Decimal('1000.0'),
-                    profit_loss=Decimal('778.3'),
-                    profit_loss_percent=Decimal('77.8')
-                )
-            ]
-            
-            total_value = sum(holding.current_value for holding in mock_holdings)
-            total_invested = sum(holding.total_invested for holding in mock_holdings)
-            total_profit_loss = sum(holding.profit_loss for holding in mock_holdings)
-            total_profit_loss_percent = (total_profit_loss / total_invested * 100) if total_invested > 0 else Decimal('0')
-            
-            return PortfolioResponse(
-                wallet_balance=Decimal('1000.0'),
-                total_portfolio_value=total_value,
-                total_invested=total_invested,
-                total_profit_loss=total_profit_loss,
-                total_profit_loss_percent=total_profit_loss_percent,
-                holdings=mock_holdings
-            )
+        # Always calculate portfolio from real trades - no more mock data
+        print(f"Calculating portfolio for user: {current_user.username} (ID: {current_user.id})")
         
-        # Original database logic for real users
         # Get user's trades
         trades = db.query(Trade).filter(Trade.user_id == current_user.id).all()
+        print(f"Found {len(trades)} trades for user {current_user.username}")
+        
+        # Calculate portfolio from trades
+        holdings = {}
+        total_cost = 0
         
         # Calculate portfolio from trades
         holdings = {}
@@ -448,9 +405,12 @@ async def get_portfolio(
         portfolio_holdings = []
         total_value = 0
         
+        print(f"Processing {len(holdings)} holdings for portfolio calculation")
+        
         for symbol, holding in holdings.items():
             if holding["quantity"] > 0:  # Only include positive holdings
                 try:
+                    print(f"Processing {symbol}: quantity={holding['quantity']}, total_cost={holding['total_cost']}")
                     current_price = await get_crypto_price(symbol)
                     current_value = holding["quantity"] * current_price
                     total_value += current_value
@@ -458,7 +418,7 @@ async def get_portfolio(
                     pnl = current_value - holding["total_cost"]
                     pnl_percentage = (pnl / holding["total_cost"] * 100) if holding["total_cost"] > 0 else Decimal('0')
                     
-                    portfolio_holdings.append(PortfolioHolding(
+                    portfolio_holding = PortfolioHolding(
                         coin_symbol=symbol,
                         quantity=holding["quantity"],
                         current_price=current_price,
@@ -467,7 +427,11 @@ async def get_portfolio(
                         total_invested=holding["total_cost"],
                         profit_loss=pnl,
                         profit_loss_percent=pnl_percentage
-                    ))
+                    )
+                    
+                    portfolio_holdings.append(portfolio_holding)
+                    print(f"Added {symbol} to portfolio: current_price=${current_price}, current_value=${current_value}, pnl=${pnl}")
+                    
                 except Exception as e:
                     print(f"Error getting price for {symbol}: {e}")
                     continue

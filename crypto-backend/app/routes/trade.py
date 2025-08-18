@@ -434,11 +434,13 @@ async def get_portfolio(
                 holdings[symbol]["total_cost"] += trade.quantity * trade.price_at_trade
                 total_cost += trade.quantity * trade.price_at_trade
             else:  # SELL
+                # Calculate cost basis reduction proportionally BEFORE reducing quantity
+                if holdings[symbol]["quantity"] > 0:
+                    cost_reduction = (trade.quantity / holdings[symbol]["quantity"]) * holdings[symbol]["total_cost"]
+                    holdings[symbol]["total_cost"] -= cost_reduction
+                    total_cost -= cost_reduction
+                
                 holdings[symbol]["quantity"] -= trade.quantity
-                # Calculate cost basis reduction proportionally
-                cost_reduction = (trade.quantity / (holdings[symbol]["quantity"] + trade.quantity)) * holdings[symbol]["total_cost"]
-                holdings[symbol]["total_cost"] -= cost_reduction
-                total_cost -= cost_reduction
             
             holdings[symbol]["trades"].append(trade)
         

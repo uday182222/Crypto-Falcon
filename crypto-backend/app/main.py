@@ -496,3 +496,64 @@ def fix_achievement_enums():
             "error": str(e),
             "timestamp": "2024-01-01T00:00:00Z"
         }
+
+@app.get("/debug/portfolio/{user_id}")
+def debug_user_portfolio(user_id: int):
+    """Debug endpoint to check a user's portfolio calculation"""
+    try:
+        from app.db import SessionLocal
+        from app.models.trade import Trade
+        from app.models.wallet import Wallet
+        from app.models.user import User
+        from sqlalchemy import text
+        
+        db = SessionLocal()
+        
+        # Get user info
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return {"error": "User not found"}
+        
+        # Get wallet info
+        wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
+        
+        # Get all trades
+        trades = db.query(Trade).filter(Trade.user_id == user_id).all()
+        
+        # Calculate holdings manually
+        holdings = {}
+        for trade in trades:
+            symbol = trade.coin_symbol
+            if symbol not in holdings:
+                holdings[symbol] = {"quantity": 0, "total_cost": 0}
+            
+            if trade.trade_type.value == "buy":
+                holdings[symbol]["quantity"] += trade.quantity
+                holdings[symbol]["total_cost"] += trade.quantity * trade.price_at_trade
+            else:  # sell
+                if holdings[symbol]["quantity"] > 0:
+                    cost_reduction = (trade.quantity / holdings[symbol]["quantity"]) * holdings[symbol]["total_cost"]
+                    holdings[symbol]["total_cost"] -= cost_reduction
+                holdings[symbol]["quantity"] -= trade.quantity
+        
+        # Filter positive holdings
+        positive_holdings = {k: v for k, v in holdings.items() if v["quantity"] > 0}
+        
+        db.close()
+        
+        return {
+            "user_id": user_id,
+            "username": user.username,
+            "wallet_balance": float(wallet.balance) if wallet else 0,
+            "user_demo_balance": float(user.demo_balance) if user else 0,
+            "total_trades": len(trades),
+            "buy_trades": len([t for t in trades if t.trade_type.value == "buy"]),
+            "sell_trades": len([t for t in trades if t.trade_type.value == "sell"]),
+            "holdings": positive_holdings,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }

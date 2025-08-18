@@ -21,6 +21,19 @@ const Portfolio = () => {
 
   useEffect(() => {
     fetchPortfolioData();
+    
+    // Listen for portfolio refresh events from trading
+    const handlePortfolioRefresh = () => {
+      console.log('Portfolio refresh event received');
+      fetchPortfolioData();
+    };
+    
+    window.addEventListener('portfolio-refresh', handlePortfolioRefresh);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('portfolio-refresh', handlePortfolioRefresh);
+    };
   }, []);
 
   const fetchPortfolioData = async () => {

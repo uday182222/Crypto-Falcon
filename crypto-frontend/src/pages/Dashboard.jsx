@@ -33,6 +33,14 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDashboardData();
     
+    // Listen for dashboard refresh events from trading
+    const handleDashboardRefresh = () => {
+      console.log('Dashboard refresh event received');
+      fetchDashboardData();
+    };
+    
+    window.addEventListener('dashboard-refresh', handleDashboardRefresh);
+    
     // Set up auto-refresh for market data every 30 seconds
     const marketDataInterval = setInterval(() => {
       refreshMarketData();
@@ -40,6 +48,7 @@ const Dashboard = () => {
 
     return () => {
       clearInterval(marketDataInterval);
+      window.removeEventListener('dashboard-refresh', handleDashboardRefresh);
     };
   }, []);
 

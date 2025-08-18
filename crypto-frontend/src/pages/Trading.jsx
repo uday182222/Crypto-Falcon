@@ -307,9 +307,20 @@ const Trading = () => {
         console.log('Balance updated to:', tradeResult.new_balance);
       }
       
-      // Refresh data
+      // Refresh all data after trade
       fetchBalance();
       fetchCoins();
+      
+      // Force refresh portfolio data to show new holdings
+      if (window.location.pathname === '/portfolio') {
+        // If we're on portfolio page, trigger a refresh
+        window.dispatchEvent(new CustomEvent('portfolio-refresh'));
+      }
+      
+      // Force refresh dashboard data if on dashboard
+      if (window.location.pathname === '/dashboard') {
+        window.dispatchEvent(new CustomEvent('dashboard-refresh'));
+      }
       
     } catch (error) {
       console.error('Trade execution error:', error);

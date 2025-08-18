@@ -326,7 +326,7 @@ export const dashboardAPI = {
   getWalletSummary: async () => {
     try {
       const response = await api.get('/wallet/summary');
-      return { success: true, data: response };
+      return { success: true, ...response };
     } catch (error) {
       return { success: false, error: error.message };
     }

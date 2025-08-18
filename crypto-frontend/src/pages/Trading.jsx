@@ -144,7 +144,9 @@ const Trading = () => {
     try {
       const walletResponse = await dashboardAPI.getWalletSummary();
       if (walletResponse.success) {
-        setBalance(parseFloat(walletResponse.data.balance || 0));
+        // The backend returns balance directly, not nested under data
+        setBalance(parseFloat(walletResponse.balance || walletResponse.data?.balance || 0));
+        console.log('Updated balance:', walletResponse.balance || walletResponse.data?.balance);
       } else {
         setError('Failed to fetch wallet balance.');
       }

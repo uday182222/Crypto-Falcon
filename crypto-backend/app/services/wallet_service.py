@@ -83,17 +83,19 @@ class WalletService:
         wallet = self.get_or_create_wallet(user_id)
         user = self.db.query(User).filter(User.id == user_id).first()
         
-        # Sync wallet balance with user demo_balance if they don't match
-        if user and abs(wallet.balance - user.demo_balance) > Decimal('0.01'):
-            print(f"Balance mismatch detected: Wallet={wallet.balance}, User={user.demo_balance}")
-            # Use the higher value (likely the correct one)
-            correct_balance = max(wallet.balance, user.demo_balance)
-            wallet.balance = correct_balance
-            user.demo_balance = correct_balance
+        # Only sync balances if this is the first time or if there's a significant mismatch
+        # Don't override wallet balance changes from trades/top-ups
+        if user and wallet.balance == Decimal('100000.0') and user.demo_balance == Decimal('100000.0'):
+            # This is the initial state, keep it
+            pass
+        elif user and abs(wallet.balance - user.demo_balance) > Decimal('1000.0'):
+            # Only sync if there's a significant mismatch (more than 1000 coins)
+            print(f"Significant balance mismatch detected: Wallet={wallet.balance}, User={user.demo_balance}")
+            # Use the wallet balance as the source of truth for transactions
+            user.demo_balance = wallet.balance
             self.db.commit()
-            self.db.refresh(wallet)
             self.db.refresh(user)
-            print(f"Synced balances to: {correct_balance}")
+            print(f"Updated user demo_balance to match wallet: {wallet.balance}")
         
         return {
             'wallet_id': wallet.id,

@@ -37,13 +37,21 @@ if os.getenv("ENVIRONMENT") == "production":
 print(f"Final CORS origins: {allowed}")
 print("=== END CORS DEBUG ===")
 
+# Add CORS middleware BEFORE any routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
+
+# Add a simple CORS test endpoint
+@app.options("/cors-test")
+async def cors_test_options():
+    """Handle preflight CORS request"""
+    return {"message": "CORS preflight OK"}
 
 # Include routers
 app.include_router(auth.router)
@@ -108,6 +116,17 @@ def cors_test():
     return {
         "message": "CORS test endpoint",
         "cors_working": True,
+        "timestamp": "2024-01-01T00:00:00Z",
+        "allowed_origins": allowed if 'allowed' in locals() else "not set"
+    }
+
+@app.get("/cors-debug")
+def cors_debug():
+    """Debug endpoint to check CORS configuration"""
+    return {
+        "environment": os.getenv("ENVIRONMENT", "not set"),
+        "allowed_origins_env": os.getenv("ALLOWED_ORIGINS", "not set"),
+        "cors_middleware_added": True,
         "timestamp": "2024-01-01T00:00:00Z"
     }
 

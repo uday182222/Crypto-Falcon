@@ -228,19 +228,25 @@ def fix_schema():
         
         db = SessionLocal()
         
-        # Add the missing preferred_currency column
-        try:
-            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_currency VARCHAR(3) DEFAULT 'USD' NOT NULL"))
-            db.commit()
-            print("Added preferred_currency column successfully")
-        except Exception as e:
-            print(f"Error adding preferred_currency column: {e}")
-            db.rollback()
+        # Add all missing columns that the User model expects
+        missing_columns = [
+            ("preferred_currency", "VARCHAR(3) DEFAULT 'USD' NOT NULL"),
+            ("is_active", "BOOLEAN DEFAULT TRUE"),
+        ]
         
+        for column_name, column_def in missing_columns:
+            try:
+                db.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {column_name} {column_def}"))
+                print(f"Added {column_name} column successfully")
+            except Exception as e:
+                print(f"Error adding {column_name} column: {e}")
+                db.rollback()
+        
+        db.commit()
         db.close()
         
         return {
-            "message": "Schema fix attempted",
+            "message": "Schema fix attempted for all missing columns",
             "timestamp": "2024-01-01T00:00:00Z"
         }
     except Exception as e:

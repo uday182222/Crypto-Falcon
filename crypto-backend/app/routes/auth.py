@@ -187,7 +187,7 @@ async def login(login_data: UserLogin, db: Session = Depends(get_db)):
         
         print(f"User authenticated successfully: {user.username}")
         
-        # Update login streak
+        # Update login streak (don't let this fail the login)
         try:
             achievement_service = AchievementService(db)
             await achievement_service.update_login_streak(user)
@@ -195,18 +195,27 @@ async def login(login_data: UserLogin, db: Session = Depends(get_db)):
         except Exception as e:
             # Log error but don't fail login
             print(f"Error updating login streak: {e}")
+            # Rollback any partial changes
+            db.rollback()
 
-        # XP system: Grant XP for login
-        def xp_needed(level):
-            return 100 + (level - 1) * 50
-        
-        user.xp += 10  # +10 XP for login
-        while user.xp >= xp_needed(user.level):
-            user.xp -= xp_needed(user.level)
-            user.level += 1
-        db.commit()
-        db.refresh(user)
-        print(f"XP updated: {user.xp}, Level: {user.level}")
+        # XP system: Grant XP for login (don't let this fail the login)
+        try:
+            def xp_needed(level):
+                return 100 + (level - 1) * 50
+            
+            user.xp += 10  # +10 XP for login
+            while user.xp >= xp_needed(user.level):
+                user.xp -= xp_needed(user.level)
+                user.level += 1
+            
+            db.commit()
+            db.refresh(user)
+            print(f"XP updated: {user.xp}, Level: {user.level}")
+        except Exception as e:
+            # Log error but don't fail login
+            print(f"Error updating XP: {e}")
+            db.rollback()
+            # Continue with login even if XP update fails
         
         # Create access token
         access_token = create_access_token(data={"sub": user.email})
@@ -235,10 +244,16 @@ async def login(login_data: UserLogin, db: Session = Depends(get_db)):
         print(f"Login successful, returning response: {response_data}")
         return response_data
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         print(f"Login error: {e}")
-        if isinstance(e, HTTPException):
-            raise e
+        # Ensure we rollback on any unexpected errors
+        try:
+            db.rollback()
+        except:
+            pass  # Ignore rollback errors
         raise HTTPException(
             status_code=500,
             detail=f"Login failed: {str(e)}"

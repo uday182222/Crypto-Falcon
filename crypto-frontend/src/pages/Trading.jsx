@@ -205,10 +205,10 @@ const Trading = () => {
       }
 
       console.log('Token found:', token.substring(0, 20) + '...');
-      console.log('API endpoint:', `http://localhost:8000/trade/${tradeType.toLowerCase()}`);
+      console.log('API endpoint:', `${import.meta.env.VITE_API_BASE_URL || 'https://motionfalcon-backend.onrender.com'}/trade/${tradeType.toLowerCase()}`);
       console.log('Request body:', {
         coin_symbol: selectedCoin,
-        side: tradeType.toLowerCase(),
+        trade_type: tradeType.toLowerCase(),
         quantity: tradeAmount
       });
       
@@ -221,7 +221,7 @@ const Trading = () => {
         balance: balance
       });
 
-              const tradeResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/trade/${tradeType.toLowerCase()}`, {
+              const tradeResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://motionfalcon-backend.onrender.com'}/trade/${tradeType.toLowerCase()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ const Trading = () => {
         },
         body: JSON.stringify({
           coin_symbol: selectedCoin,
-          side: tradeType.toLowerCase(),
+          trade_type: tradeType.toLowerCase(),
           quantity: tradeAmount
         })
       });
@@ -238,12 +238,45 @@ const Trading = () => {
       console.log('Trade response headers:', Object.fromEntries(tradeResponse.headers.entries()));
 
       if (!tradeResponse.ok) {
-        const errorData = await tradeResponse.json().catch(() => ({}));
+        let errorData = {};
+        try {
+          const responseText = await tradeResponse.text();
+          console.log('Error response text:', responseText);
+          
+          // Try to parse as JSON
+          try {
+            errorData = JSON.parse(responseText);
+          } catch {
+            // If not JSON, use the text directly
+            errorData = { message: responseText || `HTTP ${tradeResponse.status}` };
+          }
+        } catch {
+          errorData = { message: `HTTP ${tradeResponse.status}: ${tradeResponse.statusText}` };
+        }
+        
         console.error('Trade API error:', errorData);
         throw new Error(errorData.detail || errorData.message || `HTTP ${tradeResponse.status}: ${tradeResponse.statusText}`);
       }
 
-      const tradeResult = await tradeResponse.json();
+      let tradeResult = {};
+      try {
+        const responseText = await tradeResponse.text();
+        console.log('Success response text:', responseText);
+        
+        // Try to parse as JSON
+        try {
+          tradeResult = JSON.parse(responseText);
+        } catch {
+          // If not JSON, create a success object
+          tradeResult = { 
+            message: 'Trade executed successfully',
+            success: true,
+            response: responseText
+          };
+        }
+      } catch {
+        tradeResult = { message: 'Trade executed successfully', success: true };
+      }
       
       // Show trade confirmation
       setTradeConfirmation({
@@ -252,8 +285,8 @@ const Trading = () => {
         amount: tradeAmount,
         price: price,
         total: totalCost,
-        message: tradeResult.message,
-        newBalance: tradeResult.new_balance
+        message: tradeResult.message || 'Trade executed successfully',
+        newBalance: tradeResult.new_balance || balance - totalCost
       });
       
       // Update local state

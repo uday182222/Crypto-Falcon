@@ -392,6 +392,38 @@ def get_enum_values():
             "timestamp": "2024-01-01T00:00:00Z"
         }
 
+@app.post("/debug/force-balance-update")
+def force_balance_update():
+    """Force update all user balances to ensure consistency"""
+    try:
+        from app.db import SessionLocal
+        from sqlalchemy import text
+        
+        db = SessionLocal()
+        
+        # Update all users to have 100,000 demo_balance
+        db.execute(text("""
+            UPDATE users SET demo_balance = 100000.0 WHERE demo_balance != 100000.0
+        """))
+        
+        # Update all wallets to have 100,000 balance
+        db.execute(text("""
+            UPDATE wallets SET balance = 100000.0 WHERE balance != 100000.0
+        """))
+        
+        db.commit()
+        db.close()
+        
+        return {
+            "message": "All user balances forced to 100,000 DemoCoins",
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+
 @app.post("/debug/fix-achievements")
 def fix_achievement_enums():
     """Fix achievement enum values in database to match code"""
@@ -409,7 +441,7 @@ def fix_achievement_enums():
         db.execute(text("""
             CREATE TABLE achievements (
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL UNIQUE,
                 description TEXT NOT NULL,
                 type VARCHAR(50) NOT NULL,
                 icon VARCHAR(255) NOT NULL,

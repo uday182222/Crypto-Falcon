@@ -5,9 +5,16 @@ from dotenv import load_dotenv
 import logging
 
 # Load environment variables - only load local files in development
-if os.getenv("ENVIRONMENT") != "production":
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+print(f"DB.PY - Environment detected: {ENVIRONMENT}")
+
+if ENVIRONMENT != "production":
+    print("DB.PY - Loading local environment files")
     load_dotenv("env.local", override=True)  # Load local environment file only in development
-load_dotenv()  # Load .env file
+    load_dotenv(".env")  # Load .env file only in development
+else:
+    print("DB.PY - Production mode, skipping local env files")
+    print("DB.PY - Production mode, skipping .env file")
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")

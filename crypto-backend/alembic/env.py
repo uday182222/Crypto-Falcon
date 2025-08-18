@@ -65,9 +65,21 @@ def run_migrations_online() -> None:
     """
     # Use DATABASE_URL environment variable if available
     database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        # Override the config with the environment variable
-        config.set_main_option("sqlalchemy.url", database_url)
+    environment = os.getenv("ENVIRONMENT", "development")
+    
+    print(f"ALEMBIC - Environment: {environment}")
+    print(f"ALEMBIC - DATABASE_URL: {'SET' if database_url else 'NOT SET'}")
+    
+    if not database_url:
+        if environment == "production":
+            raise ValueError("DATABASE_URL environment variable is required in production")
+        else:
+            print("ALEMBIC - Using fallback database URL for development")
+            database_url = "sqlite:///./motionfalcon_local.db"
+    
+    # Override the config with the environment variable
+    config.set_main_option("sqlalchemy.url", database_url)
+    print(f"ALEMBIC - Using database URL: {database_url[:30]}...")
     
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),

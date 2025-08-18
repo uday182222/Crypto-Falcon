@@ -151,12 +151,12 @@ class LeaderboardService:
                     'total_received': Decimal('0')
                 }
             
-            if trade.side == TradeType.BUY:
+            if trade.trade_type == TradeType.BUY:
                 holdings_data[coin]['total_bought'] += trade.quantity
-                holdings_data[coin]['total_spent'] += trade.total_cost
-            else:  # SELL
+                holdings_data[coin]['total_spent'] += trade.quantity * trade.price_at_trade
+            else:
                 holdings_data[coin]['total_sold'] += trade.quantity
-                holdings_data[coin]['total_received'] += trade.total_cost
+                holdings_data[coin]['total_received'] += trade.quantity * trade.price_at_trade
         
         # Get current prices for all coins
         coin_symbols = list(holdings_data.keys())

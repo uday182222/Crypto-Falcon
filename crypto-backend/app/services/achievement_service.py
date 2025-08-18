@@ -447,7 +447,7 @@ class AchievementService:
                     'total_sold': Decimal('0')
                 }
             
-            if trade.side == TradeType.BUY:
+            if trade.trade_type == TradeType.BUY:
                 holdings_data[coin]['total_bought'] += trade.quantity
             else:
                 holdings_data[coin]['total_sold'] += trade.quantity

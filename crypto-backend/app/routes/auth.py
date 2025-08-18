@@ -120,7 +120,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         try:
             from app.services.wallet_service import WalletService
             wallet_service = WalletService(db)
-            wallet_service.create_wallet(db_user.id)
+            wallet_service.get_or_create_wallet(db_user.id)
             print("Wallet initialized successfully")
         except Exception as e:
             # Log error but don't fail registration

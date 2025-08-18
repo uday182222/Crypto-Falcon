@@ -197,7 +197,7 @@ async def buy_crypto(
     trade = Trade(
         user_id=current_user.id,
         coin_symbol=coin_symbol,
-        side=ModelTradeType.BUY,
+        trade_type=ModelTradeType.BUY,
         quantity=trade_request.quantity,
         price_at_trade=current_price,
         total_cost=total_cost
@@ -273,13 +273,13 @@ async def sell_crypto(
     buys = db.query(Trade).filter(
         Trade.user_id == current_user.id,
         Trade.coin_symbol == coin_symbol,
-        Trade.side == ModelTradeType.BUY
+        Trade.trade_type == ModelTradeType.BUY
     ).all()
     
     sells = db.query(Trade).filter(
         Trade.user_id == current_user.id,
         Trade.coin_symbol == coin_symbol,
-        Trade.side == ModelTradeType.SELL
+        Trade.trade_type == ModelTradeType.SELL
     ).all()
     
     total_bought = sum(trade.quantity for trade in buys)
@@ -312,7 +312,7 @@ async def sell_crypto(
     trade = Trade(
         user_id=current_user.id,
         coin_symbol=coin_symbol,
-        side=ModelTradeType.SELL,
+        trade_type=ModelTradeType.SELL,
         quantity=trade_request.quantity,
         price_at_trade=current_price,
         total_cost=total_value
@@ -429,7 +429,7 @@ async def get_portfolio(
                     "trades": []
                 }
             
-            if trade.side == ModelTradeType.BUY:
+            if trade.trade_type == ModelTradeType.BUY:
                 holdings[symbol]["quantity"] += trade.quantity
                 holdings[symbol]["total_cost"] += trade.quantity * trade.price_at_trade
                 total_cost += trade.quantity * trade.price_at_trade
@@ -524,7 +524,7 @@ async def execute_trade(
     achievement_service = AchievementService(db)
     
     try:
-        if trade_request.side == ModelTradeType.BUY:
+        if trade_request.trade_type == ModelTradeType.BUY:
             # BUY operation
             total_cost = trade_request.quantity * current_price
             
@@ -543,7 +543,7 @@ async def execute_trade(
             trade = Trade(
                 user_id=current_user.id,
                 coin_symbol=coin_symbol,
-                side=ModelTradeType.BUY,
+                trade_type=ModelTradeType.BUY,
                 quantity=trade_request.quantity,
                 price_at_trade=current_price,
                 total_cost=total_cost
@@ -561,13 +561,13 @@ async def execute_trade(
             buys = db.query(Trade).filter(
                 Trade.user_id == current_user.id,
                 Trade.coin_symbol == coin_symbol,
-                Trade.side == ModelTradeType.BUY
+                Trade.trade_type == ModelTradeType.BUY
             ).all()
             
             sells = db.query(Trade).filter(
                 Trade.user_id == current_user.id,
                 Trade.coin_symbol == coin_symbol,
-                Trade.side == ModelTradeType.SELL
+                Trade.trade_type == ModelTradeType.SELL
             ).all()
             
             total_bought = sum(trade.quantity for trade in buys)
@@ -591,7 +591,7 @@ async def execute_trade(
             trade = Trade(
                 user_id=current_user.id,
                 coin_symbol=coin_symbol,
-                side=ModelTradeType.SELL,
+                trade_type=ModelTradeType.SELL,
                 quantity=trade_request.quantity,
                 price_at_trade=current_price,
                 total_cost=total_value

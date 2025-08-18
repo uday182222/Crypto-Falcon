@@ -10,17 +10,16 @@ class TradeType(str, Enum):
 
 class TradeRequest(BaseModel):
     coin_symbol: str = Field(..., min_length=1, max_length=10, description="Cryptocurrency symbol (e.g., BTC, ETH)")
-    side: TradeType = Field(..., description="Trade type: buy or sell")
+    trade_type: TradeType = Field(..., description="Trade type: buy or sell")
     quantity: Decimal = Field(..., gt=0, description="Amount of cryptocurrency to trade")
 
 class TradeResponse(BaseModel):
     id: int
     user_id: int
     coin_symbol: str
-    side: TradeType
+    trade_type: TradeType
     quantity: Decimal
     price_at_trade: Decimal
-    total_cost: Decimal
     timestamp: datetime
     
     class Config:

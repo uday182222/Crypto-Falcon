@@ -11,11 +11,11 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resou
 
 app = FastAPI()
 
-# CORS middleware configuration
+# CORS middleware configuration (allow all origins, no credentials)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -99,17 +99,16 @@ def cors_test():
     return {
         "message": "CORS test endpoint",
         "cors_working": True,
-        "timestamp": "2024-01-01T00:00:00Z",
-        "allowed_origins": os.getenv("ALLOWED_ORIGINS", "not set").split(",") if os.getenv("ALLOWED_ORIGINS") else "not set"
+        "timestamp": "2024-01-01T00:00:00Z"
     }
 
 @app.get("/cors-debug")
 def cors_debug():
     """Debug endpoint to check CORS configuration"""
     return {
-        "environment": os.getenv("ENVIRONMENT", "not set"),
-        "allowed_origins_env": os.getenv("ALLOWED_ORIGINS", "not set"),
         "cors_middleware_added": True,
+        "allow_origins": ["*"],
+        "allow_credentials": False,
         "timestamp": "2024-01-01T00:00:00Z"
     }
 

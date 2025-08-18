@@ -31,7 +31,7 @@ const Portfolio = () => {
       const portfolioResponse = await dashboardAPI.getPortfolio();
       
       if (portfolioResponse.success) {
-        const portfolio = portfolioResponse.data;
+        const portfolio = portfolioResponse;
         setPortfolioData({
           totalValue: parseFloat(portfolio.total_portfolio_value || 0),
           totalInvested: parseFloat(portfolio.total_invested || 0),

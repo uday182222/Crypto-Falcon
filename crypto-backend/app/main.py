@@ -218,3 +218,33 @@ def debug_schema():
             "error": str(e),
             "timestamp": "2024-01-01T00:00:00Z"
         }
+
+@app.post("/debug/fix-schema")
+def fix_schema():
+    """Manual endpoint to fix the database schema by adding missing columns"""
+    try:
+        from app.db import SessionLocal
+        from sqlalchemy import text
+        
+        db = SessionLocal()
+        
+        # Add the missing preferred_currency column
+        try:
+            db.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_currency VARCHAR(3) DEFAULT 'USD' NOT NULL"))
+            db.commit()
+            print("Added preferred_currency column successfully")
+        except Exception as e:
+            print(f"Error adding preferred_currency column: {e}")
+            db.rollback()
+        
+        db.close()
+        
+        return {
+            "message": "Schema fix attempted",
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }

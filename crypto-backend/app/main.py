@@ -10,39 +10,36 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resou
 
 app = FastAPI()
 
-# Configure CORS with explicit debugging
-print("=== CORS CONFIGURATION DEBUG ===")
-print(f"ENVIRONMENT: {os.getenv('ENVIRONMENT', 'not set')}")
-print(f"ALLOWED_ORIGINS env var: {os.getenv('ALLOWED_ORIGINS', 'not set')}")
-
-# Parse allowed origins
-if os.getenv("ALLOWED_ORIGINS"):
-    allowed = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS").split(",") if origin.strip()]
-    print(f"Parsed ALLOWED_ORIGINS: {allowed}")
+# Configure CORS
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
+if allowed_origins:
+    allowed = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
 else:
-    allowed = ["*"]
-    print("No ALLOWED_ORIGINS set, using wildcard")
+    allowed = ["http://localhost:3000", "http://localhost:5173"]
 
-# Force production origins for safety
+# Add production origins
 production_origins = [
     "https://crypto-frontend-lffc.onrender.com",
-    "http://localhost:3000", 
-    "http://localhost:5173"
+    "https://motionfalcon-frontend.onrender.com"  # Keep both for compatibility
 ]
 
-if os.getenv("ENVIRONMENT") == "production":
-    allowed = production_origins
-    print(f"FORCED Production CORS origins: {allowed}")
+# Combine local and production origins
+allowed.extend(production_origins)
+allowed = list(set(allowed))  # Remove duplicates
 
-print(f"Final CORS origins: {allowed}")
-print("=== END CORS DEBUG ===")
+# Debug logging
+print(f"=== CORS Configuration ===")
+print(f"Environment: {os.getenv('ENVIRONMENT', 'not set')}")
+print(f"ALLOWED_ORIGINS env: {os.getenv('ALLOWED_ORIGINS', 'not set')}")
+print(f"Final allowed origins: {allowed}")
+print(f"==========================")
 
 # Add CORS middleware BEFORE any routes
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"]
 )
@@ -52,6 +49,16 @@ app.add_middleware(
 async def cors_test_options():
     """Handle preflight CORS request"""
     return {"message": "CORS preflight OK"}
+
+@app.options("/auth/login")
+async def login_options():
+    """Handle preflight CORS request for login"""
+    return {"message": "Login CORS preflight OK"}
+
+@app.options("/auth/register")
+async def register_options():
+    """Handle preflight CORS request for register"""
+    return {"message": "Register CORS preflight OK"}
 
 # Include routers
 app.include_router(auth.router)

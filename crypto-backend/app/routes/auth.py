@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.auth import get_password_hash, verify_password, create_access_token, get_current_user
 from app.db import SessionLocal

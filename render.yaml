@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: motionfalcon-backend
+    name: motionfalcon-backend-v2
     env: python
     rootDir: crypto-backend
     region: oregon
@@ -20,9 +20,9 @@ services:
       - key: RENDER
         value: "true"
       - key: FORCE_REDEPLOY
-        value: "2024-01-01-$(date +%s)"
+        value: "2024-01-01-1704067200"
       - key: REDEPLOY_TRIGGER
-        value: "migration-fix-v2"
+        value: "migration-fix-v3"
 
   - type: static
     name: crypto-frontend

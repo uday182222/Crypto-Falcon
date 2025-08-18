@@ -1,5 +1,5 @@
 // MotionFalcon API Service for React Components
-const API_BASE_URL = '';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 class MotionFalconAPI {
   constructor() {

@@ -221,7 +221,7 @@ const Trading = () => {
         balance: balance
       });
 
-      const tradeResponse = await fetch(`http://localhost:8000/trade/${tradeType.toLowerCase()}`, {
+              const tradeResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/trade/${tradeType.toLowerCase()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -298,7 +298,7 @@ const Achievements = () => {
       const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwidXNlcl9pZCI6MSwiZXhwIjoxNzM1NzQ0MDAwfQ.test-signature';
       
       // Call the check achievements endpoint to see if user has earned new ones
-      const response = await fetch('http://localhost:8000/achievements/check', {
+              const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/achievements/check`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${testToken}`,

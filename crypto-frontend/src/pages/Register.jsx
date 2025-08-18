@@ -143,7 +143,7 @@ const Register = () => {
       
       // Test the API connection first
       try {
-        const testResponse = await fetch('/api/health');
+        const testResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/health`);
         console.log('Health check response:', testResponse);
         if (testResponse.ok) {
           const healthData = await testResponse.json();

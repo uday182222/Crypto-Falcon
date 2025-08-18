@@ -1,27 +1,35 @@
 services:
   - type: web
-    name: backend
-    env: node
-    buildCommand: "npm install && npm run build"
-    startCommand: "npm start"
+    name: motionfalcon-backend
+    env: python
+    region: oregon
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: campaign-db
+          name: crypto-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: campaign-redis
-          type: redis
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: "https://motionfalcon-frontend.onrender.com,http://localhost:3000"
+      - key: ENVIRONMENT
+        value: "production"
 
   - type: static
-    name: frontend
+    name: crypto-frontend
+    region: oregon
     buildCommand: "npm install && npm run build"
-    publishPath: build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: "https://motionfalcon-backend.onrender.com"
 
   - type: worker
     name: campaign-worker
     env: node
+    region: oregon
     buildCommand: "npm install && npm run build"
     startCommand: "node worker.js"
     envVars:
@@ -35,9 +43,8 @@ services:
           type: redis
 
 databases:
-  - name: campaign-db
+  - name: crypto-db
     plan: free
+    region: oregon
 
-redis:
-  - name: campaign-redis
-    plan: free
+  

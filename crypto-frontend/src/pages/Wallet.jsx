@@ -134,7 +134,7 @@ const Wallet = () => {
   const fetchWalletTransactions = async () => {
     try {
       // Try to fetch wallet-specific transactions if available
-      const response = await fetch('http://localhost:8000/wallet/transactions', {
+              const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/transactions`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('motionfalcon_token')}`
         }
@@ -195,7 +195,7 @@ const Wallet = () => {
       console.log('Request body:', { amount: amount });
       
       // Create Razorpay order
-      const orderResponse = await fetch('http://localhost:8000/wallet/create-topup-order', {
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +233,7 @@ const Wallet = () => {
         handler: async function (response) {
           try {
             // Verify payment
-            const verifyResponse = await fetch('http://localhost:8000/wallet/verify-topup-payment', {
+            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -546,7 +546,7 @@ const Wallet = () => {
     setProcessingTopUp(true);
     try {
       // Create Razorpay order for the package
-      const orderResponse = await fetch('http://localhost:8000/wallet/create-topup-order', {
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -576,7 +576,7 @@ const Wallet = () => {
         handler: async function (response) {
           try {
             // Verify payment
-            const verifyResponse = await fetch('http://localhost:8000/wallet/verify-topup-payment', {
+            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -696,7 +696,7 @@ const Wallet = () => {
     setProcessingTopUp(true);
     try {
       // Create Razorpay order for the premium package
-      const orderResponse = await fetch('http://localhost:8000/wallet/create-topup-order', {
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -726,7 +726,7 @@ const Wallet = () => {
         handler: async function (response) {
           try {
             // Verify payment
-            const verifyResponse = await fetch('http://localhost:8000/wallet/verify-topup-payment', {
+            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

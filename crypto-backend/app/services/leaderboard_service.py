@@ -240,7 +240,12 @@ class LeaderboardService:
         ).first()
         
         if not entry:
-            entry = LeaderboardEntry(user_id=user.id)
+            entry = LeaderboardEntry(
+                user_id=user.id,
+                rank=0,  # Set default rank to fix NOT NULL constraint
+                score=Decimal('0'),  # Set default score to fix NOT NULL constraint
+                period='global'  # Set default period to fix NOT NULL constraint
+            )
             self.db.add(entry)
         
         # Update entry with calculated metrics
@@ -257,6 +262,9 @@ class LeaderboardService:
         entry.losing_trades = performance['losing_trades']
         entry.win_rate_percent = performance['win_rate_percent']
         entry.last_updated = datetime.utcnow()
+        
+        # Update score field (using portfolio performance as score)
+        entry.score = performance['portfolio_performance_percent']
         
         self.db.commit()
         return entry

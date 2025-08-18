@@ -188,3 +188,33 @@ def health_db():
             "message": str(e),
             "timestamp": "2024-01-01T00:00:00Z"
         }
+
+@app.get("/debug/schema")
+def debug_schema():
+    """Debug endpoint to check current database schema"""
+    try:
+        from app.db import SessionLocal
+        from sqlalchemy import inspect
+        
+        db = SessionLocal()
+        inspector = inspect(db.bind)
+        
+        # Get table info
+        tables = inspector.get_table_names()
+        table_info = {}
+        
+        for table in tables:
+            columns = inspector.get_columns(table)
+            table_info[table] = [col['name'] for col in columns]
+        
+        db.close()
+        
+        return {
+            "tables": table_info,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }

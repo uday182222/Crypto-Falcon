@@ -70,6 +70,29 @@ def force_reset_migrations():
     
     return False
 
+def check_missing_migrations():
+    """Check if there are missing migration references"""
+    print("=== Checking for Missing Migration References ===")
+    
+    # Try to get current migration state
+    result = subprocess.run("alembic current", shell=True, capture_output=True, text=True)
+    if result.returncode != 0:
+        print("Failed to get current migration state")
+        return True  # Assume there are issues
+    
+    current = result.stdout.strip()
+    print(f"Current migration: {current}")
+    
+    # Check if current migration exists in our versions folder
+    if current and current != "None":
+        # Check if the migration file exists
+        migration_file = f"alembic/versions/{current}.py"
+        if not os.path.exists(migration_file):
+            print(f"WARNING: Migration file {migration_file} does not exist!")
+            return True  # Missing migration detected
+    
+    return False
+
 def main():
     """Main startup logic"""
     print("=== MotionFalcon Backend Startup ===")
@@ -88,23 +111,33 @@ def main():
     
     print(f"Database URL: {database_url[:30]}...")
     
-    # Step 1: Check current migration state
-    print("\n=== Step 1: Checking Current Migration State ===")
+    # Step 1: Check for missing migration references
+    print("\n=== Step 1: Checking for Missing Migration References ===")
+    if check_missing_migrations():
+        print("Missing migration references detected - forcing reset")
+        if force_reset_migrations():
+            print("Successfully reset migration state")
+        else:
+            print("Failed to reset migration state")
+            sys.exit(1)
+    
+    # Step 2: Check current migration state
+    print("\n=== Step 2: Checking Current Migration State ===")
     run_command("alembic current", "Check current migration")
     
-    # Step 2: Try to upgrade to head
-    print("\n=== Step 2: Attempting to Run Migrations ===")
+    # Step 3: Try to upgrade to head
+    print("\n=== Step 3: Attempting to Run Migrations ===")
     if run_command("alembic upgrade head", "Run migrations"):
         print("=== Migrations Completed Successfully ===")
     else:
         print("=== Migration Failed, Attempting Force Reset ===")
         
-        # Step 3: Force reset migrations
+        # Step 4: Force reset migrations
         if force_reset_migrations():
             print("Successfully reset migration state")
             
-            # Step 4: Try to upgrade again
-            print("\n=== Step 4: Running Migrations After Reset ===")
+            # Step 5: Try to upgrade again
+            print("\n=== Step 5: Running Migrations After Reset ===")
             if run_command("alembic upgrade head", "Run migrations after reset"):
                 print("=== Migrations Completed Successfully After Reset ===")
             else:
@@ -116,7 +149,7 @@ def main():
             print("Failed to reset migration state")
             sys.exit(1)
     
-    # Step 5: Start the FastAPI application
+    # Step 6: Start the FastAPI application
     print("\n=== Starting FastAPI Application ===")
     port = os.getenv('PORT', '8000')
     cmd = f"uvicorn app.main:app --host 0.0.0.0 --port {port}"

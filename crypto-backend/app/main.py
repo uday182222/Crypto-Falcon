@@ -11,159 +11,13 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resou
 
 app = FastAPI()
 
-# Migration startup handler
-@app.on_event("startup")
-async def startup_event():
-    """Handle startup tasks including migration fixes"""
-    print("=== Starting MotionFalcon Backend ===")
-    
-    # Check if we're in production on Render
-    env = os.getenv('ENVIRONMENT', 'unknown')
-    render = os.getenv('RENDER', 'false')
-    
-    if env == 'production' and render == 'true':
-        print("=== Production Environment Detected - Running Migration Fixes ===")
-        
-        try:
-            # Try to fix migrations
-            print("Attempting to fix migration conflicts...")
-            
-            # Check current migration state
-            result = subprocess.run("alembic current", shell=True, capture_output=True, text=True)
-            print(f"Current migration: {result.stdout.strip() if result.stdout else 'None'}")
-            
-            # Check for multiple heads or missing revisions
-            result = subprocess.run("alembic heads", shell=True, capture_output=True, text=True)
-            if result.stdout and result.returncode == 0:
-                heads = result.stdout.strip().split('\n')
-                if len(heads) > 1:
-                    print(f"Multiple heads detected: {len(heads)}")
-                    
-                    # Try to merge heads
-                    print("Attempting to merge heads...")
-                    merge_result = subprocess.run("alembic merge heads -m 'startup_merge'", shell=True, capture_output=True, text=True)
-                    if merge_result.returncode == 0:
-                        print("Successfully merged heads")
-                    else:
-                        print("Failed to merge heads, trying alternative approach...")
-                        
-                        # Try to stamp to base
-                        print("Attempting to reset to base...")
-                        stamp_result = subprocess.run("alembic stamp base", shell=True, capture_output=True, text=True)
-                        if stamp_result.returncode == 0:
-                            print("Successfully reset to base")
-                        else:
-                            print("Failed to reset to base")
-            
-            # Try to upgrade
-            print("Running migrations...")
-            upgrade_result = subprocess.run("alembic upgrade head", shell=True, capture_output=True, text=True)
-            if upgrade_result.returncode == 0:
-                print("Migrations completed successfully")
-            else:
-                print("Migrations failed, attempting force reset...")
-                print(f"Error: {upgrade_result.stderr}")
-                
-                # Force reset by dropping alembic_version table
-                print("=== FORCE RESET: Attempting to reset migration state ===")
-                
-                # Try to stamp to base first
-                print("Attempting to stamp to base...")
-                stamp_result = subprocess.run("alembic stamp base", shell=True, capture_output=True, text=True)
-                if stamp_result.returncode == 0:
-                    print("Successfully stamped to base")
-                    
-                    # Now try to upgrade again
-                    print("Attempting upgrade after base stamp...")
-                    upgrade_result = subprocess.run("alembic upgrade head", shell=True, capture_output=True, text=True)
-                    if upgrade_result.returncode == 0:
-                        print("Migrations completed successfully after base stamp")
-                    else:
-                        print("Still failed after base stamp, attempting manual reset...")
-                        
-                        # Try to manually reset the database
-                        print("Attempting manual database reset...")
-                        try:
-                            # Parse DATABASE_URL to get connection details
-                            database_url = os.getenv('DATABASE_URL')
-                            if database_url and database_url.startswith('postgresql://'):
-                                # Extract connection details
-                                parts = database_url.replace('postgresql://', '').split('@')
-                                if len(parts) == 2:
-                                    user_pass = parts[0].split(':')
-                                    host_port_db = parts[1].split('/')
-                                    if len(user_pass) >= 2 and len(host_port_db) >= 2:
-                                        user = user_pass[0]
-                                        password = user_pass[1]
-                                        host_port = host_port_db[0].split(':')
-                                        host = host_port[0]
-                                        port = host_port[1] if len(host_port) > 1 else '5432'
-                                        database = host_port_db[1]
-                                        
-                                        # Set environment variables for psql
-                                        env_vars = os.environ.copy()
-                                        env_vars['PGPASSWORD'] = password
-                                        
-                                        # Drop alembic_version table
-                                        drop_cmd = f"psql -h {host} -p {port} -U {user} -d {database} -c 'DROP TABLE IF EXISTS alembic_version;'"
-                                        print(f"Running: {drop_cmd}")
-                                        
-                                        drop_result = subprocess.run(drop_cmd, shell=True, env=env_vars, capture_output=True, text=True)
-                                        if drop_result.returncode == 0:
-                                            print("Successfully dropped alembic_version table")
-                                            
-                                            # Now try to upgrade again
-                                            print("Attempting upgrade after dropping alembic_version...")
-                                            upgrade_result = subprocess.run("alembic upgrade head", shell=True, capture_output=True, text=True)
-                                            if upgrade_result.returncode == 0:
-                                                print("Migrations completed successfully after reset")
-                                            else:
-                                                print("Still failed after reset")
-                                        else:
-                                            print(f"Failed to drop alembic_version table: {drop_result.stderr}")
-                        except Exception as e:
-                            print(f"Error during manual reset: {e}")
-                else:
-                    print("Failed to stamp to base")
-                
-        except Exception as e:
-            print(f"Error during migration fix: {e}")
-            print("Continuing startup despite migration issues...")
-    
-    print("=== Startup Complete ===")
-
-# Configure CORS
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
-if allowed_origins:
-    allowed = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
-else:
-    allowed = ["http://localhost:3000", "http://localhost:5173"]
-
-# Add production origins
-production_origins = [
-    "https://crypto-frontend-lffc.onrender.com",
-    "https://motionfalcon-frontend.onrender.com"  # Keep both for compatibility
-]
-
-# Combine local and production origins
-allowed.extend(production_origins)
-allowed = list(set(allowed))  # Remove duplicates
-
-# Debug logging
-print(f"=== CORS Configuration ===")
-print(f"Environment: {os.getenv('ENVIRONMENT', 'not set')}")
-print(f"ALLOWED_ORIGINS env: {os.getenv('ALLOWED_ORIGINS', 'not set')}")
-print(f"Final allowed origins: {allowed}")
-print(f"==========================")
-
-# Add CORS middleware BEFORE any routes
+# CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed,
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
 
 # Add a simple CORS test endpoint
@@ -246,7 +100,7 @@ def cors_test():
         "message": "CORS test endpoint",
         "cors_working": True,
         "timestamp": "2024-01-01T00:00:00Z",
-        "allowed_origins": allowed if 'allowed' in locals() else "not set"
+        "allowed_origins": os.getenv("ALLOWED_ORIGINS", "not set").split(",") if os.getenv("ALLOWED_ORIGINS") else "not set"
     }
 
 @app.get("/cors-debug")

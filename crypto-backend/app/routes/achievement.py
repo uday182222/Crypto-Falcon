@@ -104,11 +104,11 @@ async def get_user_achievements(
                 if result == 0:
                     db.execute(text("""
                         INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
-                        ('First Trade', 'Complete your first trade', 'TRADING_MIL', '🎯', 1, 'trades', 1000, 'Trader', true),
-                        ('Profit Master', 'Make 10% profit on a trade', 'PROFIT_ACHI', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
-                        ('Diversifier', 'Hold 5 different cryptocurrencies', 'DIVERSIFICA', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
-                        ('Login Streak', 'Login for 7 consecutive days', 'LOGIN_STREA', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
-                        ('Volume Trader', 'Trade 1000 coins in total', 'VOLUME_REWA', '📈', 1000, 'volume', 5000, 'Volume Master', true)
+                        ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+                        ('Profit Master', 'Make 10% profit on a trade', 'profit_achievement', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
+                        ('Diversifier', 'Hold 5 different cryptocurrencies', 'diversification', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
+                        ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
+                        ('Volume Trader', 'Trade 1000 coins in total', 'volume_reward', '📈', 1000, 'volume', 5000, 'Volume Master', true)
                     """))
                 
                 db.commit()
@@ -247,17 +247,17 @@ async def initialize_achievements(
         # Insert default achievements directly
         db.execute(text("""
             INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
-            ('First Trade', 'Complete your first trade', 'TRADING_MIL', '🎯', 1, 'trades', 1000, 'Trader', true),
-            ('Trading Novice', 'Complete 10 trades', 'TRADING_MIL', '📈', 10, 'trades', 2000, 'Novice Trader', true),
-            ('Active Trader', 'Complete 50 trades', 'TRADING_MIL', '🚀', 50, 'trades', 5000, 'Active Trader', true),
-            ('Expert Trader', 'Complete 100 trades', 'TRADING_MIL', '💎', 100, 'trades', 10000, 'Expert Trader', true),
-            ('First Profit', 'Achieve your first profitable trade', 'PROFIT_ACHI', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
-            ('Rising Star', 'Achieve 5% portfolio profit', 'PROFIT_ACHI', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
-            ('Profit Master', 'Achieve 25% portfolio profit', 'PROFIT_ACHI', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
-            ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', 'DIVERSIFICA', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
-            ('Login Streak', 'Login for 7 consecutive days', 'LOGIN_STREA', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
-            ('High Volume', 'Trade over 100,000 DemoCoins in value', 'VOLUME_REWA', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
-            ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', 'VOLUME_REWA', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
+            ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+            ('Trading Novice', 'Complete 10 trades', 'trading_milestone', '📈', 10, 'trades', 2000, 'Novice Trader', true),
+            ('Active Trader', 'Complete 50 trades', 'trading_milestone', '🚀', 50, 'trades', 5000, 'Active Trader', true),
+            ('Expert Trader', 'Complete 100 trades', 'trading_milestone', '💎', 100, 'trades', 10000, 'Expert Trader', true),
+            ('First Profit', 'Achieve your first profitable trade', 'profit_achievement', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
+            ('Rising Star', 'Achieve 5% portfolio profit', 'profit_achievement', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
+            ('Profit Master', 'Achieve 25% portfolio profit', 'profit_achievement', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
+            ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', 'diversification', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
+            ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
+            ('High Volume', 'Trade over 100,000 DemoCoins in value', 'volume_reward', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
+            ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', 'volume_reward', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
         ON CONFLICT (name) DO NOTHING
         """))
         
@@ -337,11 +337,11 @@ async def setup_achievement_database(
         if result == 0:
             db.execute(text("""
                 INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
-                ('First Trade', 'Complete your first trade', 'TRADING_MIL', '🎯', 1, 'trades', 1000, 'Trader', true),
-                                        ('Profit Master', 'Make 10% profit on a trade', 'PROFIT_ACHI', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
-                        ('Diversifier', 'Hold 5 different cryptocurrencies', 'DIVERSIFICA', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
-                        ('Login Streak', 'Login for 7 consecutive days', 'LOGIN_STREA', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
-                        ('Volume Trader', 'Trade 1000 coins in total', 'VOLUME_REWA', '📈', 1000, 'volume', 5000, 'Volume Master', true)
+                ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+                                        ('Profit Master', 'Make 10% profit on a trade', 'profit_achievement', '💰', 10, 'profit_percent', 2000, 'Profit Hunter', true),
+                        ('Diversifier', 'Hold 5 different cryptocurrencies', 'diversification', '📊', 5, 'coins_held', 1500, 'Diversifier', true),
+                        ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 3000, 'Loyal Trader', true),
+                        ('Volume Trader', 'Trade 1000 coins in total', 'volume_reward', '📈', 1000, 'volume', 5000, 'Volume Master', true)
             """))
         
         db.commit()

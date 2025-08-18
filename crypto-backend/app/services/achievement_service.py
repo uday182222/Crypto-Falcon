@@ -24,7 +24,7 @@ class AchievementService:
                 {
                     "name": "First Trade",
                     "description": "Complete your first trade",
-                    "type": AchievementType.TRADING_MILESTONE,
+                    "type": "trading_milestone",
                     "icon": "🎯",
                     "requirement_value": 1,
                     "requirement_type": "trades",
@@ -34,7 +34,7 @@ class AchievementService:
                 {
                     "name": "Trading Novice",
                     "description": "Complete 10 trades",
-                    "type": AchievementType.TRADING_MILESTONE,
+                    "type": "trading_milestone",
                     "icon": "📈",
                     "requirement_value": 10,
                     "requirement_type": "trades",
@@ -44,7 +44,7 @@ class AchievementService:
                 {
                     "name": "Active Trader",
                     "description": "Complete 50 trades",
-                    "type": AchievementType.TRADING_MILESTONE,
+                    "type": "trading_milestone",
                     "icon": "🚀",
                     "requirement_value": 50,
                     "requirement_type": "trades",
@@ -54,7 +54,7 @@ class AchievementService:
                 {
                     "name": "Expert Trader",
                     "description": "Complete 100 trades",
-                    "type": AchievementType.TRADING_MILESTONE,
+                    "type": "trading_milestone",
                     "icon": "💎",
                     "requirement_value": 100,
                     "requirement_type": "trades",
@@ -66,7 +66,7 @@ class AchievementService:
                 {
                     "name": "First Profit",
                     "description": "Achieve your first profitable trade",
-                    "type": AchievementType.PROFIT_ACHIEVEMENT,
+                    "type": "profit_achievement",
                     "icon": "💰",
                     "requirement_value": 0.01,
                     "requirement_type": "profit_percentage",
@@ -76,7 +76,7 @@ class AchievementService:
                 {
                     "name": "Profit Enthusiast",
                     "description": "Achieve 10% total profit",
-                    "type": AchievementType.PROFIT_ACHIEVEMENT,
+                    "type": "profit_achievement",
                     "icon": "📊",
                     "requirement_value": 10,
                     "requirement_type": "profit_percentage",
@@ -86,7 +86,7 @@ class AchievementService:
                 {
                     "name": "Profit Master",
                     "description": "Achieve 25% total profit",
-                    "type": AchievementType.PROFIT_ACHIEVEMENT,
+                    "type": "profit_achievement",
                     "icon": "🏆",
                     "requirement_value": 25,
                     "requirement_type": "profit_percentage",
@@ -98,7 +98,7 @@ class AchievementService:
                 {
                     "name": "Daily Visitor",
                     "description": "Login for 3 consecutive days",
-                    "type": AchievementType.LOGIN_STREAK,
+                    "type": "login_streak",
                     "icon": "📅",
                     "requirement_value": 3,
                     "requirement_type": "login_streak",
@@ -108,7 +108,7 @@ class AchievementService:
                 {
                     "name": "Weekly Warrior",
                     "description": "Login for 7 consecutive days",
-                    "type": AchievementType.LOGIN_STREAK,
+                    "type": "login_streak",
                     "icon": "🗓️",
                     "requirement_value": 7,
                     "requirement_type": "login_streak",
@@ -118,7 +118,7 @@ class AchievementService:
                 {
                     "name": "Monthly Master",
                     "description": "Login for 30 consecutive days",
-                    "type": AchievementType.LOGIN_STREAK,
+                    "type": "login_streak",
                     "icon": "🏅",
                     "requirement_value": 30,
                     "requirement_type": "login_streak",
@@ -375,7 +375,7 @@ class AchievementService:
         
         # Get trading milestone achievements
         trading_achievements = self.db.query(Achievement).filter(
-            Achievement.type == AchievementType.TRADING_MILESTONE
+            Achievement.type == "trading_milestone"
         ).all()
         
         for achievement in trading_achievements:
@@ -409,7 +409,7 @@ class AchievementService:
         
         # Get profit achievements
         profit_achievements = self.db.query(Achievement).filter(
-            Achievement.type == AchievementType.PROFIT_ACHIEVEMENT
+            Achievement.type == "profit_achievement"
         ).all()
         
         for achievement in profit_achievements:

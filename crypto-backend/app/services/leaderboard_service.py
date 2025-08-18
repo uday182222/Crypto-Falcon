@@ -231,43 +231,58 @@ class LeaderboardService:
     async def update_user_leaderboard_entry(self, user: User) -> Optional[LeaderboardEntry]:
         """Update or create leaderboard entry for a user"""
         
-        # Calculate performance metrics
-        performance = await self.calculate_user_portfolio_performance(user)
-        
-        # Find existing entry or create new one
-        entry = self.db.query(LeaderboardEntry).filter(
-            LeaderboardEntry.user_id == user.id
-        ).first()
-        
-        if not entry:
-            entry = LeaderboardEntry(
-                user_id=user.id,
-                rank=0,  # Set default rank to fix NOT NULL constraint
-                score=Decimal('0'),  # Set default score to fix NOT NULL constraint
-                period='global'  # Set default period to fix NOT NULL constraint
-            )
-            self.db.add(entry)
-        
-        # Update entry with calculated metrics
-        entry.username = user.username  # Set username to fix NOT NULL constraint
-        entry.total_portfolio_value = performance['total_portfolio_value']
-        entry.total_invested = performance['total_invested']
-        entry.total_profit_loss = performance['total_profit_loss']
-        entry.total_profit_loss_percent = performance['total_profit_loss_percent']
-        entry.current_demo_balance = user.demo_balance
-        entry.initial_balance = Decimal('100000')  # Default initial balance
-        entry.portfolio_performance_percent = performance['portfolio_performance_percent']
-        entry.total_trades = performance['total_trades']
-        entry.winning_trades = performance['winning_trades']
-        entry.losing_trades = performance['losing_trades']
-        entry.win_rate_percent = performance['win_rate_percent']
-        entry.last_updated = datetime.utcnow()
-        
-        # Update score field (using portfolio performance as score)
-        entry.score = performance['portfolio_performance_percent']
-        
-        self.db.commit()
-        return entry
+        try:
+            # Calculate performance metrics
+            performance = await self.calculate_user_portfolio_performance(user)
+            
+            # Find existing entry or create new one
+            entry = self.db.query(LeaderboardEntry).filter(
+                LeaderboardEntry.user_id == user.id
+            ).first()
+            
+            if not entry:
+                entry = LeaderboardEntry(
+                    user_id=user.id,
+                    username=user.username,
+                    total_portfolio_value=performance['total_portfolio_value'],
+                    total_invested=performance['total_invested'],
+                    total_profit_loss=performance['total_profit_loss'],
+                    total_profit_loss_percent=performance['total_profit_loss_percent'],
+                    current_demo_balance=user.demo_balance,
+                    initial_balance=Decimal('100000'),
+                    portfolio_performance_percent=performance['portfolio_performance_percent'],
+                    total_trades=performance['total_trades'],
+                    winning_trades=performance['winning_trades'],
+                    losing_trades=performance['losing_trades'],
+                    win_rate_percent=performance['win_rate_percent']
+                )
+                self.db.add(entry)
+            else:
+                # Update existing entry
+                entry.username = user.username
+                entry.total_portfolio_value = performance['total_portfolio_value']
+                entry.total_invested = performance['total_invested']
+                entry.total_profit_loss = performance['total_profit_loss']
+                entry.total_profit_loss_percent = performance['total_profit_loss_percent']
+                entry.current_demo_balance = user.demo_balance
+                entry.initial_balance = Decimal('100000')
+                entry.portfolio_performance_percent = performance['portfolio_performance_percent']
+                entry.total_trades = performance['total_trades']
+                entry.winning_trades = performance['winning_trades']
+                entry.losing_trades = performance['losing_trades']
+                entry.win_rate_percent = performance['win_rate_percent']
+                entry.last_updated = datetime.utcnow()
+            
+            self.db.commit()
+            return entry
+            
+        except Exception as e:
+            print(f"Error updating leaderboard entry for user {user.id}: {e}")
+            try:
+                self.db.rollback()
+            except:
+                pass
+            return None
     
     def _get_week_start(self) -> datetime:
         """Get the start of the current week (Monday)"""

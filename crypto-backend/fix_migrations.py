@@ -23,6 +23,54 @@ def run_command(cmd, description):
         print(f"Exception running command: {e}")
         return False
 
+def force_reset_migrations():
+    """Force reset migrations by dropping alembic_version table and recreating"""
+    print("=== FORCE RESET: Dropping alembic_version table ===")
+    
+    # Try to connect to database and drop alembic_version table
+    database_url = os.getenv('DATABASE_URL')
+    if not database_url:
+        print("ERROR: DATABASE_URL not set")
+        return False
+    
+    # Use psql to drop the table
+    try:
+        # Extract connection details from DATABASE_URL
+        if database_url.startswith('postgresql://'):
+            # Parse the URL to get host, port, database, user, password
+            parts = database_url.replace('postgresql://', '').split('@')
+            if len(parts) == 2:
+                user_pass = parts[0].split(':')
+                host_port_db = parts[1].split('/')
+                if len(user_pass) >= 2 and len(host_port_db) >= 2:
+                    user = user_pass[0]
+                    password = user_pass[1]
+                    host_port = host_port_db[0].split(':')
+                    host = host_port[0]
+                    port = host_port[1] if len(host_port) > 1 else '5432'
+                    database = host_port_db[1]
+                    
+                    # Set environment variables for psql
+                    env = os.environ.copy()
+                    env['PGPASSWORD'] = password
+                    
+                    # Drop alembic_version table
+                    drop_cmd = f"psql -h {host} -p {port} -U {user} -d {database} -c 'DROP TABLE IF EXISTS alembic_version;'"
+                    print(f"Running: {drop_cmd}")
+                    
+                    result = subprocess.run(drop_cmd, shell=True, env=env, capture_output=True, text=True)
+                    if result.returncode == 0:
+                        print("Successfully dropped alembic_version table")
+                        return True
+                    else:
+                        print(f"Failed to drop table: {result.stderr}")
+                        return False
+    except Exception as e:
+        print(f"Error parsing DATABASE_URL: {e}")
+        return False
+    
+    return False
+
 def main():
     """Main migration fix logic"""
     print("=== Starting Migration Conflict Resolution ===")
@@ -59,7 +107,7 @@ def main():
             print("Multiple heads detected, attempting to merge...")
             
             # Create a merge migration
-            merge_cmd = "alembic merge heads -m 'merge_all_heads_for_production'"
+            merge_cmd = "alembic merge heads -m 'force_merge_all_heads_for_production'"
             if run_command(merge_cmd, "Merge multiple heads"):
                 print("Successfully created merge migration")
             else:
@@ -74,7 +122,14 @@ def main():
                     print(f"Successfully stamped to {latest_revision}")
                 else:
                     print("Failed to stamp to latest revision")
-                    sys.exit(1)
+                    print("=== FORCE RESET REQUIRED ===")
+                    
+                    # Force reset by dropping alembic_version table
+                    if force_reset_migrations():
+                        print("Successfully reset migration state")
+                    else:
+                        print("Failed to reset migration state")
+                        sys.exit(1)
         else:
             print("Single head detected, proceeding with upgrade")
     

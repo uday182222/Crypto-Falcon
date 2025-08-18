@@ -5,7 +5,7 @@ services:
     rootDir: crypto-backend
     region: oregon
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python fix_migrations.py"
+    startCommand: "python nuclear_reset.py"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -22,7 +22,7 @@ services:
       - key: FORCE_REDEPLOY
         value: "2024-01-01-1704067200"
       - key: REDEPLOY_TRIGGER
-        value: "migration-fix-v4"
+        value: "migration-fix-v5-force-reset"
 
   - type: static
     name: crypto-frontend

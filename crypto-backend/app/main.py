@@ -401,53 +401,62 @@ def fix_achievement_enums():
         
         db = SessionLocal()
         
-        # First, get the actual enum values from the database
-        result = db.execute(text("""
-            SELECT unnest(enum_range(NULL::achievementtype)) as enum_value;
+        # Drop and recreate the achievements table with correct enum type
+        db.execute(text("DROP TABLE IF EXISTS user_achievements CASCADE"))
+        db.execute(text("DROP TABLE IF EXISTS achievements CASCADE"))
+        
+        # Create achievements table with correct enum type
+        db.execute(text("""
+            CREATE TABLE achievements (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                icon VARCHAR(255) NOT NULL,
+                requirement_value NUMERIC(20, 8) NOT NULL,
+                requirement_type VARCHAR(50) NOT NULL,
+                reward_coins NUMERIC(20, 8) NOT NULL DEFAULT 0,
+                reward_title VARCHAR(255),
+                is_active BOOLEAN NOT NULL DEFAULT true,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+            )
         """))
         
-        enum_values = [row[0] for row in result.fetchall()]
+        # Create user_achievements table
+        db.execute(text("""
+            CREATE TABLE user_achievements (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                achievement_id INTEGER NOT NULL,
+                current_progress NUMERIC(20, 8) NOT NULL DEFAULT 0,
+                is_completed BOOLEAN NOT NULL DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                completed_at TIMESTAMP WITH TIME ZONE
+            )
+        """))
         
-        if not enum_values:
-            return {
-                "error": "No enum values found in database",
-                "timestamp": "2024-01-01T00:00:00Z"
-            }
-        
-        # Clear existing achievements and recreate with correct enum values
-        db.execute(text("DELETE FROM user_achievements"))
-        db.execute(text("DELETE FROM achievements"))
-        
-        # Use the actual enum values from the database
-        first_enum = enum_values[0] if len(enum_values) > 0 else "TRADING_MIL"
-        second_enum = enum_values[1] if len(enum_values) > 1 else "PROFIT_ACHI"
-        third_enum = enum_values[2] if len(enum_values) > 2 else "DIVERSIFICA"
-        fourth_enum = enum_values[3] if len(enum_values) > 3 else "LOGIN_STREA"
-        fifth_enum = enum_values[4] if len(enum_values) > 4 else "VOLUME_REWA"
-        
-        # Insert achievements with actual database enum values
-        db.execute(text(f"""
+        # Insert achievements with correct enum values
+        db.execute(text("""
             INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
-            ('First Trade', 'Complete your first trade', '{first_enum}', '🎯', 1, 'trades', 1000, 'Trader', true),
-            ('Trading Novice', 'Complete 10 trades', '{first_enum}', '📈', 10, 'trades', 2000, 'Novice Trader', true),
-            ('Active Trader', 'Complete 50 trades', '{first_enum}', '🚀', 50, 'trades', 5000, 'Active Trader', true),
-            ('Expert Trader', 'Complete 100 trades', '{first_enum}', '💎', 100, 'trades', 10000, 'Expert Trader', true),
-            ('First Profit', 'Achieve your first profitable trade', '{second_enum}', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
-            ('Rising Star', 'Achieve 5% portfolio profit', '{second_enum}', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
-            ('Profit Master', 'Achieve 25% portfolio profit', '{second_enum}', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
-            ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', '{third_enum}', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
-            ('Login Streak', 'Login for 7 consecutive days', '{fourth_enum}', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
-            ('High Volume', 'Trade over 100,000 DemoCoins in value', '{fifth_enum}', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
-            ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', '{fifth_enum}', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
+            ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
+            ('Trading Novice', 'Complete 10 trades', 'trading_milestone', '📈', 10, 'trades', 2000, 'Novice Trader', true),
+            ('Active Trader', 'Complete 50 trades', 'trading_milestone', '🚀', 50, 'trades', 5000, 'Active Trader', true),
+            ('Expert Trader', 'Complete 100 trades', 'trading_milestone', '💎', 100, 'trades', 10000, 'Expert Trader', true),
+            ('First Profit', 'Achieve your first profitable trade', 'profit_achievement', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
+            ('Rising Star', 'Achieve 5% portfolio profit', 'profit_achievement', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
+            ('Profit Master', 'Achieve 25% portfolio profit', 'profit_achievement', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
+            ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', 'diversification', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
+            ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
+            ('High Volume', 'Trade over 100,000 DemoCoins in value', 'volume_reward', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
+            ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', 'volume_reward', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
         """))
         
         db.commit()
         db.close()
         
         return {
-            "message": "Achievement enum fix completed",
+            "message": "Achievement tables recreated with correct enum values",
             "achievements_recreated": 11,
-            "actual_enum_values": enum_values,
             "timestamp": "2024-01-01T00:00:00Z"
         }
     except Exception as e:

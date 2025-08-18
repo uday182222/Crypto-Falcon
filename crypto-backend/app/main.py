@@ -363,3 +363,46 @@ def sync_all_balances():
             "error": str(e),
             "timestamp": "2024-01-01T00:00:00Z"
         }
+
+@app.post("/debug/fix-achievements")
+def fix_achievement_enums():
+    """Fix achievement enum values in database to match code"""
+    try:
+        from app.db import SessionLocal
+        from sqlalchemy import text
+        
+        db = SessionLocal()
+        
+        # Clear existing achievements and recreate with correct enum values
+        db.execute(text("DELETE FROM user_achievements"))
+        db.execute(text("DELETE FROM achievements"))
+        
+        # Insert achievements with correct enum values
+        db.execute(text("""
+            INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
+            ('First Trade', 'Complete your first trade', 'TRADING_MIL', '🎯', 1, 'trades', 1000, 'Trader', true),
+            ('Trading Novice', 'Complete 10 trades', 'TRADING_MIL', '📈', 10, 'trades', 2000, 'Novice Trader', true),
+            ('Active Trader', 'Complete 50 trades', 'TRADING_MIL', '🚀', 50, 'trades', 5000, 'Active Trader', true),
+            ('Expert Trader', 'Complete 100 trades', 'TRADING_MIL', '💎', 100, 'trades', 10000, 'Expert Trader', true),
+            ('First Profit', 'Achieve your first profitable trade', 'PROFIT_ACHI', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
+            ('Rising Star', 'Achieve 5% portfolio profit', 'PROFIT_ACHI', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
+            ('Profit Master', 'Achieve 25% portfolio profit', 'PROFIT_ACHI', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
+            ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', 'DIVERSIFICA', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
+            ('Login Streak', 'Login for 7 consecutive days', 'LOGIN_STREA', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
+            ('High Volume', 'Trade over 100,000 DemoCoins in value', 'VOLUME_REWA', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
+            ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', 'VOLUME_REWA', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
+        """))
+        
+        db.commit()
+        db.close()
+        
+        return {
+            "message": "Achievement enum fix completed",
+            "achievements_recreated": 11,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }

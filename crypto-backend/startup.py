@@ -25,6 +25,17 @@ def run_command(cmd, description):
         print(f"Exception running command: {e}")
         return False
 
+def run_alembic_command(cmd, description):
+    """Run an Alembic command with explicit DATABASE_URL"""
+    database_url = os.getenv('DATABASE_URL')
+    if not database_url:
+        print("ERROR: DATABASE_URL not set")
+        return False
+    
+    # Explicitly pass DATABASE_URL to Alembic
+    full_cmd = f"alembic -x db_url='{database_url}' {cmd}"
+    return run_command(full_cmd, description)
+
 def force_reset_migrations():
     """Force reset migrations by dropping alembic_version table"""
     print("=== FORCE RESET: Attempting to reset migration state ===")
@@ -74,22 +85,35 @@ def check_missing_migrations():
     """Check if there are missing migration references"""
     print("=== Checking for Missing Migration References ===")
     
-    # Try to get current migration state
-    result = subprocess.run("alembic current", shell=True, capture_output=True, text=True)
-    if result.returncode != 0:
+    # Try to get current migration state with explicit DATABASE_URL
+    result = run_alembic_command("current", "Check current migration")
+    if not result:
         print("Failed to get current migration state")
         return True  # Assume there are issues
     
-    current = result.stdout.strip()
-    print(f"Current migration: {current}")
-    
-    # Check if current migration exists in our versions folder
-    if current and current != "None":
-        # Check if the migration file exists
-        migration_file = f"alembic/versions/{current}.py"
-        if not os.path.exists(migration_file):
-            print(f"WARNING: Migration file {migration_file} does not exist!")
-            return True  # Missing migration detected
+    # Get the output from the command
+    try:
+        # Run the command again to get output
+        database_url = os.getenv('DATABASE_URL')
+        full_cmd = f"alembic -x db_url='{database_url}' current"
+        result = subprocess.run(full_cmd, shell=True, capture_output=True, text=True)
+        if result.returncode == 0:
+            current = result.stdout.strip()
+            print(f"Current migration: {current}")
+            
+            # Check if current migration exists in our versions folder
+            if current and current != "None":
+                # Check if the migration file exists
+                migration_file = f"alembic/versions/{current}.py"
+                if not os.path.exists(migration_file):
+                    print(f"WARNING: Migration file {migration_file} does not exist!")
+                    return True  # Missing migration detected
+        else:
+            print("Failed to get current migration state")
+            return True
+    except Exception as e:
+        print(f"Error checking migration state: {e}")
+        return True
     
     return False
 
@@ -123,11 +147,11 @@ def main():
     
     # Step 2: Check current migration state
     print("\n=== Step 2: Checking Current Migration State ===")
-    run_command("alembic current", "Check current migration")
+    run_alembic_command("current", "Check current migration")
     
     # Step 3: Try to upgrade to head
     print("\n=== Step 3: Attempting to Run Migrations ===")
-    if run_command("alembic upgrade head", "Run migrations"):
+    if run_alembic_command("upgrade head", "Run migrations"):
         print("=== Migrations Completed Successfully ===")
     else:
         print("=== Migration Failed, Attempting Force Reset ===")
@@ -138,12 +162,12 @@ def main():
             
             # Step 5: Try to upgrade again
             print("\n=== Step 5: Running Migrations After Reset ===")
-            if run_command("alembic upgrade head", "Run migrations after reset"):
+            if run_alembic_command("upgrade head", "Run migrations after reset"):
                 print("=== Migrations Completed Successfully After Reset ===")
             else:
                 print("=== Migrations Still Failed After Reset ===")
                 print("Current migration state:")
-                run_command("alembic current", "Check current migration")
+                run_alembic_command("current", "Check current migration")
                 sys.exit(1)
         else:
             print("Failed to reset migration state")

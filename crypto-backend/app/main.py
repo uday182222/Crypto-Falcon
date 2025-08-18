@@ -32,7 +32,7 @@ async def startup_event():
             result = subprocess.run("alembic current", shell=True, capture_output=True, text=True)
             print(f"Current migration: {result.stdout.strip() if result.stdout else 'None'}")
             
-            # Check for multiple heads
+            # Check for multiple heads or missing revisions
             result = subprocess.run("alembic heads", shell=True, capture_output=True, text=True)
             if result.stdout and result.returncode == 0:
                 heads = result.stdout.strip().split('\n')
@@ -61,8 +61,70 @@ async def startup_event():
             if upgrade_result.returncode == 0:
                 print("Migrations completed successfully")
             else:
-                print("Migrations failed, but continuing startup...")
+                print("Migrations failed, attempting force reset...")
                 print(f"Error: {upgrade_result.stderr}")
+                
+                # Force reset by dropping alembic_version table
+                print("=== FORCE RESET: Attempting to reset migration state ===")
+                
+                # Try to stamp to base first
+                print("Attempting to stamp to base...")
+                stamp_result = subprocess.run("alembic stamp base", shell=True, capture_output=True, text=True)
+                if stamp_result.returncode == 0:
+                    print("Successfully stamped to base")
+                    
+                    # Now try to upgrade again
+                    print("Attempting upgrade after base stamp...")
+                    upgrade_result = subprocess.run("alembic upgrade head", shell=True, capture_output=True, text=True)
+                    if upgrade_result.returncode == 0:
+                        print("Migrations completed successfully after base stamp")
+                    else:
+                        print("Still failed after base stamp, attempting manual reset...")
+                        
+                        # Try to manually reset the database
+                        print("Attempting manual database reset...")
+                        try:
+                            # Parse DATABASE_URL to get connection details
+                            database_url = os.getenv('DATABASE_URL')
+                            if database_url and database_url.startswith('postgresql://'):
+                                # Extract connection details
+                                parts = database_url.replace('postgresql://', '').split('@')
+                                if len(parts) == 2:
+                                    user_pass = parts[0].split(':')
+                                    host_port_db = parts[1].split('/')
+                                    if len(user_pass) >= 2 and len(host_port_db) >= 2:
+                                        user = user_pass[0]
+                                        password = user_pass[1]
+                                        host_port = host_port_db[0].split(':')
+                                        host = host_port[0]
+                                        port = host_port[1] if len(host_port) > 1 else '5432'
+                                        database = host_port_db[1]
+                                        
+                                        # Set environment variables for psql
+                                        env_vars = os.environ.copy()
+                                        env_vars['PGPASSWORD'] = password
+                                        
+                                        # Drop alembic_version table
+                                        drop_cmd = f"psql -h {host} -p {port} -U {user} -d {database} -c 'DROP TABLE IF EXISTS alembic_version;'"
+                                        print(f"Running: {drop_cmd}")
+                                        
+                                        drop_result = subprocess.run(drop_cmd, shell=True, env=env_vars, capture_output=True, text=True)
+                                        if drop_result.returncode == 0:
+                                            print("Successfully dropped alembic_version table")
+                                            
+                                            # Now try to upgrade again
+                                            print("Attempting upgrade after dropping alembic_version...")
+                                            upgrade_result = subprocess.run("alembic upgrade head", shell=True, capture_output=True, text=True)
+                                            if upgrade_result.returncode == 0:
+                                                print("Migrations completed successfully after reset")
+                                            else:
+                                                print("Still failed after reset")
+                                        else:
+                                            print(f"Failed to drop alembic_version table: {drop_result.stderr}")
+                        except Exception as e:
+                            print(f"Error during manual reset: {e}")
+                else:
+                    print("Failed to stamp to base")
                 
         except Exception as e:
             print(f"Error during migration fix: {e}")

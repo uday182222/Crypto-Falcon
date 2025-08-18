@@ -12,6 +12,18 @@ app = FastAPI()
 
 # Configure CORS
 allowed = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]
+print(f"CORS allowed origins: {allowed}")
+
+# Ensure we have the correct origins for production
+if os.getenv("ENVIRONMENT") == "production":
+    production_origins = [
+        "https://crypto-frontend-lffc.onrender.com",
+        "http://localhost:3000",
+        "http://localhost:5173"
+    ]
+    allowed = production_origins
+    print(f"Production CORS origins: {allowed}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed,

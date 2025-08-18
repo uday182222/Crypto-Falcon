@@ -4,16 +4,26 @@ import os
 from dotenv import load_dotenv
 import logging
 
-# Load environment variables - load local first, then .env
-load_dotenv("env.local", override=True)  # Load local environment file first
-load_dotenv()  # Load .env file (will be overridden by local if exists)
+# Load environment variables - only load local files in development
+if os.getenv("ENVIRONMENT") != "production":
+    load_dotenv("env.local", override=True)  # Load local environment file only in development
+load_dotenv()  # Load .env file
 
 # Database configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+print(f"Environment: {ENVIRONMENT}")
+print(f"DATABASE_URL from env: {'SET' if DATABASE_URL else 'NOT SET'}")
+
 if not DATABASE_URL:
     print("WARNING: DATABASE_URL environment variable is not set")
-    print("Using in-memory SQLite for local development")
-    DATABASE_URL = "sqlite:///./motionfalcon_local.db"  # Local SQLite fallback
+    if ENVIRONMENT == "production":
+        print("ERROR: DATABASE_URL must be set in production!")
+        raise ValueError("DATABASE_URL environment variable is required in production")
+    else:
+        print("Using in-memory SQLite for local development")
+        DATABASE_URL = "sqlite:///./motionfalcon_local.db"  # Local SQLite fallback
 
 print(f"Database URL configured: {DATABASE_URL[:20]}...")  # Log partial URL for security
 

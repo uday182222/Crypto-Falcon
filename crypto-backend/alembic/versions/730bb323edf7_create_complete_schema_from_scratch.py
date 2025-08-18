@@ -19,7 +19,44 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema - create complete database from scratch."""
+    # Defensive: if tables already exist (e.g., prior failed/partial runs),
+    # drop them in FK-safe reverse order so this migration is idempotent.
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
     
+    tables_in_reverse_fk_order = [
+        'purchases',
+        'demo_coin_packages',
+        'user_login_streaks',
+        'leaderboard_entries',
+        'user_achievements',
+        'achievements',
+        'wallet_transactions',
+        'trades',
+        'users',
+    ]
+    for table_name in tables_in_reverse_fk_order:
+        try:
+            if inspector.has_table(table_name):
+                op.drop_table(table_name)
+        except Exception:
+            # If any drop fails due to dependencies, continue; subsequent drops will resolve FKs
+            pass
+    
+    # Postgres-specific: ensure enum type does not pre-exist to avoid duplicate type errors
+    if bind.dialect.name == 'postgresql':
+        op.execute(
+            """
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'achievementtype') THEN
+                    DROP TYPE achievementtype;
+                END IF;
+            END
+            $$;
+            """
+        )
+
     # Create users table
     op.create_table('users',
         sa.Column('id', sa.Integer(), nullable=False),

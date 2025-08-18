@@ -10,19 +10,32 @@ warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resou
 
 app = FastAPI()
 
-# Configure CORS
-allowed = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]
-print(f"CORS allowed origins: {allowed}")
+# Configure CORS with explicit debugging
+print("=== CORS CONFIGURATION DEBUG ===")
+print(f"ENVIRONMENT: {os.getenv('ENVIRONMENT', 'not set')}")
+print(f"ALLOWED_ORIGINS env var: {os.getenv('ALLOWED_ORIGINS', 'not set')}")
 
-# Ensure we have the correct origins for production
+# Parse allowed origins
+if os.getenv("ALLOWED_ORIGINS"):
+    allowed = [origin.strip() for origin in os.getenv("ALLOWED_ORIGINS").split(",") if origin.strip()]
+    print(f"Parsed ALLOWED_ORIGINS: {allowed}")
+else:
+    allowed = ["*"]
+    print("No ALLOWED_ORIGINS set, using wildcard")
+
+# Force production origins for safety
+production_origins = [
+    "https://crypto-frontend-lffc.onrender.com",
+    "http://localhost:3000", 
+    "http://localhost:5173"
+]
+
 if os.getenv("ENVIRONMENT") == "production":
-    production_origins = [
-        "https://crypto-frontend-lffc.onrender.com",
-        "http://localhost:3000",
-        "http://localhost:5173"
-    ]
     allowed = production_origins
-    print(f"Production CORS origins: {allowed}")
+    print(f"FORCED Production CORS origins: {allowed}")
+
+print(f"Final CORS origins: {allowed}")
+print("=== END CORS DEBUG ===")
 
 app.add_middleware(
     CORSMiddleware,
@@ -88,6 +101,15 @@ def test_register_simple():
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "message": "Backend is running"}
+
+@app.get("/cors-test")
+def cors_test():
+    """Test endpoint to verify CORS is working"""
+    return {
+        "message": "CORS test endpoint",
+        "cors_working": True,
+        "timestamp": "2024-01-01T00:00:00Z"
+    }
 
 # Simple working auth endpoint for testing - accepts any credentials
 @app.post("/simple-login")

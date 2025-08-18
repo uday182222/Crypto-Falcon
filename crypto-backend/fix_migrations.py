@@ -41,53 +41,79 @@ def main():
     
     print(f"Database URL: {database_url[:30]}...")
     
-    # Step 1: Try to get current migration state
+    # Step 1: Check current migration state
     print("\n=== Step 1: Checking Current Migration State ===")
     run_command("alembic current", "Check current migration")
     run_command("alembic heads", "Check migration heads")
     
-    # Step 2: Try to stamp current head
-    print("\n=== Step 2: Attempting to Stamp Current Head ===")
-    if run_command("alembic stamp head", "Stamp current head"):
-        print("Successfully stamped current head")
-    else:
-        print("Failed to stamp current head, trying alternative approaches...")
-        
-        # Step 3: Try to merge heads
-        print("\n=== Step 3: Attempting to Merge Heads ===")
-        if run_command("alembic merge heads -m 'merge_all_heads'", "Merge multiple heads"):
-            print("Successfully merged heads")
-        else:
-            print("Failed to merge heads, trying reset...")
-            
-            # Step 4: Reset to base
-            print("\n=== Step 4: Resetting Migration State ===")
-            if run_command("alembic stamp base", "Reset to base"):
-                print("Successfully reset to base")
-            else:
-                print("Failed to reset to base")
-                sys.exit(1)
+    # Step 2: Try to resolve multiple heads by merging them
+    print("\n=== Step 2: Resolving Multiple Heads ===")
     
-    # Step 5: Run migrations
-    print("\n=== Step 5: Running Database Migrations ===")
+    # First, try to get all heads
+    result = subprocess.run("alembic heads", shell=True, capture_output=True, text=True)
+    if result.returncode == 0 and result.stdout:
+        heads = result.stdout.strip().split('\n')
+        print(f"Found {len(heads)} heads: {heads}")
+        
+        if len(heads) > 1:
+            print("Multiple heads detected, attempting to merge...")
+            
+            # Create a merge migration
+            merge_cmd = "alembic merge heads -m 'merge_all_heads_for_production'"
+            if run_command(merge_cmd, "Merge multiple heads"):
+                print("Successfully created merge migration")
+            else:
+                print("Failed to create merge migration, trying alternative approach...")
+                
+                # Try to stamp the database to the latest revision
+                latest_revision = heads[-1].split()[0]  # Get the revision ID
+                print(f"Attempting to stamp to latest revision: {latest_revision}")
+                
+                stamp_cmd = f"alembic stamp {latest_revision}"
+                if run_command(stamp_cmd, f"Stamp to revision {latest_revision}"):
+                    print(f"Successfully stamped to {latest_revision}")
+                else:
+                    print("Failed to stamp to latest revision")
+                    sys.exit(1)
+        else:
+            print("Single head detected, proceeding with upgrade")
+    
+    # Step 3: Try to upgrade to head
+    print("\n=== Step 3: Running Database Migrations ===")
     if run_command("alembic upgrade head", "Run migrations"):
         print("=== Migrations Completed Successfully ===")
-        
-        # Step 6: Start the application
-        print("=== Starting Application ===")
-        port = os.getenv('PORT', '8000')
-        cmd = f"uvicorn app.main:app --host 0.0.0.0 --port {port}"
-        print(f"Starting: {cmd}")
-        
-        # Use exec to replace the current process
-        os.execvp("uvicorn", ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", port])
     else:
-        print("=== Migration Failed ===")
-        print("Current migration state:")
-        run_command("alembic current", "Check current migration")
-        print("Available migrations:")
-        run_command("alembic history", "Show migration history")
-        sys.exit(1)
+        print("=== Migration Failed, Trying Alternative Approaches ===")
+        
+        # Step 4: If upgrade still fails, try to stamp to base and then upgrade
+        print("\n=== Step 4: Attempting Reset and Upgrade ===")
+        
+        # Stamp to base first
+        if run_command("alembic stamp base", "Reset to base"):
+            print("Successfully reset to base")
+            
+            # Now try to upgrade again
+            if run_command("alembic upgrade head", "Upgrade from base"):
+                print("=== Migrations Completed Successfully After Reset ===")
+            else:
+                print("=== All Migration Attempts Failed ===")
+                print("Current migration state:")
+                run_command("alembic current", "Check current migration")
+                print("Available migrations:")
+                run_command("alembic history", "Show migration history")
+                sys.exit(1)
+        else:
+            print("Failed to reset to base")
+            sys.exit(1)
+    
+    # Step 5: Start the application
+    print("=== Starting Application ===")
+    port = os.getenv('PORT', '8000')
+    cmd = f"uvicorn app.main:app --host 0.0.0.0 --port {port}"
+    print(f"Starting: {cmd}")
+    
+    # Use exec to replace the current process
+    os.execvp("uvicorn", ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", port])
 
 if __name__ == "__main__":
     main()

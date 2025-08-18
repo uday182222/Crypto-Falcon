@@ -22,7 +22,7 @@ services:
       - key: FORCE_REDEPLOY
         value: "2024-01-01-1704067200"
       - key: REDEPLOY_TRIGGER
-        value: "migration-fix-v3"
+        value: "migration-fix-v4"
 
   - type: static
     name: crypto-frontend

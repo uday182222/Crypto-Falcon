@@ -51,6 +51,7 @@ def upgrade() -> None:
         sa.Column('email', sa.String(length=100), nullable=False),
         sa.Column('hashed_password', sa.String(length=255), nullable=False),
         sa.Column('demo_balance', sa.Numeric(precision=20, scale=8), nullable=False, server_default='100000'),
+        sa.Column('preferred_currency', sa.String(length=3), nullable=False, server_default='USD'),
         sa.Column('level', sa.Integer(), nullable=False, server_default='1'),
         sa.Column('xp', sa.Integer(), nullable=False, server_default='0'),
         sa.Column('xp_first_gain_awarded', sa.Boolean(), nullable=False, server_default='false'),

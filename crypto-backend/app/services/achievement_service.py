@@ -24,7 +24,7 @@ class AchievementService:
                 {
                     "name": "First Trade",
                     "description": "Complete your first trade",
-                    "type": "trading_milestone",
+                    "type": "TRADING_MIL",
                     "icon": "🎯",
                     "requirement_value": 1,
                     "requirement_type": "trades",
@@ -34,7 +34,7 @@ class AchievementService:
                 {
                     "name": "Trading Novice",
                     "description": "Complete 10 trades",
-                    "type": "trading_milestone",
+                    "type": "TRADING_MIL",
                     "icon": "📈",
                     "requirement_value": 10,
                     "requirement_type": "trades",
@@ -44,7 +44,7 @@ class AchievementService:
                 {
                     "name": "Active Trader",
                     "description": "Complete 50 trades",
-                    "type": "trading_milestone",
+                    "type": "TRADING_MIL",
                     "icon": "🚀",
                     "requirement_value": 50,
                     "requirement_type": "trades",
@@ -54,7 +54,7 @@ class AchievementService:
                 {
                     "name": "Expert Trader",
                     "description": "Complete 100 trades",
-                    "type": "trading_milestone",
+                    "type": "TRADING_MIL",
                     "icon": "💎",
                     "requirement_value": 100,
                     "requirement_type": "trades",
@@ -66,7 +66,7 @@ class AchievementService:
                 {
                     "name": "First Profit",
                     "description": "Achieve your first profitable trade",
-                    "type": "profit_achievement",
+                    "type": "PROFIT_ACHI",
                     "icon": "💰",
                     "requirement_value": 0.01,
                     "requirement_type": "profit_percentage",
@@ -76,7 +76,7 @@ class AchievementService:
                 {
                     "name": "Profit Enthusiast",
                     "description": "Achieve 10% total profit",
-                    "type": "profit_achievement",
+                    "type": "PROFIT_ACHI",
                     "icon": "📊",
                     "requirement_value": 10,
                     "requirement_type": "profit_percentage",
@@ -86,7 +86,7 @@ class AchievementService:
                 {
                     "name": "Profit Master",
                     "description": "Achieve 25% total profit",
-                    "type": "profit_achievement",
+                    "type": "PROFIT_ACHI",
                     "icon": "🏆",
                     "requirement_value": 25,
                     "requirement_type": "profit_percentage",
@@ -98,7 +98,7 @@ class AchievementService:
                 {
                     "name": "Daily Visitor",
                     "description": "Login for 3 consecutive days",
-                    "type": "login_streak",
+                    "type": "LOGIN_STREA",
                     "icon": "📅",
                     "requirement_value": 3,
                     "requirement_type": "login_streak",
@@ -108,7 +108,7 @@ class AchievementService:
                 {
                     "name": "Weekly Warrior",
                     "description": "Login for 7 consecutive days",
-                    "type": "login_streak",
+                    "type": "LOGIN_STREA",
                     "icon": "🗓️",
                     "requirement_value": 7,
                     "requirement_type": "login_streak",
@@ -118,7 +118,7 @@ class AchievementService:
                 {
                     "name": "Monthly Master",
                     "description": "Login for 30 consecutive days",
-                    "type": "login_streak",
+                    "type": "LOGIN_STREA",
                     "icon": "🏅",
                     "requirement_value": 30,
                     "requirement_type": "login_streak",
@@ -184,17 +184,17 @@ class AchievementService:
                     # Insert default achievements directly
                     self.db.execute(text("""
                         INSERT INTO achievements (name, description, type, icon, requirement_value, requirement_type, reward_coins, reward_title, is_active) VALUES
-                        ('First Trade', 'Complete your first trade', 'trading_milestone', '🎯', 1, 'trades', 1000, 'Trader', true),
-                        ('Trading Novice', 'Complete 10 trades', 'trading_milestone', '📈', 10, 'trades', 2000, 'Novice Trader', true),
-                        ('Active Trader', 'Complete 50 trades', 'trading_milestone', '🚀', 50, 'trades', 5000, 'Active Trader', true),
-                        ('Expert Trader', 'Complete 100 trades', 'trading_milestone', '💎', 100, 'trades', 10000, 'Expert Trader', true),
-                        ('First Profit', 'Achieve your first profitable trade', 'profit_achievement', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
-                        ('Rising Star', 'Achieve 5% portfolio profit', 'profit_achievement', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
-                        ('Profit Master', 'Achieve 25% portfolio profit', 'profit_achievement', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
-                        ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', 'diversification', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
-                        ('Login Streak', 'Login for 7 consecutive days', 'login_streak', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
-                        ('High Volume', 'Trade over 100,000 DemoCoins in value', 'volume_reward', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
-                        ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', 'volume_reward', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
+                        ('First Trade', 'Complete your first trade', 'TRADING_MIL', '🎯', 1, 'trades', 1000, 'Trader', true),
+                        ('Trading Novice', 'Complete 10 trades', 'TRADING_MIL', '📈', 10, 'trades', 2000, 'Novice Trader', true),
+                        ('Active Trader', 'Complete 50 trades', 'TRADING_MIL', '🚀', 50, 'trades', 5000, 'Active Trader', true),
+                        ('Expert Trader', 'Complete 100 trades', 'TRADING_MIL', '💎', 100, 'trades', 10000, 'Expert Trader', true),
+                        ('First Profit', 'Achieve your first profitable trade', 'PROFIT_ACHI', '💰', 0.01, 'profit_percentage', 1500, 'Profit Maker', true),
+                        ('Rising Star', 'Achieve 5% portfolio profit', 'PROFIT_ACHI', '⭐', 5, 'profit_percentage', 3000, 'Rising Star', true),
+                        ('Profit Master', 'Achieve 25% portfolio profit', 'PROFIT_ACHI', '🏆', 25, 'profit_percentage', 7500, 'Profit Master', true),
+                        ('Diversified Portfolio', 'Hold 5 different cryptocurrencies', 'DIVERSIFICA', '🎨', 5, 'coins_held', 2000, 'Diversifier', true),
+                        ('Login Streak', 'Login for 7 consecutive days', 'LOGIN_STREA', '🔥', 7, 'days_streak', 1000, 'Loyal Trader', true),
+                        ('High Volume', 'Trade over 100,000 DemoCoins in value', 'VOLUME_REWA', '📊', 100000, 'volume', 3000, 'Volume Trader', true),
+                        ('Whale Trader', 'Trade over 1,000,000 DemoCoins in value', 'VOLUME_REWA', '🐋', 1000000, 'volume', 10000, 'Whale Trader', true)
                     ON CONFLICT (name) DO NOTHING
                     """))
                     
@@ -376,7 +376,7 @@ class AchievementService:
         
         # Get trading milestone achievements
         trading_achievements = self.db.query(Achievement).filter(
-            Achievement.type == "trading_milestone"
+            Achievement.type == "TRADING_MIL"
         ).all()
         
         for achievement in trading_achievements:
@@ -524,7 +524,7 @@ class AchievementService:
         
         # Get login streak achievements
         streak_achievements = self.db.query(Achievement).filter(
-            Achievement.type == "login_streak"
+            Achievement.type == "LOGIN_STREA"
         ).all()
         
         for achievement in streak_achievements:

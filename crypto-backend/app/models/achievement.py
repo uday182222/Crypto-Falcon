@@ -5,11 +5,11 @@ from app.db import Base
 import enum
 
 class AchievementType(str, enum.Enum):
-    TRADING_MILESTONE = "trading_milestone"
-    PROFIT_ACHIEVEMENT = "profit_achievement"
-    DIVERSIFICATION = "diversification"
-    LOGIN_STREAK = "login_streak"
-    VOLUME_REWARD = "volume_reward"
+    TRADING_MILESTONE = "TRADING_MIL"
+    PROFIT_ACHIEVEMENT = "PROFIT_ACHI" 
+    DIVERSIFICATION = "DIVERSIFICA"
+    LOGIN_STREAK = "LOGIN_STREA"
+    VOLUME_REWARD = "VOLUME_REWA"
 
 class Achievement(Base):
     __tablename__ = "achievements"

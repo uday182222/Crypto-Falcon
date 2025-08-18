@@ -32,8 +32,11 @@ services:
     publishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
-        value: "https://motionfalcon-backend.onrender.com"
-
+        value: "https://motionfalcon-backend-v2.onrender.com"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
 
 
 databases:

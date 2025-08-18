@@ -84,7 +84,8 @@ const Wallet = () => {
       // Fetch wallet balance
       const walletResponse = await dashboardAPI.getWalletSummary();
       if (walletResponse.success) {
-        setBalance(parseFloat(walletResponse.data.balance || 0));
+        setBalance(parseFloat(walletResponse.balance || 0));
+        console.log('Wallet balance updated:', walletResponse.balance);
       }
 
       // Fetch only wallet transactions (top-ups, package purchases)

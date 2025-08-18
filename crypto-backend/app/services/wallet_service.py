@@ -14,8 +14,13 @@ class WalletService:
         """Get user's wallet"""
         return self.db.query(Wallet).filter(Wallet.user_id == user_id).first()
     
-    def create_wallet(self, user_id: int, initial_balance: Decimal = Decimal('1000.0')) -> Wallet:
+    def create_wallet(self, user_id: int, initial_balance: Decimal = None) -> Wallet:
         """Create a new wallet for user with initial balance"""
+        # If no initial balance provided, use the user's demo_balance
+        if initial_balance is None:
+            user = self.db.query(User).filter(User.id == user_id).first()
+            initial_balance = user.demo_balance if user else Decimal('100000.0')
+        
         wallet = Wallet(
             user_id=user_id,
             balance=initial_balance
@@ -78,11 +83,24 @@ class WalletService:
         wallet = self.get_or_create_wallet(user_id)
         user = self.db.query(User).filter(User.id == user_id).first()
         
+        # Sync wallet balance with user demo_balance if they don't match
+        if user and abs(wallet.balance - user.demo_balance) > Decimal('0.01'):
+            print(f"Balance mismatch detected: Wallet={wallet.balance}, User={user.demo_balance}")
+            # Use the higher value (likely the correct one)
+            correct_balance = max(wallet.balance, user.demo_balance)
+            wallet.balance = correct_balance
+            user.demo_balance = correct_balance
+            self.db.commit()
+            self.db.refresh(wallet)
+            self.db.refresh(user)
+            print(f"Synced balances to: {correct_balance}")
+        
         return {
             'wallet_id': wallet.id,
             'user_id': user_id,
             'username': user.username if user else None,
             'balance': wallet.balance,
+            'demo_balance': user.demo_balance if user else None,
             'created_at': wallet.created_at,
             'updated_at': wallet.updated_at,
             'currency': 'USD',  # Demo wallet uses USD

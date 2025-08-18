@@ -296,3 +296,50 @@ def fix_schema():
             "error": str(e),
             "timestamp": "2024-01-01T00:00:00Z"
         }
+
+@app.post("/debug/sync-balances")
+def sync_all_balances():
+    """Sync all user balances between users.demo_balance and wallets.balance"""
+    try:
+        from app.db import SessionLocal
+        from app.models.user import User
+        from app.models.wallet import Wallet
+        
+        db = SessionLocal()
+        
+        # Get all users
+        users = db.query(User).all()
+        synced_count = 0
+        
+        for user in users:
+            # Get or create wallet
+            wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
+            
+            if not wallet:
+                # Create wallet with user's demo_balance
+                wallet = Wallet(user_id=user.id, balance=user.demo_balance)
+                db.add(wallet)
+                synced_count += 1
+                print(f"Created wallet for user {user.id} with balance {user.demo_balance}")
+            elif wallet.balance != user.demo_balance:
+                # Sync balances - use the higher value
+                correct_balance = max(wallet.balance, user.demo_balance)
+                wallet.balance = correct_balance
+                user.demo_balance = correct_balance
+                synced_count += 1
+                print(f"Synced user {user.id} balance to {correct_balance}")
+        
+        db.commit()
+        db.close()
+        
+        return {
+            "message": f"Balance sync completed for {synced_count} users",
+            "users_processed": len(users),
+            "users_synced": synced_count,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }

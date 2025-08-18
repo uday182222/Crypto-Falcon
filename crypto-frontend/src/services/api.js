@@ -316,7 +316,7 @@ export const dashboardAPI = {
   getPortfolio: async () => {
     try {
       const response = await api.get('/trade/portfolio');
-      return { success: true, data: response };
+      return { success: true, ...response };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -387,7 +387,7 @@ export const dashboardAPI = {
   getTradeHistory: async () => {
     try {
       const response = await api.get('/trade/history');
-      return { success: true, data: response };
+      return { success: true, ...response };
     } catch (error) {
       return { success: false, error: error.message };
     }

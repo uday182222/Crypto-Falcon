@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey, Boolean, Text, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey, Boolean, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db import Base
@@ -17,7 +17,7 @@ class Achievement(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
-    type = Column(SQLEnum(AchievementType), nullable=False)
+    type = Column(String(50), nullable=False)
     icon = Column(String(255), nullable=False)  # Icon identifier or URL
     
     # Achievement requirements

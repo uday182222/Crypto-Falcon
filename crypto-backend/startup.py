@@ -81,39 +81,48 @@ def force_reset_migrations():
     
     return False
 
-def check_missing_migrations():
-    """Check if there are missing migration references"""
-    print("=== Checking for Missing Migration References ===")
+def aggressive_database_reset():
+    """Aggressively reset the entire database to eliminate all conflicts"""
+    print("=== AGGRESSIVE RESET: Complete database reset to eliminate conflicts ===")
     
-    # Try to get current migration state with explicit DATABASE_URL
-    result = run_alembic_command("current", "Check current migration")
-    if not result:
-        print("Failed to get current migration state")
-        return True  # Assume there are issues
+    database_url = os.getenv('DATABASE_URL')
+    if not database_url:
+        print("ERROR: DATABASE_URL not set")
+        return False
     
-    # Get the output from the command
     try:
-        # Run the command again to get output
-        database_url = os.getenv('DATABASE_URL')
-        full_cmd = f"alembic -x db_url='{database_url}' current"
-        result = subprocess.run(full_cmd, shell=True, capture_output=True, text=True)
-        if result.returncode == 0:
-            current = result.stdout.strip()
-            print(f"Current migration: {current}")
-            
-            # Check if current migration exists in our versions folder
-            if current and current != "None":
-                # Check if the migration file exists
-                migration_file = f"alembic/versions/{current}.py"
-                if not os.path.exists(migration_file):
-                    print(f"WARNING: Migration file {migration_file} does not exist!")
-                    return True  # Missing migration detected
-        else:
-            print("Failed to get current migration state")
-            return True
+        # Parse DATABASE_URL
+        if database_url.startswith('postgresql://'):
+            parts = database_url.replace('postgresql://', '').split('@')
+            if len(parts) == 2:
+                user_pass = parts[0].split(':')
+                host_port_db = parts[1].split('/')
+                if len(user_pass) >= 2 and len(host_port_db) >= 2:
+                    user = user_pass[0]
+                    password = user_pass[1]
+                    host_port = host_port_db[0].split(':')
+                    host = host_port[0]
+                    port = host_port[1] if len(host_port) > 1 else '5432'
+                    database = host_port_db[1]
+                    
+                    # Set environment variables for psql
+                    env = os.environ.copy()
+                    env['PGPASSWORD'] = password
+                    
+                    # Drop entire public schema and recreate it (nuclear option)
+                    reset_cmd = f"psql -h {host} -p {port} -U {user} -d {database} -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public;'"
+                    print(f"Running: {reset_cmd}")
+                    
+                    result = subprocess.run(reset_cmd, shell=True, env=env, capture_output=True, text=True)
+                    if result.returncode == 0:
+                        print("Successfully reset entire database schema")
+                        return True
+                    else:
+                        print(f"Failed to reset schema: {result.stderr}")
+                        return False
     except Exception as e:
-        print(f"Error checking migration state: {e}")
-        return True
+        print(f"Error parsing DATABASE_URL: {e}")
+        return False
     
     return False
 
@@ -135,45 +144,38 @@ def main():
     
     print(f"Database URL: {database_url[:30]}...")
     
-    # Step 1: Check for missing migration references
-    print("\n=== Step 1: Checking for Missing Migration References ===")
-    if check_missing_migrations():
-        print("Missing migration references detected - forcing reset")
-        if force_reset_migrations():
-            print("Successfully reset migration state")
-        else:
-            print("Failed to reset migration state")
-            sys.exit(1)
-    
-    # Step 2: Check current migration state
-    print("\n=== Step 2: Checking Current Migration State ===")
-    run_alembic_command("current", "Check current migration")
-    
-    # Step 3: Try to upgrade to head
-    print("\n=== Step 3: Attempting to Run Migrations ===")
-    if run_alembic_command("upgrade head", "Run migrations"):
-        print("=== Migrations Completed Successfully ===")
-    else:
-        print("=== Migration Failed, Attempting Force Reset ===")
+    # Since local development is no longer needed, always do aggressive reset on Render
+    if env == 'production' and render == 'true':
+        print("=== Production on Render - Performing Aggressive Database Reset ===")
         
-        # Step 4: Force reset migrations
-        if force_reset_migrations():
-            print("Successfully reset migration state")
-            
-            # Step 5: Try to upgrade again
-            print("\n=== Step 5: Running Migrations After Reset ===")
-            if run_alembic_command("upgrade head", "Run migrations after reset"):
-                print("=== Migrations Completed Successfully After Reset ===")
-            else:
-                print("=== Migrations Still Failed After Reset ===")
-                print("Current migration state:")
-                run_alembic_command("current", "Check current migration")
-                sys.exit(1)
+        # Step 1: Aggressive database reset to eliminate all conflicts
+        if aggressive_database_reset():
+            print("Successfully reset database schema")
         else:
-            print("Failed to reset migration state")
+            print("Failed to reset database schema")
             sys.exit(1)
+        
+        # Step 2: Reset Alembic state to base
+        print("\n=== Step 2: Resetting Alembic State to Base ===")
+        if run_alembic_command("stamp base", "Reset to base"):
+            print("Successfully reset to base")
+        else:
+            print("Failed to reset to base")
+            sys.exit(1)
+        
+        # Step 3: Run migrations from scratch
+        print("\n=== Step 3: Running Migrations from Scratch ===")
+        if run_alembic_command("upgrade head", "Run migrations from base"):
+            print("=== Migrations Completed Successfully ===")
+        else:
+            print("=== Migrations Failed ===")
+            print("Current migration state:")
+            run_alembic_command("current", "Check current migration")
+            sys.exit(1)
+    else:
+        print("=== Non-production environment, skipping aggressive reset ===")
     
-    # Step 6: Start the FastAPI application
+    # Step 4: Start the FastAPI application
     print("\n=== Starting FastAPI Application ===")
     port = os.getenv('PORT', '8000')
     cmd = f"uvicorn app.main:app --host 0.0.0.0 --port {port}"

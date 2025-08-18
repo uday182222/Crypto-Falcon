@@ -1,5 +1,6 @@
 import warnings
 import os
+import subprocess
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -9,6 +10,65 @@ from app.routes import auth, trade, leaderboard, achievement, purchase, currency
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resources")
 
 app = FastAPI()
+
+# Migration startup handler
+@app.on_event("startup")
+async def startup_event():
+    """Handle startup tasks including migration fixes"""
+    print("=== Starting MotionFalcon Backend ===")
+    
+    # Check if we're in production on Render
+    env = os.getenv('ENVIRONMENT', 'unknown')
+    render = os.getenv('RENDER', 'false')
+    
+    if env == 'production' and render == 'true':
+        print("=== Production Environment Detected - Running Migration Fixes ===")
+        
+        try:
+            # Try to fix migrations
+            print("Attempting to fix migration conflicts...")
+            
+            # Check current migration state
+            result = subprocess.run("alembic current", shell=True, capture_output=True, text=True)
+            print(f"Current migration: {result.stdout.strip() if result.stdout else 'None'}")
+            
+            # Check for multiple heads
+            result = subprocess.run("alembic heads", shell=True, capture_output=True, text=True)
+            if result.stdout and result.returncode == 0:
+                heads = result.stdout.strip().split('\n')
+                if len(heads) > 1:
+                    print(f"Multiple heads detected: {len(heads)}")
+                    
+                    # Try to merge heads
+                    print("Attempting to merge heads...")
+                    merge_result = subprocess.run("alembic merge heads -m 'startup_merge'", shell=True, capture_output=True, text=True)
+                    if merge_result.returncode == 0:
+                        print("Successfully merged heads")
+                    else:
+                        print("Failed to merge heads, trying alternative approach...")
+                        
+                        # Try to stamp to base
+                        print("Attempting to reset to base...")
+                        stamp_result = subprocess.run("alembic stamp base", shell=True, capture_output=True, text=True)
+                        if stamp_result.returncode == 0:
+                            print("Successfully reset to base")
+                        else:
+                            print("Failed to reset to base")
+            
+            # Try to upgrade
+            print("Running migrations...")
+            upgrade_result = subprocess.run("alembic upgrade head", shell=True, capture_output=True, text=True)
+            if upgrade_result.returncode == 0:
+                print("Migrations completed successfully")
+            else:
+                print("Migrations failed, but continuing startup...")
+                print(f"Error: {upgrade_result.stderr}")
+                
+        except Exception as e:
+            print(f"Error during migration fix: {e}")
+            print("Continuing startup despite migration issues...")
+    
+    print("=== Startup Complete ===")
 
 # Configure CORS
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")

@@ -5,7 +5,7 @@ services:
     rootDir: crypto-backend
     region: oregon
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python nuclear_reset.py"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -22,7 +22,7 @@ services:
       - key: FORCE_REDEPLOY
         value: "2024-01-01-1704067200"
       - key: REDEPLOY_TRIGGER
-        value: "migration-fix-v5-force-reset"
+        value: "migration-fix-v7-startup-handler"
 
   - type: static
     name: crypto-frontend

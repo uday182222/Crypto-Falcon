@@ -380,18 +380,10 @@ def get_enum_values():
         
         enum_values = [row[0] for row in result.fetchall()]
         
-        # Get trade type enum values
-        result = db.execute(text("""
-            SELECT unnest(enum_range(NULL::tradetype)) as enum_value;
-        """))
-        
-        trade_enum_values = [row[0] for row in result.fetchall()]
-        
         db.close()
         
         return {
             "achievement_types": enum_values,
-            "trade_types": trade_enum_values,
             "timestamp": "2024-01-01T00:00:00Z"
         }
     except Exception as e:

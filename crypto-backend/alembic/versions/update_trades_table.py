@@ -1,7 +1,7 @@
 """update trades table structure
 
 Revision ID: update_trades_table
-Revises: add_wallets_table
+Revises: fix_purchases_table
 Create Date: 2024-12-19 13:00:00.000000
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'update_trades_table'
-down_revision = '4b21ee4b95d9'
+down_revision = 'fix_purchases_table'
 branch_labels = None
 depends_on = None
 

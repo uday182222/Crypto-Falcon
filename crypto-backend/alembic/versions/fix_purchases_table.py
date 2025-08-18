@@ -1,7 +1,7 @@
 """fix purchases table
 
 Revision ID: fix_purchases_table
-Revises: add_missing_tables
+Revises: 7b574d379658
 Create Date: 2024-01-01 12:00:00.000000
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'fix_purchases_table'
-down_revision = 'add_missing_tables'
+down_revision = '7b574d379658'
 branch_labels = None
 depends_on = None
 

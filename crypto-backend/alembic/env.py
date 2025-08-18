@@ -65,13 +65,15 @@ def run_migrations_online() -> None:
     """
     # Use DATABASE_URL environment variable if available
     database_url = os.getenv("DATABASE_URL")
-    environment = os.getenv("ENVIRONMENT", "development")
+    is_render = os.getenv("RENDER") is not None
+    environment = os.getenv("ENVIRONMENT", "production" if is_render else "development")
     
     print(f"ALEMBIC - Environment: {environment}")
+    print(f"ALEMBIC - Running on Render: {is_render}")
     print(f"ALEMBIC - DATABASE_URL: {'SET' if database_url else 'NOT SET'}")
     
     if not database_url:
-        if environment == "production":
+        if environment == "production" or is_render:
             raise ValueError("DATABASE_URL environment variable is required in production")
         else:
             print("ALEMBIC - Using fallback database URL for development")

@@ -4,11 +4,13 @@ import os
 from dotenv import load_dotenv
 import logging
 
-# Load environment variables - only load local files in development
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+# Detect production environment - check for Render-specific environment variables
+IS_RENDER = os.getenv("RENDER") is not None
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production" if IS_RENDER else "development")
 print(f"DB.PY - Environment detected: {ENVIRONMENT}")
+print(f"DB.PY - Running on Render: {IS_RENDER}")
 
-if ENVIRONMENT != "production":
+if ENVIRONMENT != "production" and not IS_RENDER:
     print("DB.PY - Loading local environment files")
     load_dotenv("env.local", override=True)  # Load local environment file only in development
     load_dotenv(".env")  # Load .env file only in development

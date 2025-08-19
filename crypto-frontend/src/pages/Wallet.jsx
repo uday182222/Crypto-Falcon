@@ -420,17 +420,6 @@ const Wallet = () => {
   // Top-up packages configuration
   const topUpPackages = [
     {
-      id: 'registration',
-      name: 'Registration',
-      usdAmount: 100000, // 100,000 USD for ₹0
-      demoCoins: 100000,
-      bonus: 0,
-      popular: false,
-      color: 'from-gray-500 to-gray-600',
-      inrPrice: 0,
-      checkoutPrice: 0
-    },
-    {
       id: 'crypto-crumbs',
       name: 'Crypto Crumbs',
       usdAmount: 100000, // 100,000 USD for ₹10

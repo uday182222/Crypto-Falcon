@@ -421,112 +421,228 @@ const Wallet = () => {
   // Top-up packages configuration
   const topUpPackages = [
     {
-      id: 'starter',
-      name: 'Starter Pack',
-      usdAmount: 50000, // 50,000 USD for ₹100
-      demoCoins: 50000,
+      id: 'registration',
+      name: 'Registration',
+      usdAmount: 100000, // 100,000 USD for ₹0
+      demoCoins: 100000,
       bonus: 0,
       popular: false,
-      color: 'from-blue-500 to-cyan-500'
+      color: 'from-gray-500 to-gray-600',
+      inrPrice: 0,
+      checkoutPrice: 0
     },
     {
-      id: 'pro',
-      name: 'Pro Pack',
-      usdAmount: 150000, // 150,000 USD for ₹250
-      demoCoins: 150000,
-      bonus: 20000,
+      id: 'crypto-crumbs',
+      name: 'Crypto Crumbs',
+      usdAmount: 100000, // 100,000 USD for ₹10
+      demoCoins: 100000,
+      bonus: 0,
+      popular: false,
+      color: 'from-green-500 to-emerald-500',
+      inrPrice: 10,
+      checkoutPrice: 12
+    },
+    {
+      id: 'rookie-pack',
+      name: 'Rookie Pack',
+      usdAmount: 200000, // 200,000 USD for ₹20
+      demoCoins: 200000,
+      bonus: 0,
+      popular: false,
+      color: 'from-blue-500 to-cyan-500',
+      inrPrice: 20,
+      checkoutPrice: 23
+    },
+    {
+      id: 'lambo-baron',
+      name: 'Lambo Baron',
+      usdAmount: 500000, // 500,000 USD for ₹50
+      demoCoins: 500000,
+      bonus: 0,
+      popular: false,
+      color: 'from-yellow-500 to-orange-500',
+      inrPrice: 50,
+      checkoutPrice: 55
+    },
+    {
+      id: 'ramen-bubble',
+      name: 'Ramen Bubble',
+      usdAmount: 1000000, // 1,000,000 USD for ₹100
+      demoCoins: 1000000,
+      bonus: 0,
       popular: true,
-      color: 'from-purple-500 to-pink-500'
+      color: 'from-purple-500 to-pink-500',
+      inrPrice: 100,
+      checkoutPrice: 110
     },
     {
-      id: 'premium',
-      name: 'Premium Pack',
-      usdAmount: 350000, // 350,000 USD for ₹500
-      demoCoins: 350000,
-      bonus: 100000,
+      id: 'digi-dynasty',
+      name: 'Digi Dynasty',
+      usdAmount: 2500000, // 2,500,000 USD for ₹250
+      demoCoins: 2500000,
+      bonus: 0,
       popular: false,
-      color: 'from-orange-500 to-red-500'
+      color: 'from-indigo-500 to-purple-500',
+      inrPrice: 250,
+      checkoutPrice: 265
     },
     {
-      id: 'ultimate',
-      name: 'Ultimate Pack',
-      usdAmount: 800000, // 800,000 USD for ₹1000
-      demoCoins: 800000,
-      bonus: 300000,
+      id: 'block-mogul',
+      name: 'Block Mogul',
+      usdAmount: 5000000, // 5,000,000 USD for ₹500
+      demoCoins: 5000000,
+      bonus: 0,
       popular: false,
-      color: 'from-green-500 to-emerald-500'
+      color: 'from-red-500 to-pink-500',
+      inrPrice: 500,
+      checkoutPrice: 525
+    },
+    {
+      id: 'satoshi-vault',
+      name: 'Satoshi\'s Vault',
+      usdAmount: 100000000, // 100,000,000 USD for ₹1000
+      demoCoins: 100000000,
+      bonus: 0,
+      popular: false,
+      color: 'from-yellow-400 to-orange-500',
+      inrPrice: 1000,
+      checkoutPrice: 1050
     }
   ];
 
-  // Premium feature packages configuration (based on the image reference)
+  // Premium feature packages configuration (based on the new package structure)
   const premiumPackages = [
     {
-      id: 'starter-premium',
-      name: 'Starter Pack',
-      icon: '🔲',
-      inrPrice: 99, // ₹99 for 50,000 USD in game
-      usdPrice: 50000, // 50,000 USD in game
-      demoCoins: 1000,
-      bonus: 10,
+      id: 'registration-premium',
+      name: 'Registration',
+      icon: '🎯',
+      inrPrice: 0, // ₹0 for 100,000 USD in game
+      usdPrice: 100000, // 100,000 USD in game
+      demoCoins: 100000,
+      bonus: 0,
+      popular: false,
+      color: 'from-gray-500 to-gray-600',
+      features: [
+        'Free registration',
+        'Basic trading access',
+        '100,000 MOCK USD'
+      ]
+    },
+    {
+      id: 'crypto-crumbs-premium',
+      name: 'Crypto Crumbs',
+      icon: '🪙',
+      inrPrice: 12, // ₹12 checkout for 100,000 USD in game
+      usdPrice: 100000, // 100,000 USD in game
+      demoCoins: 100000,
+      bonus: 0,
+      popular: false,
+      color: 'from-green-500 to-emerald-500',
+      features: [
+        '100,000 MOCK USD',
+        'Basic trading features',
+        'Email support'
+      ]
+    },
+    {
+      id: 'rookie-pack-premium',
+      name: 'Rookie Pack',
+      icon: '🚀',
+      inrPrice: 23, // ₹23 checkout for 200,000 USD in game
+      usdPrice: 200000, // 200,000 USD in game
+      demoCoins: 200000,
+      bonus: 0,
       popular: false,
       color: 'from-blue-500 to-cyan-500',
       features: [
-        'Basic trading',
-        'Email support',
+        '200,000 MOCK USD',
+        'Enhanced trading tools',
+        'Priority support'
+      ]
+    },
+    {
+      id: 'lambo-baron-premium',
+      name: 'Lambo Baron',
+      icon: '🏎️',
+      inrPrice: 55, // ₹55 checkout for 500,000 USD in game
+      usdPrice: 500000, // 500,000 USD in game
+      demoCoins: 500000,
+      bonus: 0,
+      popular: false,
+      color: 'from-yellow-500 to-orange-500',
+      features: [
+        '500,000 MOCK USD',
+        'Advanced analytics',
         'Mobile app access'
       ]
     },
     {
-      id: 'pro-premium',
-      name: 'Pro Pack',
-      icon: '⭐',
-      inrPrice: 299, // ₹299 for 150,000 USD in game
-      usdPrice: 150000, // 150,000 USD in game
-      demoCoins: 3500,
-      bonus: 20,
+      id: 'ramen-bubble-premium',
+      name: 'Ramen Bubble',
+      icon: '🍜',
+      inrPrice: 110, // ₹110 checkout for 1,000,000 USD in game
+      usdPrice: 1000000, // 1,000,000 USD in game
+      demoCoins: 1000000,
+      bonus: 0,
       popular: true,
       color: 'from-purple-500 to-pink-500',
       features: [
-        'Advanced trading',
-        'Priority support',
-        'Analytics dashboard',
+        '1,000,000 MOCK USD',
+        'Premium trading features',
+        '24/7 support',
         'API access'
       ]
     },
     {
-      id: 'premium-pack',
-      name: 'Premium Pack',
+      id: 'digi-dynasty-premium',
+      name: 'Digi Dynasty',
       icon: '👑',
-      inrPrice: 599, // ₹599 for 350,000 USD in game
-      usdPrice: 350000, // 350,000 USD in game
-      demoCoins: 8000,
-      bonus: 30,
+      inrPrice: 265, // ₹265 checkout for 2,500,000 USD in game
+      usdPrice: 2500000, // 2,500,000 USD in game
+      demoCoins: 2500000,
+      bonus: 0,
       popular: false,
-      color: 'from-orange-500 to-red-500',
+      color: 'from-indigo-500 to-purple-500',
       features: [
-        'All features',
-        '24/7 support',
+        '2,500,000 MOCK USD',
+        'VIP trading tools',
         'Custom strategies',
-        'VIP status',
         'Exclusive events'
       ]
     },
     {
-      id: 'ultimate-premium',
-      name: 'Ultimate Pack',
-      icon: '⚡',
-      inrPrice: 999, // ₹999 for 800,000 USD in game
-      usdPrice: 800000, // 800,000 USD in game
-      demoCoins: 15000,
-      bonus: 50,
+      id: 'block-mogul-premium',
+      name: 'Block Mogul',
+      icon: '💎',
+      inrPrice: 525, // ₹525 checkout for 5,000,000 USD in game
+      usdPrice: 5000000, // 5,000,000 USD in game
+      demoCoins: 5000000,
+      bonus: 0,
       popular: false,
-      color: 'from-green-500 to-emerald-500',
+      color: 'from-red-500 to-pink-500',
       features: [
-        'Everything included',
+        '5,000,000 MOCK USD',
+        'All premium features',
         'Personal advisor',
-        'Beta features',
+        'Beta features access'
+      ]
+    },
+    {
+      id: 'satoshi-vault-premium',
+      name: 'Satoshi\'s Vault',
+      icon: '🏦',
+      inrPrice: 1050, // ₹1050 checkout for 100,000,000 USD in game
+      usdPrice: 100000000, // 100,000,000 USD in game
+      demoCoins: 100000000,
+      bonus: 0,
+      popular: false,
+      color: 'from-yellow-400 to-orange-500',
+      features: [
+        '100,000,000 MOCK USD',
+        'Everything included',
         'Lifetime updates',
-        'Premium community'
+        'Premium community',
+        'Exclusive insights'
       ]
     }
   ];
@@ -554,7 +670,7 @@ const Wallet = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          amount: packageData.id === 'starter' ? 100 : packageData.id === 'pro' ? 250 : packageData.id === 'premium' ? 500 : 1000, // Send actual INR amount
+          amount: packageData.checkoutPrice, // Send actual checkout amount
           package_id: packageData.id // Send package ID for backend processing
         })
       });
@@ -704,7 +820,7 @@ const Wallet = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          amount: packageData.id === 'starter-premium' ? 99 : packageData.id === 'pro-premium' ? 299 : packageData.id === 'premium-pack' ? 599 : 999, // Send actual INR amount
+          amount: packageData.inrPrice, // Send actual INR amount
           package_id: packageData.id // Send package ID for backend processing
         })
       });
@@ -2080,7 +2196,7 @@ const Wallet = () => {
                           fontSize: '1rem',
                           margin: 0
                         }}>
-                          USD for ₹{pkg.id === 'starter' ? '100' : pkg.id === 'pro' ? '250' : pkg.id === 'premium' ? '500' : '1000'}
+                          USD for ₹{pkg.inrPrice}
                         </p>
                       </div>
 
@@ -2140,7 +2256,7 @@ const Wallet = () => {
                             Processing...
                           </div>
                         ) : (
-                          `Buy ${pkg.name} - ₹${pkg.id === 'starter' ? '100' : pkg.id === 'pro' ? '250' : pkg.id === 'premium' ? '500' : '1000'}`
+                          `Buy ${pkg.name} - ₹${pkg.checkoutPrice}`
                         )}
                       </Button>
                     </div>

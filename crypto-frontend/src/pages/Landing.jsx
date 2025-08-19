@@ -712,12 +712,13 @@ const Landing = () => {
           margin: '0 auto',
           textAlign: 'center'
         }}>
+          {/* Logo and Company Name */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '0.75rem',
-            marginBottom: '1rem'
+            marginBottom: '1.5rem'
           }}>
             <div style={{
               width: '2rem',
@@ -740,14 +741,84 @@ const Landing = () => {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
             }}>
-              MotionFalcon
+              Bitcoinpro
             </span>
           </div>
+
+          {/* Navigation Links */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '2rem',
+            marginBottom: '1.5rem',
+            flexWrap: 'wrap'
+          }}>
+            <Link to="/privacy" style={{
+              color: '#94a3b8',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              transition: 'color 0.3s ease',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.color = '#8b5cf6';
+              e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.color = '#94a3b8';
+              e.target.style.borderColor = 'transparent';
+            }}>
+              Privacy Policy
+            </Link>
+            <Link to="/terms" style={{
+              color: '#94a3b8',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              transition: 'color 0.3s ease',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.color = '#8b5cf6';
+              e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.color = '#94a3b8';
+              e.target.style.borderColor = 'transparent';
+            }}>
+              Terms of Service
+            </Link>
+            <Link to="/contact" style={{
+              color: '#94a3b8',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              transition: 'color 0.3s ease',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              border: '1px solid transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.color = '#8b5cf6';
+              e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.color = '#94a3b8';
+              e.target.style.borderColor = 'transparent';
+            }}>
+              Contact Us
+            </Link>
+          </div>
+
+          {/* Copyright */}
           <p style={{ 
             color: '#cbd5e1',
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
+            margin: 0
           }}>
-            © 2024 MotionFalcon. All rights reserved. Trade smart, trade safe.
+            © 2024 Bitcoinpro. All rights reserved. Trade smart, trade safe.
           </p>
         </div>
       </footer>

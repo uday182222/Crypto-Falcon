@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotionFalcon - Loading...</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .loading {
+            text-align: center;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #8b5cf6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading">
+        <div class="spinner"></div>
+        <h2>Loading MotionFalcon...</h2>
+        <p>Redirecting you to the correct page...</p>
+    </div>
+
+    <script>
+        // SPA Routing Fix for Render
+        // This handles direct route access like /portfolio, /trading, etc.
+        
+        // Get the current path
+        const currentPath = window.location.pathname;
+        const search = window.location.search;
+        const hash = window.location.hash;
+        
+        // Check if this is a route (not a file)
+        if (currentPath !== '/' && !currentPath.includes('.')) {
+            console.log('404 detected for route:', currentPath);
+            
+            // Redirect to the main app with the route
+            const redirectUrl = '/' + currentPath + search + hash;
+            console.log('Redirecting to:', redirectUrl);
+            
+            // Use replace to avoid adding to browser history
+            window.location.replace(redirectUrl);
+        } else {
+            // If it's not a route, just go to home
+            window.location.replace('/');
+        }
+    </script>
+</body>
+</html>
+

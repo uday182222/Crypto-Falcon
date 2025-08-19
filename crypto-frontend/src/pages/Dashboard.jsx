@@ -4,6 +4,7 @@ import { TrendingUp, TrendingDown, DollarSign, Users, Activity, ArrowUpRight, Ar
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingAnimation from '../components/ui/LoadingAnimation';
+import Footer from '../components/layout/Footer';
 import { dashboardAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -944,6 +945,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

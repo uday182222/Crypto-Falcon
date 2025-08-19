@@ -10,6 +10,7 @@ import Wallet from './pages/Wallet'
 import Achievements from './pages/Achievements'
 import Portfolio from './pages/Portfolio'
 import Profile from './pages/Profile'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import './App.css'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           
           {/* Protected Routes - with Navbar */}
           <Route path="/dashboard" element={

@@ -353,23 +353,21 @@ async def verify_wallet_topup_payment(
         game_usd_amount = 0
         
         if request.package_id:
-            # Package-based top-up
-            if request.package_id == 'starter':
-                game_usd_amount = 50000  # ₹100 = 50,000 USD
-            elif request.package_id == 'pro':
-                game_usd_amount = 150000  # ₹250 = 150,000 USD
-            elif request.package_id == 'premium':
-                game_usd_amount = 350000  # ₹500 = 350,000 USD
-            elif request.package_id == 'ultimate':
-                game_usd_amount = 800000  # ₹1000 = 800,000 USD
-            elif request.package_id == 'starter-premium':
-                game_usd_amount = 50000  # ₹99 = 50,000 USD
-            elif request.package_id == 'pro-premium':
-                game_usd_amount = 150000  # ₹299 = 150,000 USD
-            elif request.package_id == 'premium-pack':
-                game_usd_amount = 350000  # ₹599 = 350,000 USD
-            elif request.package_id == 'ultimate-premium':
-                game_usd_amount = 800000  # ₹999 = 800,000 USD
+            # Package-based top-up with new package IDs
+            if request.package_id == 'crypto-crumbs':
+                game_usd_amount = 100000  # ₹10 = 100,000 USD
+            elif request.package_id == 'rookie-pack':
+                game_usd_amount = 200000  # ₹20 = 200,000 USD
+            elif request.package_id == 'lambo-baron':
+                game_usd_amount = 500000  # ₹50 = 500,000 USD
+            elif request.package_id == 'ramen-bubble':
+                game_usd_amount = 1000000  # ₹100 = 1,000,000 USD
+            elif request.package_id == 'digi-dynasty':
+                game_usd_amount = 2500000  # ₹250 = 2,500,000 USD
+            elif request.package_id == 'block-mogul':
+                game_usd_amount = 5000000  # ₹500 = 5,000,000 USD
+            elif request.package_id == 'satoshi-vault':
+                game_usd_amount = 100000000  # ₹1000 = 100,000,000 USD
             elif request.package_id == 'custom':
                 # Custom top-up amount - amount is in INR
                 # For custom top-up, assume ₹1 = 500 USD in game

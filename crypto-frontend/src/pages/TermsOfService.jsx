@@ -48,7 +48,10 @@ const TermsOfService = () => {
         {/* Content */}
         <Card style={{
           padding: '3rem',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          background: 'rgba(15, 23, 42, 0.8)',
+          border: '1px solid rgba(51, 65, 85, 0.3)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
         }}>
           <div style={{
             color: '#e2e8f0',

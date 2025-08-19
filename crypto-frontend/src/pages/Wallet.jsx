@@ -13,7 +13,6 @@ const Wallet = () => {
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [showTopUpPackages, setShowTopUpPackages] = useState(false);
   const [showTopUpSubpage, setShowTopUpSubpage] = useState(false);
-  const [topUpType, setTopUpType] = useState('demo'); // 'demo' or 'packages'
   const [processingTopUp, setProcessingTopUp] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
@@ -510,142 +509,7 @@ const Wallet = () => {
     }
   ];
 
-  // Premium feature packages configuration (based on the new package structure)
-  const premiumPackages = [
-    {
-      id: 'registration-premium',
-      name: 'Registration',
-      icon: '🎯',
-      inrPrice: 0, // ₹0 for 100,000 USD in game
-      usdPrice: 100000, // 100,000 USD in game
-      demoCoins: 100000,
-      bonus: 0,
-      popular: false,
-      color: 'from-gray-500 to-gray-600',
-      features: [
-        'Free registration',
-        'Basic trading access',
-        '100,000 MOCK USD'
-      ]
-    },
-    {
-      id: 'crypto-crumbs-premium',
-      name: 'Crypto Crumbs',
-      icon: '🪙',
-      inrPrice: 12, // ₹12 checkout for 100,000 USD in game
-      usdPrice: 100000, // 100,000 USD in game
-      demoCoins: 100000,
-      bonus: 0,
-      popular: false,
-      color: 'from-green-500 to-emerald-500',
-      features: [
-        '100,000 MOCK USD',
-        'Basic trading features',
-        'Email support'
-      ]
-    },
-    {
-      id: 'rookie-pack-premium',
-      name: 'Rookie Pack',
-      icon: '🚀',
-      inrPrice: 23, // ₹23 checkout for 200,000 USD in game
-      usdPrice: 200000, // 200,000 USD in game
-      demoCoins: 200000,
-      bonus: 0,
-      popular: false,
-      color: 'from-blue-500 to-cyan-500',
-      features: [
-        '200,000 MOCK USD',
-        'Enhanced trading tools',
-        'Priority support'
-      ]
-    },
-    {
-      id: 'lambo-baron-premium',
-      name: 'Lambo Baron',
-      icon: '🏎️',
-      inrPrice: 55, // ₹55 checkout for 500,000 USD in game
-      usdPrice: 500000, // 500,000 USD in game
-      demoCoins: 500000,
-      bonus: 0,
-      popular: false,
-      color: 'from-yellow-500 to-orange-500',
-      features: [
-        '500,000 MOCK USD',
-        'Advanced analytics',
-        'Mobile app access'
-      ]
-    },
-    {
-      id: 'ramen-bubble-premium',
-      name: 'Ramen Bubble',
-      icon: '🍜',
-      inrPrice: 110, // ₹110 checkout for 1,000,000 USD in game
-      usdPrice: 1000000, // 1,000,000 USD in game
-      demoCoins: 1000000,
-      bonus: 0,
-      popular: true,
-      color: 'from-purple-500 to-pink-500',
-      features: [
-        '1,000,000 MOCK USD',
-        'Premium trading features',
-        '24/7 support',
-        'API access'
-      ]
-    },
-    {
-      id: 'digi-dynasty-premium',
-      name: 'Digi Dynasty',
-      icon: '👑',
-      inrPrice: 265, // ₹265 checkout for 2,500,000 USD in game
-      usdPrice: 2500000, // 2,500,000 USD in game
-      demoCoins: 2500000,
-      bonus: 0,
-      popular: false,
-      color: 'from-indigo-500 to-purple-500',
-      features: [
-        '2,500,000 MOCK USD',
-        'VIP trading tools',
-        'Custom strategies',
-        'Exclusive events'
-      ]
-    },
-    {
-      id: 'block-mogul-premium',
-      name: 'Block Mogul',
-      icon: '💎',
-      inrPrice: 525, // ₹525 checkout for 5,000,000 USD in game
-      usdPrice: 5000000, // 5,000,000 USD in game
-      demoCoins: 5000000,
-      bonus: 0,
-      popular: false,
-      color: 'from-red-500 to-pink-500',
-      features: [
-        '5,000,000 MOCK USD',
-        'All premium features',
-        'Personal advisor',
-        'Beta features access'
-      ]
-    },
-    {
-      id: 'satoshi-vault-premium',
-      name: 'Satoshi\'s Vault',
-      icon: '🏦',
-      inrPrice: 1050, // ₹1050 checkout for 100,000,000 USD in game
-      usdPrice: 100000000, // 100,000,000 USD in game
-      demoCoins: 100000000,
-      bonus: 0,
-      popular: false,
-      color: 'from-yellow-400 to-orange-500',
-      features: [
-        '100,000,000 MOCK USD',
-        'Everything included',
-        'Lifetime updates',
-        'Premium community',
-        'Exclusive insights'
-      ]
-    }
-  ];
+
 
   const handlePackageTopUp = async (packageData) => {
     if (!razorpayLoaded) {
@@ -797,167 +661,6 @@ const Wallet = () => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const handlePremiumPackagePurchase = async (packageData) => {
-    if (!razorpayLoaded) {
-      addNotification('warning', 'Payment Gateway Loading', 'Please wait a moment for the payment system to initialize');
-      return;
-    }
-
-    // Check if user is authenticated
-    const token = localStorage.getItem('motionfalcon_token');
-    if (!token) {
-      addNotification('warning', 'Authentication Required', 'Please login first to purchase premium packages');
-      return;
-    }
-
-    setProcessingTopUp(true);
-    try {
-      // Create Razorpay order for the premium package
-      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          amount: packageData.inrPrice, // Send actual INR amount
-          package_id: packageData.id // Send package ID for backend processing
-        })
-      });
-
-      if (!orderResponse.ok) {
-        const errorText = await orderResponse.text();
-        throw new Error(`Failed to create order: ${orderResponse.status} ${orderResponse.statusText} - ${errorText}`);
-      }
-
-      const orderData = await orderResponse.json();
-      
-      // Initialize Razorpay payment
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B',
-        amount: orderData.amount_inr * 100, // Convert to paise
-        currency: 'INR',
-        name: 'MotionFalcon',
-        description: `${packageData.name} - Premium Features + ₹${packageData.inrPrice}`,
-        order_id: orderData.order_id,
-        handler: async function (response) {
-          try {
-            // Verify payment
-            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                amount: packageData.inrPrice,
-                package_id: packageData.id // Send package ID for verification
-              })
-            });
-
-            if (verifyResponse.ok) {
-              const result = await verifyResponse.json();
-              
-              // Update local state with Game USD amount from backend
-              const totalAmount = result.amount_added || packageData.usdPrice;
-              setBalance(prev => prev + totalAmount);
-              setShowTopUpSubpage(false);
-              
-              // Add to transactions
-              const newTransaction = {
-                id: Date.now(),
-                type: 'premium',
-                coin: 'USD',
-                amount: totalAmount,
-                price: 1,
-                total: totalAmount,
-                date: new Date().toISOString(),
-                status: 'completed',
-                category: 'wallet'
-              };
-              setTransactions(prev => [newTransaction, ...prev]);
-              
-              // Show success notification
-              addNotification('success', 
-                `Successfully purchased ${packageData.name}!`, 
-                'Premium features unlocked and Game USD added',
-                [
-                  { icon: '💰', text: `Added $${totalAmount.toLocaleString()} Game USD` },
-                  { icon: '⭐', text: 'Premium features unlocked!' }
-                ]
-              );
-              
-              // Refresh wallet data
-              fetchWalletData();
-            } else {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-              
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            alert('Payment verification failed. Please contact support.');
-          }
-        },
-        prefill: {
-          name: 'Demo User',
-          email: 'demo@motionfalcon.com'
-        },
-        theme: {
-          color: '#14b8a6'
-        },
-        modal: {
-          ondismiss: function() {
-            setProcessingTopUp(false);
-          }
-        }
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-      
-    } catch (error) {
-      console.error('Premium package purchase error:', error);
-      addNotification('error', 'Payment Failed', 'Failed to initiate payment. Please try again.');
-    } finally {
-      setProcessingTopUp(false);
-    }
-  };
 
 
 
@@ -2011,7 +1714,7 @@ const Wallet = () => {
                   fontSize: '1rem',
                   margin: 0
                 }}>
-                  Choose between USD balance for trading or premium packages for enhanced features
+                  Choose from our selection of packages to add USD to your wallet for trading
                 </p>
               </div>
               <Button
@@ -2029,542 +1732,185 @@ const Wallet = () => {
               </Button>
             </div>
 
-            {/* Type Switcher */}
-            <div style={{
-              display: 'flex',
-              background: 'rgba(15, 23, 42, 0.8)',
-              border: '1px solid rgba(51, 65, 85, 0.5)',
-              borderRadius: '1.5rem',
-              padding: '0.25rem',
-              marginBottom: '3rem',
-              maxWidth: '500px',
-              margin: '0 auto 3rem auto',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
-            }}>
-              <Button
-                variant="ghost"
-                onClick={() => setTopUpType('demo')}
-                style={{
-                  flex: 1,
-                  background: topUpType === 'demo' ? 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)' : 'transparent',
-                  color: topUpType === 'demo' ? 'white' : '#94a3b8',
-                  border: 'none',
-                  padding: '1.25rem 1.5rem',
-                  borderRadius: '1.25rem',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  boxShadow: topUpType === 'demo' ? '0 4px 15px rgba(20, 184, 166, 0.3)' : 'none'
-                }}
-              >
-                                  💵 USD Balance
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setTopUpType('packages')}
-                style={{
-                  flex: 1,
-                  background: topUpType === 'packages' ? 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)' : 'transparent',
-                  color: topUpType === 'packages' ? 'white' : '#94a3b8',
-                  border: 'none',
-                  padding: '1.25rem 1.5rem',
-                  borderRadius: '1.25rem',
-                  fontWeight: '600',
-                  fontSize: '1rem',
-                  transition: 'all 0.3s ease',
-                  boxShadow: topUpType === 'packages' ? '0 4px 15px rgba(20, 184, 166, 0.3)' : 'none'
-                }}
-              >
-                ⭐ Premium Packages
-              </Button>
-            </div>
-
-            {/* USD Balance Section */}
-            {topUpType === 'demo' && (
-              <div>
-                <h4 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '600',
-                  color: '#f8fafc',
-                  margin: '0 0 1.5rem 0',
-                  textAlign: 'center'
-                }}>
-                  🪙 Demo Coin Packages
-                </h4>
-                <p style={{
-                  color: '#94a3b8',
-                  fontSize: '1rem',
-                  margin: '0 0 2rem 0',
-                  textAlign: 'center'
-                }}>
-                  Add USD to your wallet for trading - perfect for learning and testing strategies
-                </p>
-                
-                {/* Demo Coin Packages Grid */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gap: '2rem',
-                  marginBottom: '2rem',
-                  maxWidth: '1200px',
-                  margin: '0 auto 2rem auto'
-                }}>
-                  {topUpPackages.map((pkg) => (
-                    <div key={pkg.id} style={{
-                      background: 'rgba(15, 23, 42, 0.9)',
-                      border: '1px solid',
-                      borderColor: pkg.popular ? 'rgba(139, 92, 246, 0.6)' : 'rgba(51, 65, 85, 0.6)',
-                      borderRadius: '1.5rem',
-                      padding: '2rem',
-                      position: 'relative',
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer',
-                      backdropFilter: 'blur(10px)',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-                    }} onMouseEnter={(e) => {
-                      e.target.closest('div').style.transform = 'translateY(-8px)';
-                      e.target.closest('div').style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.4)';
-                      e.target.closest('div').style.borderColor = pkg.popular ? 'rgba(139, 92, 246, 0.8)' : 'rgba(51, 65, 85, 0.8)';
-                    }} onMouseLeave={(e) => {
-                      e.target.closest('div').style.transform = 'translateY(0)';
-                      e.target.closest('div').style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
-                      e.target.closest('div').style.borderColor = pkg.popular ? 'rgba(139, 92, 246, 0.6)' : 'rgba(51, 65, 85, 0.6)';
-                    }}>
-                      {/* Popular Badge */}
-                      {pkg.popular && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '-12px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '1rem',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          border: '2px solid rgba(15, 23, 42, 0.95)'
-                        }}>
-                          ⭐ Most Popular
-                        </div>
-                      )}
-
-                      {/* Package Header */}
-                      <div style={{
-                        textAlign: 'center',
-                        marginBottom: '1.5rem'
-                      }}>
-                        <h5 style={{
-                          fontSize: '1.5rem',
-                          fontWeight: '700',
-                          color: '#f8fafc',
-                          margin: '0 0 0.5rem 0'
-                        }}>
-                          {pkg.name}
-                        </h5>
-                        <div style={{
-                          background: `linear-gradient(135deg, ${pkg.color})`,
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '0.5rem',
-                          display: 'inline-block'
-                        }}>
-                          <span style={{
-                            color: 'white',
-                            fontSize: '0.875rem',
-                            fontWeight: '600'
-                          }}>
-                            ${pkg.usdAmount}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* USD Amount */}
-                      <div style={{
-                        textAlign: 'center',
-                        marginBottom: '1.5rem'
-                      }}>
-                        <div style={{
-                          fontSize: '2.5rem',
-                          fontWeight: '800',
-                          color: '#f8fafc',
-                          marginBottom: '0.5rem'
-                        }}>
-                          ${pkg.usdAmount.toLocaleString()}
-                        </div>
-                        <p style={{
-                          color: '#94a3b8',
-                          fontSize: '1rem',
-                          margin: 0
-                        }}>
-                          USD for ₹{pkg.inrPrice}
-                        </p>
-                      </div>
-
-                      {/* Bonus */}
-                      {pkg.bonus > 0 && (
-                        <div style={{
-                          textAlign: 'center',
-                          marginBottom: '1.5rem',
-                          padding: '1rem',
-                          background: 'rgba(34, 197, 94, 0.1)',
-                          border: '1px solid rgba(34, 197, 94, 0.3)',
-                          borderRadius: '0.75rem'
-                        }}>
-                          <div style={{
-                            fontSize: '1.25rem',
-                            fontWeight: '700',
-                            color: '#22c55e',
-                            marginBottom: '0.25rem'
-                          }}>
-                            +{pkg.bonus.toLocaleString()} Bonus
-                          </div>
-                          <p style={{
-                            color: '#16a34a',
-                            fontSize: '0.875rem',
-                            margin: 0
-                          }}>
-                            🎁 Extra coins for free!
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Purchase Button */}
-                      <Button
-                        variant="primary"
-                        onClick={() => handlePackageTopUp(pkg)}
-                        disabled={processingTopUp || !razorpayLoaded}
-                        style={{
-                          width: '100%',
-                          background: pkg.popular 
-                            ? 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'
-                            : 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
-                          color: 'white',
-                          border: 'none',
-                          padding: '1rem',
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          borderRadius: '0.75rem'
-                        }}
-                      >
-                        {processingTopUp ? (
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}>
-                            <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
-                            Processing...
-                          </div>
-                        ) : (
-                          `Buy ${pkg.name} - ₹${pkg.checkoutPrice}`
-                        )}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Premium Packages Section */}
-            {topUpType === 'packages' && (
-              <div>
-                <h4 style={{
-                  fontSize: '1.5rem',
-                  fontWeight: '600',
-                  color: '#f8fafc',
-                  margin: '0 0 1.5rem 0',
-                  textAlign: 'center'
-                }}>
-                  ⭐ Premium Feature Packages (INR Pricing)
-                </h4>
-                <p style={{
-                  color: '#94a3b8',
-                  fontSize: '1rem',
-                  margin: '0 0 2rem 0',
-                  textAlign: 'center'
-                }}>
-                  Unlock advanced features, priority support, and exclusive trading tools. Pay in INR, get Game USD!
-                </p>
-                
-                {/* Premium Packages Grid */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gap: '2rem',
-                  marginBottom: '2rem',
-                  maxWidth: '1200px',
-                  margin: '0 auto 2rem auto'
-                }}>
-                  {premiumPackages.map((pkg) => (
-                    <div key={pkg.id} style={{
-                      background: 'rgba(15, 23, 42, 0.9)',
-                      border: '1px solid',
-                      borderColor: pkg.popular ? 'rgba(139, 92, 246, 0.6)' : 'rgba(51, 65, 85, 0.6)',
-                      borderRadius: '1.5rem',
-                      padding: '2rem',
-                      position: 'relative',
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer',
-                      backdropFilter: 'blur(10px)',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
-                    }} onMouseEnter={(e) => {
-                      e.target.closest('div').style.transform = 'translateY(-8px)';
-                      e.target.closest('div').style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.4)';
-                      e.target.closest('div').style.borderColor = pkg.popular ? 'rgba(139, 92, 246, 0.8)' : 'rgba(51, 65, 85, 0.8)';
-                    }} onMouseLeave={(e) => {
-                      e.target.closest('div').style.transform = 'translateY(0)';
-                      e.target.closest('div').style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
-                      e.target.closest('div').style.borderColor = pkg.popular ? 'rgba(139, 92, 246, 0.6)' : 'rgba(51, 65, 85, 0.6)';
-                    }}>
-                      {/* Popular Badge */}
-                      {pkg.popular && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '-12px',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-                          color: 'white',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '1rem',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          border: '2px solid rgba(15, 23, 42, 0.95)'
-                        }}>
-                          ⭐ MOST POPULAR
-                        </div>
-                      )}
-
-                      {/* Package Icon */}
-                      <div style={{
-                        textAlign: 'center',
-                        marginBottom: '1rem'
-                      }}>
-                        <div style={{
-                          fontSize: '2.5rem',
-                          marginBottom: '0.5rem'
-                        }}>
-                          {pkg.icon}
-                        </div>
-                      </div>
-
-                      {/* Package Header */}
-                      <div style={{
-                        textAlign: 'center',
-                        marginBottom: '1.5rem'
-                      }}>
-                        <h5 style={{
-                          fontSize: '1.5rem',
-                          fontWeight: '700',
-                          color: '#f8fafc',
-                          margin: '0 0 0.5rem 0'
-                        }}>
-                          {pkg.name}
-                        </h5>
-                        <div style={{
-                          background: `linear-gradient(135deg, ${pkg.color})`,
-                          padding: '0.5rem 1rem',
-                          borderRadius: '0.5rem',
-                          display: 'inline-block'
-                        }}>
-                          <span style={{
-                            color: 'white',
-                            fontSize: '1.25rem',
-                            fontWeight: '700'
-                          }}>
-                            ₹{pkg.inrPrice}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* USD Amount */}
-                      <div style={{
-                        textAlign: 'center',
-                        marginBottom: '1.5rem'
-                      }}>
-                        <div style={{
-                          fontSize: '2rem',
-                          fontWeight: '800',
-                          color: '#f8fafc',
-                          marginBottom: '0.5rem'
-                        }}>
-                          ${pkg.usdPrice}
-                        </div>
-                        <p style={{
-                          color: '#94a3b8',
-                          fontSize: '0.875rem',
-                          margin: 0
-                        }}>
-                          USD
-                        </p>
-                      </div>
-
-                      {/* Bonus */}
-                      <div style={{
-                        textAlign: 'center',
-                        marginBottom: '1.5rem'
-                      }}>
-                        <div style={{
-                          padding: '0.5rem 1rem',
-                          background: 'rgba(34, 197, 94, 0.1)',
-                          border: '1px solid rgba(34, 197, 94, 0.3)',
-                          borderRadius: '0.5rem',
-                          display: 'inline-block'
-                        }}>
-                          <span style={{
-                            color: '#22c55e',
-                            fontSize: '0.875rem',
-                            fontWeight: '600'
-                          }}>
-                            +{pkg.bonus}% Bonus
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Features */}
-                      <div style={{
-                        marginBottom: '1.5rem'
-                      }}>
-                        {pkg.features.map((feature, index) => (
-                          <div key={index} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            marginBottom: '0.5rem'
-                          }}>
-                            <div style={{
-                              color: '#22c55e',
-                              fontSize: '1rem'
-                            }}>
-                              ✓
-                            </div>
-                            <span style={{
-                              color: '#94a3b8',
-                              fontSize: '0.875rem'
-                            }}>
-                              {feature}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Purchase Button */}
-                      <Button
-                        variant="primary"
-                        onClick={() => handlePremiumPackagePurchase(pkg)}
-                        disabled={processingTopUp || !razorpayLoaded}
-                        style={{
-                          width: '100%',
-                          background: pkg.popular 
-                            ? 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'
-                            : 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
-                          color: 'white',
-                          border: 'none',
-                          padding: '1rem',
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          borderRadius: '0.75rem'
-                        }}
-                      >
-                        {processingTopUp ? (
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}>
-                            <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
-                            Processing...
-                          </div>
-                        ) : (
-                          `Select Package`
-                        )}
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Info Section */}
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.8)',
-              border: '1px solid rgba(51, 65, 85, 0.5)',
-              borderRadius: '1rem',
-              padding: '1.5rem'
-            }}>
+            {/* Packages Section */}
+            <div>
               <h4 style={{
-                fontSize: '1.25rem',
+                fontSize: '1.5rem',
                 fontWeight: '600',
                 color: '#f8fafc',
-                margin: '0 0 1rem 0'
+                margin: '0 0 1.5rem 0',
+                textAlign: 'center'
               }}>
-                ℹ️ Important Information
+                🎮 Trading Packages
               </h4>
+              <p style={{
+                color: '#94a3b8',
+                fontSize: '1rem',
+                margin: '0 0 2rem 0',
+                textAlign: 'center'
+              }}>
+                Select a package to add USD to your wallet for trading and learning
+              </p>
+              
+              {/* Packages Grid */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '1rem'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '2rem',
+                marginBottom: '2rem',
+                maxWidth: '1200px',
+                margin: '0 auto 2rem auto'
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#14b8a6'
-                  }} />
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                    Demo coins are for practice trading only
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#14b8a6'
-                  }} />
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                    Payment processed securely via Razorpay
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#14b8a6'
-                  }} />
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                    Coins added instantly after payment
-                  </span>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.75rem'
-                }}>
-                  <div style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#14b8a6'
-                  }} />
-                  <span style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
-                    No real money trading - 100% safe
-                  </span>
-                </div>
+                {topUpPackages.map((pkg) => (
+                  <div key={pkg.id} style={{
+                    background: 'rgba(15, 23, 42, 0.9)',
+                    border: '1px solid',
+                    borderColor: pkg.popular ? 'rgba(139, 92, 246, 0.6)' : 'rgba(51, 65, 85, 0.6)',
+                    borderRadius: '1.5rem',
+                    padding: '2rem',
+                    position: 'relative',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+                  }} onMouseEnter={(e) => {
+                    e.target.closest('div').style.transform = 'translateY(-8px)';
+                    e.target.closest('div').style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.4)';
+                    e.target.closest('div').style.borderColor = pkg.popular ? 'rgba(139, 92, 246, 0.8)' : 'rgba(51, 65, 85, 0.8)';
+                  }} onMouseLeave={(e) => {
+                    e.target.closest('div').style.transform = 'translateY(0)';
+                    e.target.closest('div').style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
+                    e.target.closest('div').style.borderColor = pkg.popular ? 'rgba(139, 92, 246, 0.6)' : 'rgba(51, 65, 85, 0.6)';
+                  }}>
+                    {/* Popular Badge */}
+                    {pkg.popular && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '-12px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                        color: 'white',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '1rem',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        border: '2px solid rgba(15, 23, 42, 0.95)'
+                      }}>
+                        ⭐ Most Popular
+                      </div>
+                    )}
+
+                    {/* Package Header */}
+                    <div style={{
+                      textAlign: 'center',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <h5 style={{
+                        fontSize: '1.5rem',
+                        fontWeight: '700',
+                        color: '#f8fafc',
+                        margin: '0 0 0.5rem 0'
+                      }}>
+                        {pkg.name}
+                      </h5>
+                      <div style={{
+                        background: `linear-gradient(135deg, ${pkg.color})`,
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.5rem',
+                        display: 'inline-block'
+                      }}>
+                        <span style={{
+                          color: 'white',
+                          fontSize: '0.875rem',
+                          fontWeight: '600'
+                        }}>
+                          ${pkg.usdAmount.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* USD Amount */}
+                    <div style={{
+                      textAlign: 'center',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <div style={{
+                        fontSize: '2.5rem',
+                        fontWeight: '800',
+                        color: '#f8fafc',
+                        marginBottom: '0.5rem'
+                      }}>
+                        ${pkg.usdAmount.toLocaleString()}
+                      </div>
+                      <p style={{
+                        color: '#94a3b8',
+                        fontSize: '1rem',
+                        margin: 0
+                      }}>
+                        MOCK USD
+                      </p>
+                    </div>
+
+                    {/* Price Information */}
+                    <div style={{
+                      textAlign: 'center',
+                      marginBottom: '1.5rem',
+                      padding: '1rem',
+                      background: 'rgba(34, 197, 94, 0.1)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
+                      borderRadius: '0.75rem'
+                    }}>
+                      <div style={{
+                        fontSize: '1.25rem',
+                        fontWeight: '700',
+                        color: '#22c55e',
+                        marginBottom: '0.25rem'
+                      }}>
+                        ₹{pkg.checkoutPrice} Checkout
+                      </div>
+                      <p style={{
+                        color: '#16a34a',
+                        fontSize: '0.875rem',
+                        margin: 0
+                      }}>
+                        {pkg.inrPrice === 0 ? 'Free Registration' : `Base Price: ₹${pkg.inrPrice}`}
+                      </p>
+                    </div>
+
+                    {/* Purchase Button */}
+                    <Button
+                      variant="primary"
+                      onClick={() => handlePackageTopUp(pkg)}
+                      disabled={processingTopUp || !razorpayLoaded}
+                      style={{
+                        width: '100%',
+                        background: pkg.popular 
+                          ? 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'
+                          : 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '1rem',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        borderRadius: '0.75rem'
+                      }}
+                    >
+                      {processingTopUp ? (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                          Processing...
+                        </div>
+                      ) : (
+                        pkg.inrPrice === 0 ? 'Free Registration' : `Buy ${pkg.name} - ₹${pkg.checkoutPrice}`
+                      )}
+                    </Button>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

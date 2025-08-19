@@ -1,6 +1,5 @@
 import React from 'react';
 import { FileText, AlertTriangle, Shield, Users, Coins, Lock, Globe, Scale, Phone, Mail, MapPin } from 'lucide-react';
-import Card from '../components/ui/Card';
 
 const TermsOfService = () => {
   return (
@@ -46,12 +45,13 @@ const TermsOfService = () => {
         </div>
 
         {/* Content */}
-        <Card style={{
+        <div style={{
           padding: '3rem',
           marginBottom: '2rem',
           background: 'rgba(15, 23, 42, 0.8)',
           border: '1px solid rgba(51, 65, 85, 0.3)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          borderRadius: '15px'
         }}>
           <div style={{
             color: '#e2e8f0',
@@ -447,7 +447,7 @@ const TermsOfService = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Footer Info */}
         <div style={{

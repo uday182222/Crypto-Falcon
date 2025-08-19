@@ -1,6 +1,5 @@
 import React from 'react';
 import { Shield, Calendar } from 'lucide-react';
-import Card from '../components/ui/Card';
 
 const PrivacyPolicy = () => {
   return (
@@ -43,15 +42,31 @@ const PrivacyPolicy = () => {
           }}>
             How we collect, use, and protect your information
           </p>
+          
+          {/* Test Message */}
+          <div style={{
+            background: 'rgba(34, 197, 94, 0.1)',
+            border: '1px solid rgba(34, 197, 94, 0.3)',
+            borderRadius: '0.75rem',
+            padding: '1rem',
+            marginTop: '1rem',
+            maxWidth: '600px',
+            margin: '1rem auto 0 auto'
+          }}>
+            <p style={{ color: '#4ade80', margin: 0, fontWeight: '600' }}>
+              ✅ Page is loading successfully! Content should be visible below.
+            </p>
+          </div>
         </div>
 
         {/* Content */}
-        <Card style={{
+        <div style={{
           padding: '3rem',
           marginBottom: '2rem',
           background: 'rgba(15, 23, 42, 0.8)',
           border: '1px solid rgba(51, 65, 85, 0.3)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)'
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          borderRadius: '15px'
         }}>
           <div style={{
             color: '#e2e8f0',
@@ -310,7 +325,7 @@ const PrivacyPolicy = () => {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Footer Info */}
         <div style={{

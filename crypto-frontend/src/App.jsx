@@ -11,6 +11,7 @@ import Achievements from './pages/Achievements'
 import Portfolio from './pages/Portfolio'
 import Profile from './pages/Profile'
 import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 import './App.css'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           
           {/* Protected Routes - with Navbar */}
           <Route path="/dashboard" element={

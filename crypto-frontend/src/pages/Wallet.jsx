@@ -556,7 +556,7 @@ const Wallet = () => {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                amount: packageData.usdAmount,
+                amount: packageData.checkoutPrice, // Send checkout price in INR
                 package_id: packageData.id // Send package ID for verification
               })
             });
@@ -564,8 +564,8 @@ const Wallet = () => {
             if (verifyResponse.ok) {
               const result = await verifyResponse.json();
               
-              // Update local state with USD amount
-              const totalAmount = packageData.usdAmount;
+              // Update local state with USD amount from backend
+              const totalAmount = result.amount_added || packageData.usdAmount;
               setBalance(prev => prev + totalAmount);
               setShowTopUpSubpage(false);
               
@@ -588,7 +588,7 @@ const Wallet = () => {
                 `Successfully purchased ${packageData.name}!`, 
                 'Your USD has been added to your wallet',
                 [
-                  { icon: '💰', text: `Added $${totalAmount.toFixed(2)} USD` }
+                  { icon: '💰', text: `Added $${totalAmount.toLocaleString()} USD` }
                 ]
               );
               

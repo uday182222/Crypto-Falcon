@@ -699,6 +699,276 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Additional Pages Redirection Section */}
+      <section style={{
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        borderTop: '1px solid rgba(51, 65, 85, 0.3)',
+        padding: '4rem 2rem',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <h2 style={{
+            fontSize: '2.5rem',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '1rem'
+          }}>
+            Explore More
+          </h2>
+          <p style={{
+            color: '#94a3b8',
+            fontSize: '1.125rem',
+            marginBottom: '3rem',
+            maxWidth: '600px',
+            marginLeft: 'auto',
+            marginRight: 'auto'
+          }}>
+            Discover our comprehensive resources, stay connected, and learn about our policies
+          </p>
+
+          {/* Page Cards Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '2rem',
+            marginBottom: '3rem'
+          }}>
+            {/* Blog Page Card */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
+              border: '1px solid rgba(20, 184, 166, 0.3)',
+              borderRadius: '1rem',
+              padding: '2rem',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-8px)';
+              e.currentTarget.style.boxShadow = '0 20px 40px rgba(20, 184, 166, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(20, 184, 166, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'rgba(20, 184, 166, 0.3)';
+            }}
+            onClick={() => window.location.href = '/blog'}>
+              <div style={{
+                width: '3rem',
+                height: '3rem',
+                background: 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <span style={{ fontSize: '1.5rem' }}>📝</span>
+              </div>
+              <h3 style={{
+                color: '#f8fafc',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
+              }}>
+                Blog & Insights
+              </h3>
+              <p style={{
+                color: '#94a3b8',
+                fontSize: '0.875rem',
+                marginBottom: '1.5rem',
+                lineHeight: '1.6'
+              }}>
+                Stay updated with the latest crypto trends, trading strategies, and market insights from our expert team
+              </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                color: '#14b8a6',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}>
+                Read Articles <ArrowRight size={16} />
+              </div>
+            </div>
+
+            {/* Contact Us Page Card */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%)',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              borderRadius: '1rem',
+              padding: '2rem',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-8px)';
+              e.currentTarget.style.boxShadow = '0 20px 40px rgba(139, 92, 246, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            }}
+            onClick={() => window.location.href = '/contact-us'}>
+              <div style={{
+                width: '3rem',
+                height: '3rem',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #14b8a6 100%)',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <span style={{ fontSize: '1.5rem' }}>📞</span>
+              </div>
+              <h3 style={{
+                color: '#f8fafc',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
+              }}>
+                Get in Touch
+              </h3>
+              <p style={{
+                color: '#94a3b8',
+                fontSize: '0.875rem',
+                marginBottom: '1.5rem',
+                lineHeight: '1.6'
+              }}>
+                Have questions? Need support? Reach out to our team through multiple channels for assistance
+              </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                color: '#8b5cf6',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}>
+                Contact Us <ArrowRight size={16} />
+              </div>
+            </div>
+
+            {/* Cancellations and Refunds Page Card */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(20, 184, 166, 0.1) 100%)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '1rem',
+              padding: '2rem',
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-8px)';
+              e.currentTarget.style.boxShadow = '0 20px 40px rgba(239, 68, 68, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            }}
+            onClick={() => window.location.href = '/cancellations-and-refunds'}>
+              <div style={{
+                width: '3rem',
+                height: '3rem',
+                background: 'linear-gradient(135deg, #ef4444 0%, #14b8a6 100%)',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <span style={{ fontSize: '1.5rem' }}>🔄</span>
+              </div>
+              <h3 style={{
+                color: '#f8fafc',
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                marginBottom: '0.75rem'
+              }}>
+                Policies & Refunds
+              </h3>
+              <p style={{
+                color: '#94a3b8',
+                fontSize: '0.875rem',
+                marginBottom: '1.5rem',
+                lineHeight: '1.6'
+              }}>
+                Understand our cancellation policies, refund procedures, and customer protection measures
+              </p>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                color: '#ef4444',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}>
+                View Policies <ArrowRight size={16} />
+              </div>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
+            border: '1px solid rgba(20, 184, 166, 0.3)',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '600px',
+            margin: '0 auto'
+          }}>
+            <h3 style={{
+              color: '#f8fafc',
+              fontSize: '1.5rem',
+              fontWeight: '600',
+              marginBottom: '1rem'
+            }}>
+              Ready to Start Trading?
+            </h3>
+            <p style={{
+              color: '#94a3b8',
+              fontSize: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              Join thousands of traders and start your crypto journey today
+            </p>
+            <Link to="/register">
+              <Button
+                variant="primary"
+                style={{
+                  background: 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 2rem',
+                  fontSize: '1rem',
+                  fontWeight: '600'
+                }}
+              >
+                Get Started Now
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer style={{
         borderTop: '2px solid rgba(51, 65, 85, 0.6)',

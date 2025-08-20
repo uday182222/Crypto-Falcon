@@ -10,6 +10,8 @@ import Wallet from './pages/Wallet'
 import Achievements from './pages/Achievements'
 import Portfolio from './pages/Portfolio'
 import Profile from './pages/Profile'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 import './App.css'
 
 // Debug component to show current route
@@ -64,48 +66,9 @@ const RouteHandler = () => {
   return null;
 };
 
-// Inline component for testing
-const PrivacyPolicy = () => {
-  console.log('PrivacyPolicy component rendering');
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'red',
-      color: 'white',
-      padding: '2rem',
-      fontSize: '2rem',
-      textAlign: 'center'
-    }}>
-      <h1>PRIVACY POLICY TEST</h1>
-      <p>If you can see this RED page with white text, the component is working!</p>
-      <p>Current URL: {window.location.href}</p>
-      <p>Time: {new Date().toLocaleString()}</p>
-      <p>✅ SUCCESS: Route is working!</p>
-      <p>Path: {window.location.pathname}</p>
-    </div>
-  );
-};
 
-const TermsOfService = () => {
-  console.log('TermsOfService component rendering');
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'blue',
-      color: 'white',
-      padding: '2rem',
-      fontSize: '2rem',
-      textAlign: 'center'
-    }}>
-      <h1>TERMS OF SERVICE TEST</h1>
-      <p>If you can see this BLUE page with white text, the component is working!</p>
-      <p>Current URL: {window.location.href}</p>
-      <p>Time: {new Date().toLocaleString()}</p>
-      <p>✅ SUCCESS: Route is working!</p>
-      <p>Path: {window.location.pathname}</p>
-    </div>
-  );
-};
+
+
 
 function App() {
   console.log('App component rendering, routes should be available');

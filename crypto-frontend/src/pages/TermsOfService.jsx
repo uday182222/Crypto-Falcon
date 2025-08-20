@@ -1,462 +1,246 @@
 import React from 'react';
-import { FileText, AlertTriangle, Shield, Users, Coins, Lock, Globe, Scale, Phone, Mail, MapPin } from 'lucide-react';
 
 const TermsOfService = () => {
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%)',
-      padding: '2rem'
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto'
-      }}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '3rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '1rem',
-            marginBottom: '1rem'
-          }}>
-            <FileText size={48} color="#8b5cf6" />
-            <h1 style={{
-              fontSize: '3rem',
-              fontWeight: '800',
-              color: '#f8fafc',
-              margin: 0
-            }}>
-              Terms of Service
-            </h1>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-4">
+            Terms of Service
+          </h1>
+          <div className="text-gray-300 space-y-2">
+            <p><strong>Effective Date:</strong> January 1, 2025</p>
+            <p><strong>Last Updated:</strong> January 1, 2025</p>
           </div>
-          <p style={{
-            color: '#94a3b8',
-            fontSize: '1.25rem',
-            margin: '0 auto',
-            maxWidth: '600px'
-          }}>
-            Legal terms and conditions for using our platform
-          </p>
         </div>
 
         {/* Content */}
-        <div style={{
-          padding: '3rem',
-          marginBottom: '2rem',
-          background: 'rgba(15, 23, 42, 0.8)',
-          border: '1px solid rgba(51, 65, 85, 0.3)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-          borderRadius: '15px'
-        }}>
-          <div style={{
-            color: '#e2e8f0',
-            fontSize: '1.1rem',
-            lineHeight: '1.8'
-          }}>
-            {/* Effective Date */}
-            <div style={{
-              background: 'rgba(139, 92, 246, 0.1)',
-              border: '1px solid rgba(139, 92, 246, 0.3)',
-              borderRadius: '1rem',
-              padding: '1.5rem',
-              marginBottom: '2rem',
-              textAlign: 'center'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.5rem'
-              }}>
-                <FileText size={20} color="#8b5cf6" />
-                <span style={{ color: '#8b5cf6', fontWeight: '600' }}>
-                  Last Updated: December 2024
-                </span>
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem'
-              }}>
-                <FileText size={20} color="#8b5cf6" />
-                <span style={{ color: '#8b5cf6', fontWeight: '600' }}>
-                  Effective Date: December 2024
-                </span>
-              </div>
-            </div>
-
-            {/* 1. Introduction */}
-            <section style={{ marginBottom: '2rem' }}>
-              <h2 style={{
-                color: '#f8fafc',
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                marginBottom: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <FileText size={24} color="#8b5cf6" />
-                1. Introduction and Acceptance
-              </h2>
-              <p style={{ marginBottom: '1rem' }}>
-                By accessing or using Bitcoinpro's crypto trading simulation platform ("Service"), you acknowledge that you have read, understood, and agree to be legally bound by these Terms of Service / Conditions ("Terms"). If you do not agree to these Terms in their entirety, you must immediately discontinue use of the Service.
-              </p>
-              <p style={{ marginBottom: '1rem' }}>
-                These Terms constitute a binding legal agreement between you ("User," "you," or "your") and <strong style={{ color: '#f8fafc' }}>Bitcoinpro</strong> ("Company," "we," "our," or "us").
-              </p>
-            </section>
-
-            {/* 2. Service Description and Educational Purpose */}
-            <section style={{ marginBottom: '2rem' }}>
-              <h2 style={{
-                color: '#f8fafc',
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                marginBottom: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <Coins size={24} color="#8b5cf6" />
-                2. Service Description and Educational Purpose
-              </h2>
-              
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                2.1 Core Functionality
-              </h3>
-              <p style={{ marginBottom: '1rem' }}>
-                Bitcoinpro provides an educational cryptocurrency trading simulation platform where users can:
-              </p>
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                marginBottom: '1rem'
-              }}>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Practice cryptocurrency trading strategies using virtual currency with real-time data</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Purchase virtual "Mock Cash" with real money for enhanced gameplay</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Access educational content about cryptocurrency markets and trading principles</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Participate in simulated market activities and competitions</span>
-                </li>
-              </ul>
-
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                2.2 Critical Disclaimers
-              </h3>
-              <div style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: '0.75rem',
-                padding: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <p style={{ color: '#fca5a5', margin: 0, fontWeight: '600', marginBottom: '0.5rem' }}>
-                  <strong>IMPORTANT:</strong> This is a simulation game designed exclusively for educational and entertainment purposes. Key limitations include:
-                </p>
-                <ul style={{
-                  listStyle: 'none',
-                  padding: 0,
-                  margin: 0
-                }}>
-                  <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>●</span>
-                    <span style={{ color: '#fca5a5' }}>No Real Trading: No actual cryptocurrencies, securities, or financial instruments are traded, purchased, or exchanged</span>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>●</span>
-                    <span style={{ color: '#fca5a5' }}>Virtual Assets Only: All trading activities occur with virtual assets that have no real-world monetary value</span>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>●</span>
-                    <span style={{ color: '#fca5a5' }}>Educational Tool: The Platform serves as a learning environment and should not be considered a substitute for professional financial education</span>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                    <span style={{ color: '#ef4444', fontSize: '1.2rem' }}>●</span>
-                    <span style={{ color: '#fca5a5' }}>Simulated Markets: Market data and price movements may not reflect real-world conditions</span>
-                  </li>
-                </ul>
-              </div>
-            </section>
-
-            {/* 3. Eligibility and Account Requirements */}
-            <section style={{ marginBottom: '2rem' }}>
-              <h2 style={{
-                color: '#f8fafc',
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                marginBottom: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <Users size={24} color="#8b5cf6" />
-                3. Eligibility and Account Requirements
-              </h2>
-              
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                3.1 Age Requirements
-              </h3>
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                marginBottom: '1rem'
-              }}>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Primary Users: Must be at least 18 years old (or age of majority in your jurisdiction)</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Minor Users: Ages 13-17 may use the Service only with explicit parental consent and ongoing supervision</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Prohibited: Users under 13 are strictly prohibited from using the Service</span>
-                </li>
-              </ul>
-
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                3.2 Geographic and Legal Compliance
-              </h3>
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                marginBottom: '1rem'
-              }}>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Users must ensure their use complies with all applicable local, state, and federal laws</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>The Service may not be available in all jurisdictions</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>You are responsible for determining whether your use of the Service is lawful in your location</span>
-                </li>
-              </ul>
-
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                3.3 Account Registration
-              </h3>
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                marginBottom: '1rem'
-              }}>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Accurate Information: You must provide truthful, complete, and current registration information</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Single Account Policy: One account per person; multiple accounts are strictly prohibited</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Security Responsibility: You are solely responsible for maintaining account confidentiality and security</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Notification Duty: You must immediately report any unauthorized account access</span>
-                </li>
-              </ul>
-            </section>
-
-            {/* 4. Virtual Currency and Payment Terms */}
-            <section style={{ marginBottom: '2rem' }}>
-              <h2 style={{
-                color: '#f8fafc',
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                marginBottom: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <Coins size={24} color="#8b5cf6" />
-                4. Virtual Currency and Payment Terms
-              </h2>
-              
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                4.1 Mock Cash System
-              </h3>
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                marginBottom: '1rem'
-              }}>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Nature: "Mock Cash" is virtual currency used exclusively within the Platform</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>No Real Value: Mock Cash has zero real-world value and cannot be exchanged, redeemed, or converted to real money, cryptocurrency, or any other form of value</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Non-Transferable: Mock Cash cannot be transferred between accounts or sold to third parties</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Expiration: All Mock Cash expires upon account termination or suspension</span>
-                </li>
-              </ul>
-
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                4.2 Purchase Terms
-              </h3>
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                marginBottom: '1rem'
-              }}>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Final Sales: All Mock Cash purchases are final and non-refundable, except where required by applicable law</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Payment Authorization: You authorize charges to your selected payment method for all purchases</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Third-Party Processing: Payments are processed through secure third-party processors; we do not store payment information</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Price Changes: Prices may change without prior notice</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Additional Fees: Payment method fees and taxes may apply</span>
-                </li>
-              </ul>
-
-              <h3 style={{
-                color: '#e2e8f0',
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                marginTop: '1.5rem'
-              }}>
-                4.3 No Investment Representation
-              </h3>
-              <p style={{ marginBottom: '1rem' }}>
-                Purchases of Mock Cash do not represent:
-              </p>
-              <ul style={{
-                listStyle: 'none',
-                padding: 0,
-                marginBottom: '1rem'
-              }}>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Deposits, investments, or securities of any kind</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Ownership interests in the Company</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Claims against Company assets</span>
-                </li>
-                <li style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '1.2rem' }}>●</span>
-                  <span>Rights to future profits or distributions</span>
-                </li>
-              </ul>
-            </section>
-
-            {/* Continue with more sections... */}
-            <div style={{
-              textAlign: 'center',
-              padding: '2rem',
-              color: '#94a3b8',
-              borderTop: '1px solid rgba(139, 92, 246, 0.2)',
-              marginTop: '2rem'
-            }}>
-              <p style={{ marginBottom: '1rem' }}>
-                <strong>Note:</strong> This is a comprehensive Terms of Service document. The full content continues with additional sections including Intellectual Property Rights, Prohibited Activities, Disclaimers, Liability Limitations, and more.
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-8 shadow-2xl border border-slate-700/50">
+          
+          {/* Section 1: Acceptance and Scope */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">1. Acceptance and Scope of Terms</h2>
+            <div className="text-gray-300 space-y-3 leading-relaxed">
+              <p>
+                By accessing, downloading, or using Motion Falcon's crypto trading simulation platform
+                ("Service," "Platform," "Game," or "App"), you acknowledge that you have read, understood, and
+                agree to be legally bound by these Terms of Service / Conditions ("Terms"). If you do not agree
+                to these Terms in their entirety, you must immediately discontinue use of the Service.
               </p>
               <p>
-                For the complete Terms of Service with all sections, please contact our support team or check our website.
+                These Terms constitute a binding legal agreement between you ("User," "you," or "your") and
+                Motion Falcon ("Company," "we," "our," or "us").
               </p>
             </div>
-          </div>
-        </div>
+          </section>
 
-        {/* Footer Info */}
-        <div style={{
-          textAlign: 'center',
-          color: '#64748b',
-          fontSize: '0.9rem'
-        }}>
-          <p>Last updated: {new Date().toLocaleDateString()}</p>
-          <p>For legal questions, please contact our legal department.</p>
+          {/* Section 2: Service Description */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">2. Service Description and Educational Purpose</h2>
+            
+            <h3 className="text-xl font-medium text-purple-300 mb-3">2.1 Core Functionality</h3>
+            <div className="text-gray-300 space-y-3">
+              <p>Motion Falcon provides an educational cryptocurrency trading simulation platform where users can:</p>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Practice cryptocurrency trading strategies using virtual currency with real-time data</li>
+                <li>Purchase virtual "Mock Cash" with real money for enhanced gameplay</li>
+                <li>Access educational content about cryptocurrency markets and trading principles</li>
+                <li>Participate in simulated market activities and competitions</li>
+              </ul>
+            </div>
+
+            <h3 className="text-xl font-medium text-purple-300 mb-3 mt-6">2.2 Critical Disclaimers</h3>
+            <div className="bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg">
+              <p className="font-semibold text-red-300 mb-2">IMPORTANT:</p>
+              <p className="text-gray-300">
+                This is a simulation game designed exclusively for educational and entertainment purposes. Key limitations include:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-4 mt-2 text-gray-300">
+                <li><strong>No Real Trading:</strong> No actual cryptocurrencies, securities, or financial instruments are traded, purchased, or exchanged</li>
+                <li><strong>Virtual Assets Only:</strong> All trading activities occur with virtual assets that have no real-world monetary value</li>
+                <li><strong>Educational Tool:</strong> The Platform serves as a learning environment and should not be considered a substitute for professional financial education</li>
+                <li><strong>Simulated Markets:</strong> Market data and price movements may not reflect real-world conditions</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Section 3: Eligibility */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">3. Eligibility and Account Requirements</h2>
+            
+            <h3 className="text-xl font-medium text-purple-300 mb-3">3.1 Age Requirements</h3>
+            <div className="text-gray-300 space-y-3">
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li><strong>Primary Users:</strong> Must be at least 18 years old (or age of majority in your jurisdiction)</li>
+                <li><strong>Minor Users:</strong> Ages 13-17 may use the Service only with explicit parental consent and ongoing supervision</li>
+                <li><strong>Prohibited:</strong> Users under 13 are strictly prohibited from using the Service</li>
+              </ul>
+            </div>
+
+            <h3 className="text-xl font-medium text-purple-300 mb-3 mt-6">3.2 Account Registration</h3>
+            <div className="text-gray-300 space-y-3">
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li><strong>Accurate Information:</strong> You must provide truthful, complete, and current registration information</li>
+                <li><strong>Single Account Policy:</strong> One account per person; multiple accounts are strictly prohibited</li>
+                <li><strong>Security Responsibility:</strong> You are solely responsible for maintaining account confidentiality and security</li>
+                <li><strong>Notification Duty:</strong> You must immediately report any unauthorized account access</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Section 4: Virtual Currency */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">4. Virtual Currency and Payment Terms</h2>
+            
+            <h3 className="text-xl font-medium text-purple-300 mb-3">4.1 Mock Cash System</h3>
+            <div className="text-gray-300 space-y-3">
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li><strong>Nature:</strong> "Mock Cash" is virtual currency used exclusively within the Platform</li>
+                <li><strong>No Real Value:</strong> Mock Cash has zero real-world value and cannot be exchanged, redeemed, or converted to real money</li>
+                <li><strong>Non-Transferable:</strong> Mock Cash cannot be transferred between accounts or sold to third parties</li>
+                <li><strong>Expiration:</strong> All Mock Cash expires upon account termination or suspension</li>
+              </ul>
+            </div>
+
+            <h3 className="text-xl font-medium text-purple-300 mb-3 mt-6">4.2 Purchase Terms</h3>
+            <div className="text-gray-300 space-y-3">
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li><strong>Final Sales:</strong> All Mock Cash purchases are final and non-refundable, except where required by applicable law</li>
+                <li><strong>Payment Authorization:</strong> You authorize charges to your selected payment method for all purchases</li>
+                <li><strong>Third-Party Processing:</strong> Payments are processed through secure third-party processors</li>
+                <li><strong>Price Changes:</strong> Prices may change without prior notice</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Section 5: Prohibited Activities */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">5. Prohibited Activities and Conduct</h2>
+            
+            <h3 className="text-xl font-medium text-purple-300 mb-3">5.1 Strictly Prohibited Activities</h3>
+            <div className="text-gray-300 space-y-3">
+              <p>Users shall not:</p>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Use the Service for any unlawful purposes or activities</li>
+                <li>Create multiple accounts to circumvent Platform limitations</li>
+                <li>Manipulate, exploit, or abuse game mechanics or systems</li>
+                <li>Use bots, scripts, automation tools, or other unauthorized software</li>
+                <li>Attempt to hack, compromise, disrupt, or gain unauthorized access to the Service</li>
+                <li>Engage in harassment, abuse, threats, or inappropriate behavior toward other users</li>
+                <li>Misrepresent the Service as actual cryptocurrency trading or investment</li>
+                <li>Sell, transfer, or attempt to monetize accounts or virtual assets</li>
+              </ul>
+            </div>
+
+            <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded-r-lg mt-4">
+              <p className="font-semibold text-yellow-300">Consequences of Violations:</p>
+              <p className="text-gray-300">
+                Violations may result in immediate account suspension or termination without notice, 
+                forfeiture of all virtual assets, and potential legal action.
+              </p>
+            </div>
+          </section>
+
+          {/* Section 6: Disclaimers */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">6. Educational and Financial Disclaimers</h2>
+            
+            <h3 className="text-xl font-medium text-purple-300 mb-3">6.1 Not Financial Advice</h3>
+            <div className="text-gray-300 space-y-3">
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>The Service provides entertainment and general educational content only</li>
+                <li>Nothing constitutes financial, investment, legal, or tax advice</li>
+                <li>Company representatives are not licensed financial advisors</li>
+                <li>Users should consult qualified professionals before making real-world investment decisions</li>
+              </ul>
+            </div>
+
+            <h3 className="text-xl font-medium text-purple-300 mb-3 mt-6">6.2 Risk Acknowledgment</h3>
+            <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded-r-lg">
+              <p className="font-semibold text-orange-300">Users acknowledge that real cryptocurrency and financial market activities involve:</p>
+              <ul className="list-disc list-inside space-y-1 ml-4 mt-2 text-gray-300">
+                <li>Significant financial risk and potential total loss of capital</li>
+                <li>Extreme price volatility and market unpredictability</li>
+                <li>Regulatory uncertainty and potential legal restrictions</li>
+                <li>Technical risks including system failures and security breaches</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Section 7: Limitation of Liability */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">7. Limitation of Liability and Disclaimers</h2>
+            
+            <h3 className="text-xl font-medium text-purple-300 mb-3">7.1 Comprehensive Liability Limitation</h3>
+            <div className="bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg">
+              <p className="font-semibold text-red-300 mb-2">TO THE MAXIMUM EXTENT PERMITTED BY LAW:</p>
+              <p className="text-gray-300 mb-2">Motion Falcon SHALL NOT BE LIABLE FOR:</p>
+              <ul className="list-disc list-inside space-y-1 ml-4 text-gray-300">
+                <li>Any indirect, incidental, special, consequential, punitive, or exemplary damages</li>
+                <li>Loss of profits, revenue, data, or business opportunities</li>
+                <li>Service interruptions, system failures, or data loss</li>
+                <li>Damages arising from third-party actions or content</li>
+                <li>Any damages exceeding the total amount paid by you to the Company within 30 days preceding the claim</li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Section 8: Governing Law */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">8. Governing Law and Dispute Resolution</h2>
+            
+            <h3 className="text-xl font-medium text-purple-300 mb-3">8.1 Governing Law</h3>
+            <div className="text-gray-300 space-y-3">
+              <p>
+                These Terms are governed by and construed in accordance with the laws of Maharashtra,
+                Pune, India, without regard to conflict of law principles.
+              </p>
+            </div>
+
+            <h3 className="text-xl font-medium text-purple-300 mb-3 mt-6">8.2 Mandatory Arbitration</h3>
+            <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-r-lg">
+              <p className="font-semibold text-blue-300">BINDING ARBITRATION CLAUSE:</p>
+              <p className="text-gray-300">
+                Any dispute, claim, or controversy arising out of or relating to these Terms or the Service 
+                shall be resolved exclusively through binding arbitration administered by Motion Falcon in Pune, Maharashtra.
+              </p>
+            </div>
+          </section>
+
+          {/* Section 9: Contact Information */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-blue-400 mb-4">9. Contact Information</h2>
+            <div className="text-gray-300 space-y-4">
+              <div className="bg-slate-700/30 p-6 rounded-lg">
+                <h3 className="text-xl font-medium text-purple-300 mb-4">For questions, concerns, or legal notices regarding these Terms:</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <p><strong>Motion Falcon</strong></p>
+                    <p>Email: legal@motionfalcon.com</p>
+                    <p>Phone: [PHONE_NUMBER]</p>
+                  </div>
+                  <div>
+                    <p><strong>Address</strong></p>
+                    <p>[COMPANY_ADDRESS]</p>
+                    <p>Pune, Maharashtra, India</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer */}
+          <div className="mt-12 pt-8 border-t border-slate-600 text-center text-gray-400">
+            <p className="text-sm mb-4">
+              By creating an account or using Motion Falcon's crypto trading simulation platform, you
+              acknowledge that you have carefully read, fully understood, and agree to be legally
+              bound by these Terms of Service in their entirety.
+            </p>
+            <p className="text-sm">
+              This document was last updated on January 1, 2025 and becomes effective immediately upon posting.
+            </p>
+          </div>
         </div>
       </div>
     </div>

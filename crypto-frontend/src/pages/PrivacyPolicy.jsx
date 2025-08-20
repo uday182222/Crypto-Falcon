@@ -345,7 +345,7 @@ const PrivacyPolicy = () => {
                       </div>
                       <div>
                         <p className="font-semibold text-white">BitcoinPro Privacy Team</p>
-                        <p className="text-gray-300">Email: privacy@bitcoinpro.in</p>
+                        <p className="text-gray-300">Email: info@bitcoinpro.in</p>
                         <p className="text-gray-300">Address: [Company Address]</p>
                       </div>
                     </div>
@@ -357,7 +357,7 @@ const PrivacyPolicy = () => {
                       </div>
                       <div>
                         <p className="font-semibold text-white">Grievance Officer (India)</p>
-                        <p className="text-gray-300">Email: grievance@bitcoinpro.in</p>
+                        <p className="text-gray-300">Email: support@bitcoinpro.in</p>
                         <p className="text-gray-300 flex items-center gap-2">
                           <Phone className="w-4 h-4 text-gray-400" />
                           Phone: Coming Soon

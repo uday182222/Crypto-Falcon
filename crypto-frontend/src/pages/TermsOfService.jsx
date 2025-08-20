@@ -46,14 +46,14 @@ const TermsOfService = () => {
             </div>
             <div className="text-gray-300 space-y-4 leading-relaxed text-lg">
               <p>
-                By accessing, downloading, or using Motion Falcon's crypto trading simulation platform
+                By accessing, downloading, or using BitcoinPro's crypto trading simulation platform
                 ("Service," "Platform," "Game," or "App"), you acknowledge that you have read, understood, and
                 agree to be legally bound by these Terms of Service / Conditions ("Terms"). If you do not agree
                 to these Terms in their entirety, you must immediately discontinue use of the Service.
               </p>
               <p>
                 These Terms constitute a binding legal agreement between you ("User," "you," or "your") and
-                Motion Falcon ("Company," "we," "our," or "us").
+                BitcoinPro ("Company," "we," "our," or "us").
               </p>
             </div>
           </section>
@@ -72,7 +72,7 @@ const TermsOfService = () => {
               2.1 Core Functionality
             </h3>
             <div className="text-gray-300 space-y-4">
-              <p className="text-lg">Motion Falcon provides an educational cryptocurrency trading simulation platform where users can:</p>
+              <p className="text-lg">BitcoinPro provides an educational cryptocurrency trading simulation platform where users can:</p>
               <div className="grid md:grid-cols-2 gap-4">
                 {[
                   'Practice cryptocurrency trading strategies using virtual currency with real-time data',
@@ -338,7 +338,7 @@ const TermsOfService = () => {
                 <AlertTriangle className="w-6 h-6 text-red-300 mt-1 flex-shrink-0" />
                 <div>
                   <p className="font-semibold text-red-300 text-lg mb-3">TO THE MAXIMUM EXTENT PERMITTED BY LAW:</p>
-                  <p className="text-gray-200 mb-4">Motion Falcon SHALL NOT BE LIABLE FOR:</p>
+                  <p className="text-gray-200 mb-4">BitcoinPro SHALL NOT BE LIABLE FOR:</p>
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
                       'Any indirect, incidental, special, consequential, punitive, or exemplary damages',
@@ -385,7 +385,7 @@ const TermsOfService = () => {
                   <p className="font-semibold text-indigo-300 text-lg mb-2">BINDING ARBITRATION CLAUSE</p>
                   <p className="text-gray-200">
                     Any dispute, claim, or controversy arising out of or relating to these Terms or the Service 
-                    shall be resolved exclusively through binding arbitration administered by Motion Falcon in Pune, Maharashtra.
+                    shall be resolved exclusively through binding arbitration administered by BitcoinPro in Pune, Maharashtra.
                   </p>
                 </div>
               </div>
@@ -404,17 +404,90 @@ const TermsOfService = () => {
               <div className="bg-gradient-to-r from-blue-900/30 to-indigo-900/30 p-8 rounded-xl border border-blue-500/30">
                 <h3 className="text-2xl font-semibold text-blue-300 mb-6 flex items-center gap-3">
                   <Building className="w-6 h-6" />
-                  For questions, concerns, or legal notices regarding these Terms
+                  Contact Information for Different Services
                 </h3>
-                <div className="grid md:grid-cols-2 gap-8">
+                
+                {/* TOS Column */}
+                <div className="grid md:grid-cols-3 gap-8 mb-8">
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-blue-300 mb-4 text-center">TOS</h4>
+                    <div className="space-y-3">
+                      <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                        <p className="font-semibold text-blue-200 text-sm">Legal Email</p>
+                        <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-slate-700/30 p-3 rounded-lg border border-slate-600/50">
+                        <p className="font-semibold text-gray-200 text-sm">Phone Number</p>
+                        <p className="text-gray-300 text-sm">[PHONE_NUMBER]</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Privacy Policy Column */}
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-green-300 mb-4 text-center">Privacy Policy</h4>
+                    <div className="space-y-3">
+                      <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                        <p className="font-semibold text-blue-200 text-sm">Privacy Email</p>
+                        <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-green-500/20 p-3 rounded-lg border border-green-500/30">
+                        <p className="font-semibold text-green-200 text-sm">Grievance Email</p>
+                        <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-slate-700/30 p-3 rounded-lg border border-slate-600/50">
+                        <p className="font-semibold text-gray-200 text-sm">Data Protection Officer</p>
+                        <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-green-500/20 p-3 rounded-lg border border-green-500/30">
+                        <p className="font-semibold text-green-200 text-sm">Legal Email</p>
+                        <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* CNFP Column */}
+                  <div className="space-y-4">
+                    <h4 className="text-xl font-semibold text-purple-300 mb-4 text-center">CNFP</h4>
+                    <div className="space-y-3">
+                      <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                        <p className="font-semibold text-blue-200 text-sm">General Email</p>
+                        <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-green-500/20 p-3 rounded-lg border border-green-500/30">
+                        <p className="font-semibold text-green-200 text-sm">Refunds & Cancellation</p>
+                        <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                        <p className="font-semibold text-blue-200 text-sm">Billing</p>
+                        <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-green-500/20 p-3 rounded-lg border border-green-500/30">
+                        <p className="font-semibold text-green-200 text-sm">Tech Support</p>
+                        <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-blue-500/20 p-3 rounded-lg border border-blue-500/30">
+                        <p className="font-semibold text-blue-200 text-sm">Legal Compliance</p>
+                        <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                      </div>
+                      <div className="bg-green-500/20 p-3 rounded-lg border border-green-500/30">
+                        <p className="font-semibold text-green-200 text-sm">Grievance</p>
+                        <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Company Details */}
+                <div className="grid md:grid-cols-2 gap-8 pt-6 border-t border-blue-500/30">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-500/20 rounded-lg">
                         <Building className="w-5 h-5 text-blue-400" />
                       </div>
                       <div>
-                        <p className="font-semibold text-white text-lg">Motion Falcon</p>
-                        <p className="text-gray-300">Email: legal@motionfalcon.com</p>
+                        <p className="font-semibold text-white text-lg">BitcoinPro</p>
+                        <p className="text-gray-300">Email: info@bitcoinpro.in</p>
                         <p className="text-gray-300">Phone: [PHONE_NUMBER]</p>
                       </div>
                     </div>
@@ -446,7 +519,7 @@ const TermsOfService = () => {
                 <h3 className="text-xl font-semibold text-purple-300">Legal Agreement</h3>
               </div>
               <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-                By creating an account or using Motion Falcon's crypto trading simulation platform, you
+                By creating an account or using BitcoinPro's crypto trading simulation platform, you
                 acknowledge that you have carefully read, fully understood, and agree to be legally
                 bound by these Terms of Service in their entirety.
               </p>

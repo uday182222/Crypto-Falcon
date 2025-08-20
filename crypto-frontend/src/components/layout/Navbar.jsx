@@ -475,7 +475,7 @@ const Navbar = () => {
                   {/* Logo Image */}
                   <img 
                     src="/yqRCvprlca2HEIUhFc404ozGNPI.avif"
-                    alt="MotionFalcon Logo"
+                    alt="BitcoinPro Logo"
                     style={{
                       width: '12px',
                       height: '12px',
@@ -555,7 +555,7 @@ const Navbar = () => {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}>
-                MotionFalcon
+                BitcoinPro
               </span>
             </div>
           </Link>

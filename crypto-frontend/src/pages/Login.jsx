@@ -122,8 +122,8 @@ const Login = () => {
       
       if (response.success) {
         // Store the token and user data
-        localStorage.setItem('motionfalcon_token', response.data.access_token);
-        localStorage.setItem('motionfalcon_user', JSON.stringify(response.data.user));
+        localStorage.setItem('bitcoinpro_token', response.data.access_token);
+        localStorage.setItem('bitcoinpro_user', JSON.stringify(response.data.user));
         
         // Redirect to dashboard
         navigate('/dashboard');
@@ -153,7 +153,7 @@ const Login = () => {
             color: 'white',
             marginBottom: '1rem'
           }}>
-            MotionFalcon
+            BitcoinPro
           </h1>
           <p style={{ color: '#94a3b8' }}>Loading...</p>
         </div>
@@ -382,7 +382,7 @@ const Login = () => {
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text'
                 }}>
-                  MotionFalcon
+                  BitcoinPro
                 </span>
               </div>
             </Link>
@@ -819,18 +819,18 @@ const Login = () => {
               }} />
               
               {/* Logo Image */}
-              <img 
-                src="/yqRCvprlca2HEIUhFc404ozGNPI.avif"
-                alt="MotionFalcon Logo"
-                style={{
-                  width: '70px',
-                  height: '70px',
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
-                  zIndex: 2,
-                  position: 'relative'
-                }}
-              />
+                                <img 
+                    src="/yqRCvprlca2HEIUhFc404ozGNPI.avif"
+                    alt="BitcoinPro Logo"
+                    style={{
+                      width: '70px',
+                      height: '70px',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))',
+                      zIndex: 2,
+                      position: 'relative'
+                    }}
+                  />
             </div>
             
             {/* Floating Particles - Simplified */}

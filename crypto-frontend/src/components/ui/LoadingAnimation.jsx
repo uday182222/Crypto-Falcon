@@ -200,7 +200,7 @@ const LoadingAnimation = ({ message = 'Loading...', size = 'medium' }) => {
           {/* Logo Image */}
           <img 
             src="/yqRCvprlca2HEIUhFc404ozGNPI.avif"
-            alt="MotionFalcon Logo"
+            alt="BitcoinPro Logo"
             style={{
               width: `${currentSize.width * 0.2}px`,
               height: `${currentSize.height * 0.2}px`,
@@ -284,7 +284,7 @@ const LoadingAnimation = ({ message = 'Loading...', size = 'medium' }) => {
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text'
         }}>
-          MotionFalcon
+          BitcoinPro
         </h1>
         <p style={{ 
           color: '#94a3b8',

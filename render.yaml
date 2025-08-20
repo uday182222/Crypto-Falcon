@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: motionfalcon-backend-v2
+    name: bitcoinpro-backend
     env: python
     rootDir: crypto-backend
     region: oregon
@@ -14,7 +14,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_ORIGINS
-        value: "https://crypto-frontend-lffc.onrender.com,https://motionfalcon-frontend.onrender.com,http://localhost:3000,http://localhost:5173"
+        value: "https://crypto-frontend-lffc.onrender.com,https://bitcoinpro-frontend.onrender.com,http://localhost:3000,http://localhost:5173"
       - key: ENVIRONMENT
         value: "production"
       - key: RENDER
@@ -22,17 +22,17 @@ services:
       - key: FORCE_REDEPLOY
         value: "2024-01-01-1704067200"
       - key: REDEPLOY_TRIGGER
-        value: "migration-fix-v14-preferred-currency-column"
+        value: "bitcoinpro-branding-update"
 
   - type: static
-    name: crypto-frontend
+    name: bitcoinpro-frontend
     rootDir: crypto-frontend
     region: oregon
     buildCommand: "npm install && npm run build"
     publishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
-        value: "https://motionfalcon-backend.onrender.com"
+        value: "https://bitcoinpro-backend.onrender.com"
     routes:
       - type: rewrite
         source: /*

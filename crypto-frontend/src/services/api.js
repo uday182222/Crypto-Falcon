@@ -1,22 +1,22 @@
-// MotionFalcon API Service for React Components
+// BitcoinPro API Service for React Components
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://motionfalcon-backend.onrender.com';
 
-class MotionFalconAPI {
+class BitcoinProAPI {
   constructor() {
     this.baseURL = API_BASE_URL;
-    this.token = localStorage.getItem('motionfalcon_token');
+    this.token = localStorage.getItem('bitcoinpro_token');
   }
 
   // Set authentication token
   setToken(token) {
     this.token = token;
-    localStorage.setItem('motionfalcon_token', token);
+    localStorage.setItem('bitcoinpro_token', token);
   }
 
   // Clear authentication token
   clearToken() {
     this.token = null;
-    localStorage.removeItem('motionfalcon_token');
+    localStorage.removeItem('bitcoinpro_token');
   }
 
   // Get headers for API requests
@@ -161,7 +161,7 @@ class MotionFalconAPI {
 }
 
 // Create and export API instances
-export const api = new MotionFalconAPI();
+export const api = new BitcoinProAPI();
 
 // Export specific API services
 export const userAPI = {

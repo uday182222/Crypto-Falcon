@@ -100,7 +100,7 @@ const Landing = () => {
             color: 'white',
             marginBottom: '1rem'
           }}>
-            MotionFalcon
+            BitcoinPro
           </h1>
           <p style={{ color: '#94a3b8' }}>Trading Platform Loading...</p>
         </div>
@@ -243,7 +243,7 @@ const Landing = () => {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}>
-                MotionFalcon
+                BitcoinPro
               </span>
             </div>
             <div style={{
@@ -533,7 +533,7 @@ const Landing = () => {
               color: 'white',
               marginBottom: '1rem'
             }}>
-              Why Choose MotionFalcon?
+              Why Choose BitcoinPro?
             </h2>
             <p style={{
               fontSize: '1.25rem',
@@ -667,7 +667,7 @@ const Landing = () => {
               color: '#cbd5e1',
               marginBottom: '2rem'
             }}>
-              Join thousands of traders who are already mastering the markets with MotionFalcon
+              Join thousands of traders who are already mastering the markets with BitcoinPro
             </p>
             <Link to="/register">
               <Button variant="primary" size="large" style={{
@@ -1011,7 +1011,7 @@ const Landing = () => {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
             }}>
-              Bitcoinpro
+              BitcoinPro
             </span>
           </div>
 

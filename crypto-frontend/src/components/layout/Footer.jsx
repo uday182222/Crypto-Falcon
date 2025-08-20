@@ -46,7 +46,7 @@ const Footer = () => {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>
-            Bitcoinpro
+            BitcoinPro
           </span>
         </div>
 
@@ -123,7 +123,17 @@ const Footer = () => {
           fontSize: '0.875rem',
           margin: 0
         }}>
-          © 2024 Bitcoinpro. All rights reserved. Trade smart, trade safe.
+          © 2024 BitcoinPro. All rights reserved. Trade smart, trade safe.
+        </p>
+        
+        {/* Ownership */}
+        <p style={{ 
+          color: '#94a3b8',
+          fontSize: '0.75rem',
+          margin: '0.5rem 0 0 0',
+          fontStyle: 'italic'
+        }}>
+          Owned by MotionFalcon
         </p>
       </div>
     </footer>

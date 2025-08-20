@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TrendingUp, Shield, Trophy, Zap, Users, BarChart3, Coins, Star, ArrowRight, Play } from 'lucide-react';
 import Button from '../components/ui/Button';
 
 const Landing = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -759,7 +760,7 @@ const Landing = () => {
               e.currentTarget.style.boxShadow = 'none';
               e.currentTarget.style.borderColor = 'rgba(20, 184, 166, 0.3)';
             }}
-            onClick={() => window.location.href = '/blog'}>
+            onClick={() => navigate('/blog')}>
               <div style={{
                 width: '3rem',
                 height: '3rem',
@@ -821,7 +822,7 @@ const Landing = () => {
               e.currentTarget.style.boxShadow = 'none';
               e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
             }}
-            onClick={() => window.location.href = '/contact-us'}>
+            onClick={() => navigate('/contact-us')}>
               <div style={{
                 width: '3rem',
                 height: '3rem',
@@ -883,7 +884,7 @@ const Landing = () => {
               e.currentTarget.style.boxShadow = 'none';
               e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
             }}
-            onClick={() => window.location.href = '/cancellations-and-refunds'}>
+            onClick={() => navigate('/cancellations-and-refunds')}>
               <div style={{
                 width: '3rem',
                 height: '3rem',

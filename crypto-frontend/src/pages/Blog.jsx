@@ -8,7 +8,7 @@ const Blog = () => {
       id: 1,
       title: "Getting Started with Crypto Trading: A Beginner's Guide",
       excerpt: "Learn the fundamentals of cryptocurrency trading, from understanding blockchain technology to making your first virtual trade on our simulation platform.",
-      author: "Motion Falcon Team",
+      author: "BitcoinPro Team",
       date: "January 15, 2025",
       readTime: "8 min read",
       category: "Beginner Guide",

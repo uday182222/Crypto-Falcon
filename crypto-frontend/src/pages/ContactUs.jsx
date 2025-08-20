@@ -38,7 +38,7 @@ const ContactUs = () => {
       icon: Mail,
       title: "Email Support",
       description: "Get help with your account, trading questions, or technical issues",
-      contact: "support@motionfalcon.com",
+      contact: "support@bitcoinpro.in",
       response: "Response within 24 hours",
       color: "blue"
     },
@@ -154,6 +154,82 @@ const ContactUs = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Comprehensive Contact Information */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Contact Information by Service Type</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            
+            {/* TOS Column */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-blue-300 mb-4 text-center">TOS</h3>
+              <div className="space-y-3">
+                <div className="bg-blue-500/20 p-4 rounded-lg border border-blue-500/30">
+                  <p className="font-semibold text-blue-200 text-sm">Legal Email</p>
+                  <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                </div>
+                <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50">
+                  <p className="font-semibold text-gray-200 text-sm">Phone Number</p>
+                  <p className="text-gray-300 text-sm">+91 [PHONE_NUMBER]</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Privacy Policy Column */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-green-300 mb-4 text-center">Privacy Policy</h3>
+              <div className="space-y-3">
+                <div className="bg-blue-500/20 p-4 rounded-lg border border-blue-500/30">
+                  <p className="font-semibold text-blue-200 text-sm">Privacy Email</p>
+                  <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                </div>
+                <div className="bg-green-500/20 p-4 rounded-lg border border-green-500/30">
+                  <p className="font-semibold text-green-200 text-sm">Grievance Email</p>
+                  <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                </div>
+                <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50">
+                  <p className="font-semibold text-gray-200 text-sm">Data Protection Officer</p>
+                  <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                </div>
+                <div className="bg-green-500/20 p-4 rounded-lg border border-green-500/30">
+                  <p className="font-semibold text-green-200 text-sm">Legal Email</p>
+                  <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* CNFP Column */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-purple-300 mb-4 text-center">CNFP</h3>
+              <div className="space-y-3">
+                <div className="bg-blue-500/20 p-4 rounded-lg border border-blue-500/30">
+                  <p className="font-semibold text-blue-200 text-sm">General Email</p>
+                  <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                </div>
+                <div className="bg-green-500/20 p-4 rounded-lg border border-green-500/30">
+                  <p className="font-semibold text-green-200 text-sm">Refunds & Cancellation</p>
+                  <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                </div>
+                <div className="bg-blue-500/20 p-4 rounded-lg border border-blue-500/30">
+                  <p className="font-semibold text-blue-200 text-sm">Billing</p>
+                  <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                </div>
+                <div className="bg-green-500/20 p-4 rounded-lg border border-green-500/30">
+                  <p className="font-semibold text-green-200 text-sm">Tech Support</p>
+                  <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                </div>
+                <div className="bg-blue-500/20 p-4 rounded-lg border border-blue-500/30">
+                  <p className="font-semibold text-blue-200 text-sm">Legal Compliance</p>
+                  <p className="text-gray-300 text-sm">info@bitcoinpro.in</p>
+                </div>
+                <div className="bg-green-500/20 p-4 rounded-lg border border-green-500/30">
+                  <p className="font-semibold text-green-200 text-sm">Grievance</p>
+                  <p className="text-gray-300 text-sm">support@bitcoinpro.in</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -351,7 +427,7 @@ const ContactUs = () => {
             <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>support@motionfalcon.com</span>
+                <span>support@bitcoinpro.in</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />

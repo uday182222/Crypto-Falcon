@@ -1089,7 +1089,7 @@ const Landing = () => {
             fontSize: '0.875rem',
             margin: 0
           }}>
-            © 2024 Bitcoinpro. All rights reserved. Trade smart, trade safe.
+            ©️ 2025 Bitcoinpro is owned by Motion falcon. All rights reserved. Trade smart, Trade safe
           </p>
         </div>
       </footer>

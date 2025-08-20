@@ -418,7 +418,10 @@ const TermsOfService = () => {
                       </div>
                       <div className="bg-slate-700/30 p-3 rounded-lg border border-slate-600/50">
                         <p className="font-semibold text-gray-200 text-sm">Phone Number</p>
-                        <p className="text-gray-300 text-sm">[PHONE_NUMBER]</p>
+                        <p className="text-gray-300 text-sm flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-gray-400" />
+                          Coming Soon
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -488,7 +491,10 @@ const TermsOfService = () => {
                       <div>
                         <p className="font-semibold text-white text-lg">BitcoinPro</p>
                         <p className="text-gray-300">Email: info@bitcoinpro.in</p>
-                        <p className="text-gray-300">Phone: [PHONE_NUMBER]</p>
+                        <p className="text-gray-300 flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-gray-400" />
+                          Phone: Coming Soon
+                        </p>
                       </div>
                     </div>
                   </div>

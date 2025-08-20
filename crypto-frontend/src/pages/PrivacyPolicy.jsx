@@ -22,11 +22,11 @@ const PrivacyPolicy = () => {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span><strong>Effective Date:</strong> January 15, 2025</span>
+              <span><strong>Effective Date:</strong> 20 August, 2025</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span><strong>Last Updated:</strong> January 15, 2025</span>
+              <span><strong>Last Updated:</strong> 20 August, 2025</span>
             </div>
           </div>
         </div>
@@ -358,7 +358,10 @@ const PrivacyPolicy = () => {
                       <div>
                         <p className="font-semibold text-white">Grievance Officer (India)</p>
                         <p className="text-gray-300">Email: grievance@bitcoinpro.in</p>
-                        <p className="text-gray-300">Phone: [Phone Number]</p>
+                        <p className="text-gray-300 flex items-center gap-2">
+                          <Phone className="w-4 h-4 text-gray-400" />
+                          Phone: Coming Soon
+                        </p>
                       </div>
                     </div>
                   </div>

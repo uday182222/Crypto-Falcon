@@ -54,7 +54,7 @@ const ContactUs = () => {
       icon: Phone,
       title: "Phone Support",
       description: "Speak directly with our customer support representatives",
-      contact: "+91 [PHONE_NUMBER]",
+      contact: "Coming Soon",
       response: "Available 9 AM - 6 PM IST",
       color: "purple"
     }
@@ -77,7 +77,7 @@ const ContactUs = () => {
     },
     {
       question: "What if I encounter technical issues?",
-      answer: "Our technical support team is available 24/7. You can reach us through email, live chat, or phone support for immediate assistance."
+      answer: "Our technical support team is available 24/7. You can reach us through email, live chat, or phone support (coming soon) for immediate assistance."
     }
   ];
 
@@ -157,7 +157,10 @@ const ContactUs = () => {
                 </div>
                 <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/50">
                   <p className="font-semibold text-gray-200 text-sm">Phone Number</p>
-                  <p className="text-gray-300 text-sm">+91 [PHONE_NUMBER]</p>
+                  <p className="text-gray-300 text-sm flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-gray-400" />
+                    Coming Soon
+                  </p>
                 </div>
               </div>
             </div>
@@ -369,7 +372,7 @@ const ContactUs = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <span>+91 [PHONE_NUMBER]</span>
+                <span>Coming Soon</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />

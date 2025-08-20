@@ -224,85 +224,44 @@ const Trading = () => {
     try {
       setIsTradeExecuting(true);
       
-      // Execute real trade through backend API
-      const token = localStorage.getItem('motionfalcon_token');
-      if (!token) {
-        alert('Please login first to trade');
-        return;
-      }
-
-      console.log('Token found:', token.substring(0, 20) + '...');
-      console.log('API endpoint:', `${import.meta.env.VITE_API_BASE_URL || 'https://motionfalcon-backend.onrender.com'}/trade/${tradeType.toLowerCase()}`);
-      console.log('Request body:', {
-        coin_symbol: selectedCoin,
-        trade_type: tradeType.toLowerCase(),
-        quantity: tradeAmount
+      // Execute real trade through backend API using dashboardAPI
+      console.log('Executing trade through dashboardAPI:', {
+        type: tradeType,
+        coin: selectedCoin,
+        amount: tradeAmount,
+        price: currentPrice,
+        totalCost: totalCost
       });
       
       console.log('Executing trade:', {
         type: tradeType,
         coin: selectedCoin,
         amount: tradeAmount,
-        price: price,
+        price: currentPrice,
         totalCost: totalCost,
         balance: balance
       });
 
-              const tradeResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://motionfalcon-backend.onrender.com'}/trade/${tradeType.toLowerCase()}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+      // Use the appropriate API method based on trade type
+      let tradeResult;
+      if (tradeType === 'buy') {
+        tradeResult = await dashboardAPI.buyCrypto({
           coin_symbol: selectedCoin,
-          trade_type: tradeType.toLowerCase(),
+          trade_type: 'buy',
           quantity: tradeAmount
-        })
-      });
-
-      console.log('Trade response status:', tradeResponse.status);
-      console.log('Trade response headers:', Object.fromEntries(tradeResponse.headers.entries()));
-
-      if (!tradeResponse.ok) {
-        let errorData = {};
-        try {
-          const responseText = await tradeResponse.text();
-          console.log('Error response text:', responseText);
-          
-          // Try to parse as JSON
-          try {
-            errorData = JSON.parse(responseText);
-          } catch {
-            // If not JSON, use the text directly
-            errorData = { message: responseText || `HTTP ${tradeResponse.status}` };
-          }
-        } catch {
-          errorData = { message: `HTTP ${tradeResponse.status}: ${tradeResponse.statusText}` };
-        }
-        
-        console.error('Trade API error:', errorData);
-        throw new Error(errorData.detail || errorData.message || `HTTP ${tradeResponse.status}: ${tradeResponse.statusText}`);
+        });
+      } else {
+        tradeResult = await dashboardAPI.sellCrypto({
+          coin_symbol: selectedCoin,
+          trade_type: 'sell',
+          quantity: tradeAmount
+        });
       }
 
-      let tradeResult = {};
-      try {
-        const responseText = await tradeResponse.text();
-        console.log('Success response text:', responseText);
-        
-        // Try to parse as JSON
-        try {
-          tradeResult = JSON.parse(responseText);
-        } catch {
-          // If not JSON, create a success object
-          tradeResult = { 
-            message: 'Trade executed successfully',
-            success: true,
-            response: responseText
-          };
-        }
-      } catch {
-        tradeResult = { message: 'Trade executed successfully', success: true };
+      console.log('Trade API response:', tradeResult);
+
+      if (!tradeResult.success) {
+        throw new Error(tradeResult.error || 'Trade failed');
       }
       
       // Show trade confirmation

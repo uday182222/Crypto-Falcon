@@ -393,6 +393,16 @@ export const dashboardAPI = {
     }
   },
 
+  // Buy cryptocurrency
+  buyCrypto: async (buyData) => {
+    try {
+      const response = await api.post('/trade/buy', buyData);
+      return { success: true, ...response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
   // Sell cryptocurrency
   sellCrypto: async (sellData) => {
     try {

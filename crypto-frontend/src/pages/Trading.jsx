@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Coins, DollarSign, Activity, RefreshCw } from 'lucide-react';
 import Button from '../components/ui/Button';
 import LoadingAnimation from '../components/ui/LoadingAnimation';
 import { dashboardAPI } from '../services/api';
 
 const Trading = () => {
+  const [searchParams] = useSearchParams();
   const [selectedCoin, setSelectedCoin] = useState('BTC');
   const [tradeType, setTradeType] = useState('buy');
   const [amount, setAmount] = useState('');
@@ -89,6 +91,22 @@ const Trading = () => {
     fetchCoins();
     fetchBalance();
   }, []);
+
+  // Handle URL parameters for coin selection
+  useEffect(() => {
+    const coinFromUrl = searchParams.get('coin');
+    if (coinFromUrl && coins.length > 0) {
+      // Check if the coin exists in our coins list
+      const coinExists = coins.find(coin => 
+        coin.symbol === coinFromUrl.toUpperCase() || 
+        coin.symbol === coinFromUrl.toLowerCase()
+      );
+      if (coinExists) {
+        setSelectedCoin(coinExists.symbol);
+        console.log('Coin selected from URL:', coinFromUrl);
+      }
+    }
+  }, [searchParams, coins]);
 
   // Set chart ready when coins are loaded
   useEffect(() => {

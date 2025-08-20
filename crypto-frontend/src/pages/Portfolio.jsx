@@ -119,6 +119,19 @@ const Portfolio = () => {
     }
   };
 
+  const handleSell = (holding) => {
+    // TODO: Implement sell functionality
+    console.log('Sell clicked for:', holding.coin_symbol);
+    // This will be implemented to open a sell modal or redirect to sell page
+    alert(`Sell functionality for ${holding.coin_symbol} will be implemented here.`);
+  };
+
+  const handleBuyMore = (holding) => {
+    // Navigate to trading page with the specific coin selected
+    console.log('Buy more clicked for:', holding.coin_symbol);
+    navigate(`/trading?coin=${holding.coin_symbol}`);
+  };
+
   if (isLoading) {
     return <LoadingAnimation message="Loading Portfolio..." size="large" />;
   }
@@ -585,7 +598,7 @@ const Portfolio = () => {
                 {/* Table Header */}
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
+                  gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1.5fr',
                   gap: '1rem',
                   padding: '1rem 1.5rem',
                   background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.05) 100%)',
@@ -602,13 +615,14 @@ const Portfolio = () => {
                   <div>Avg Buy Price</div>
                   <div>Total Invested</div>
                   <div>Profit/Loss</div>
+                  <div>Actions</div>
                 </div>
                 
                 {/* Holdings Rows */}
                 {sortedHoldings.map((holding, index) => (
                   <div key={index} style={{
                     display: 'grid',
-                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1.5fr',
                     gap: '1rem',
                     padding: '1rem 1.5rem',
                     background: 'rgba(15, 23, 42, 0.3)',
@@ -745,6 +759,60 @@ const Portfolio = () => {
                           {parseFloat(holding.profit_loss) >= 0 ? '+' : ''}{parseFloat(holding.profit_loss_percent).toFixed(2)}%
                         </p>
                       </div>
+                    </div>
+                    
+                    {/* Actions Column */}
+                    <div style={{
+                      display: 'flex',
+                      gap: '0.5rem',
+                      justifyContent: 'center'
+                    }}>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleSell(holding)}
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          color: '#ef4444',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          padding: '0.5rem 1rem',
+                          fontSize: '0.75rem',
+                          transition: 'all 0.2s ease',
+                          minWidth: '60px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                        }}
+                      >
+                        Sell
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        onClick={() => handleBuyMore(holding)}
+                        style={{
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          color: '#10b981',
+                          border: '1px solid rgba(16, 185, 129, 0.3)',
+                          padding: '0.5rem 1rem',
+                          fontSize: '0.75rem',
+                          transition: 'all 0.2s ease',
+                          minWidth: '80px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
+                          e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+                          e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                        }}
+                      >
+                        Buy More
+                      </Button>
                     </div>
                   </div>
                 ))}

@@ -14,28 +14,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService'
 import './App.css'
 
-// Debug component to show current route
-const RouteDebug = () => {
-  const location = useLocation();
-  console.log('Current location:', location);
-  return (
-    <div style={{
-      position: 'fixed',
-      top: '10px',
-      right: '10px',
-      background: 'rgba(0,0,0,0.8)',
-      color: 'white',
-      padding: '10px',
-      borderRadius: '5px',
-      fontSize: '12px',
-      zIndex: 9999
-    }}>
-      <div>Path: {location.pathname}</div>
-      <div>Search: {location.search}</div>
-      <div>Full Path: {location.pathname + location.search}</div>
-    </div>
-  );
-};
+
 
 // Route handler component
 const RouteHandler = () => {
@@ -77,7 +56,6 @@ function App() {
     <Router>
       <div className="App">
         <RouteHandler />
-        <RouteDebug />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />

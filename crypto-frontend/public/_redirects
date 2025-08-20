@@ -1,2 +1,14 @@
 # Handle React Router - redirect all routes to index.html
 /*    /index.html   200
+
+# Additional SPA routing rules
+/privacy    /index.html   200
+/terms      /index.html   200
+/dashboard  /index.html   200
+/trading    /index.html   200
+/wallet     /index.html   200
+/achievements /index.html   200
+/portfolio  /index.html   200
+/profile    /index.html   200
+/login      /index.html   200
+/register   /index.html   200

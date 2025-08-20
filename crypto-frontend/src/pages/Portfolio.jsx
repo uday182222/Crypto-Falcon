@@ -966,55 +966,122 @@ const Portfolio = () => {
                     {/* Actions Column */}
                     <div style={{
                       display: 'flex',
-                      gap: '0.5rem',
-                      justifyContent: 'center'
+                      gap: '0.75rem',
+                      justifyContent: 'center',
+                      alignItems: 'center'
                     }}>
-                      <Button 
-                        variant="ghost" 
+                      {/* Sell Button */}
+                      <button
                         onClick={() => handleSell(holding)}
                         style={{
-                          background: 'rgba(239, 68, 68, 0.1)',
+                          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)',
                           color: '#ef4444',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          padding: '0.5rem 1rem',
+                          border: '1px solid rgba(239, 68, 68, 0.4)',
+                          borderRadius: '0.5rem',
+                          padding: '0.625rem 1rem',
                           fontSize: '0.75rem',
-                          transition: 'all 0.2s ease',
-                          minWidth: '60px'
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          minWidth: '70px',
+                          backdropFilter: 'blur(8px)',
+                          boxShadow: '0 2px 8px rgba(239, 68, 68, 0.1)',
+                          position: 'relative',
+                          overflow: 'hidden'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.15) 100%)';
+                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 8px 25px rgba(239, 68, 68, 0.25)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)';
+                          e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.1)';
+                        }}
+                        onMouseDown={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0) scale(0.98)';
+                          e.currentTarget.style.boxShadow = '0 1px 4px rgba(239, 68, 68, 0.2)';
+                        }}
+                        onMouseUp={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px) scale(1)';
+                          e.currentTarget.style.boxShadow = '0 8px 25px rgba(239, 68, 68, 0.25)';
                         }}
                       >
-                        Sell
-                      </Button>
-                      <Button 
-                        variant="ghost" 
+                        <span style={{
+                          position: 'relative',
+                          zIndex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.375rem'
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                          Sell
+                        </span>
+                      </button>
+
+                      {/* Buy More Button */}
+                      <button
                         onClick={() => handleBuyMore(holding)}
                         style={{
-                          background: 'rgba(16, 185, 129, 0.1)',
+                          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)',
                           color: '#10b981',
-                          border: '1px solid rgba(16, 185, 129, 0.3)',
-                          padding: '0.5rem 1rem',
+                          border: '1px solid rgba(16, 185, 129, 0.4)',
+                          borderRadius: '0.5rem',
+                          padding: '0.625rem 1rem',
                           fontSize: '0.75rem',
-                          transition: 'all 0.2s ease',
-                          minWidth: '80px'
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          minWidth: '90px',
+                          backdropFilter: 'blur(8px)',
+                          boxShadow: '0 2px 8px rgba(16, 185, 129, 0.1)',
+                          position: 'relative',
+                          overflow: 'hidden'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
-                          e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(16, 185, 129, 0.15) 100%)';
+                          e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.6)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.25)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
-                          e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)';
+                          e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.1)';
+                        }}
+                        onMouseDown={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0) scale(0.98)';
+                          e.currentTarget.style.boxShadow = '0 1px 4px rgba(16, 185, 129, 0.2)';
+                        }}
+                        onMouseUp={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px) scale(1)';
+                          e.currentTarget.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.25)';
                         }}
                       >
-                        Buy More
-                      </Button>
+                        <span style={{
+                          position: 'relative',
+                          zIndex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.375rem'
+                        }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 5v14"></path>
+                            <path d="M5 12h14"></path>
+                          </svg>
+                          Buy More
+                        </span>
+                      </button>
                     </div>
                   </div>
                 ))}

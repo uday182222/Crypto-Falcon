@@ -16,8 +16,33 @@
 
 # Don't cache HTML files - always serve fresh
 /*.html
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
 
 # Handle SPA routing - no cache for routes
 /*
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+# Force no-cache for all routes to prevent routing issues
+/dashboard
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+/trading
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+/wallet
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+/achievements
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+/portfolio
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+/profile
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+/login
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache
+
+/register
+  Cache-Control: no-cache, no-store, must-revalidate, Pragma: no-cache

@@ -20,14 +20,23 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false, // Disable sourcemaps in production
     minify: 'terser',
+    // Add cache-busting for deployed apps
     rollupOptions: {
       output: {
+        // Ensure unique filenames for cache busting
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
           ui: ['lucide-react']
         }
       }
+    },
+    // Add build time for cache busting
+    define: {
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString())
     }
   },
 

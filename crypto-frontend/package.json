@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp public/_redirects dist/ && cp public/_headers dist/ && cp public/404.html dist/",
+    "build": "vite build && cp public/_redirects dist/ && cp public/_headers dist/ && cp public/404.html dist/ && cp public/404.html dist/404.html",
+    "postbuild": "echo 'Build complete. Verifying files...' && ls -la dist/ && echo 'Checking for routing files...' && test -f dist/_redirects && test -f dist/_headers && test -f dist/404.html && echo '✅ All routing files present' || echo '❌ Missing routing files'",
     "preview": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0"
   },

@@ -47,6 +47,18 @@ const RouteHandler = () => {
       sessionStorage.removeItem('intendedRoute');
       navigate(intendedRoute);
     }
+
+    // Additional debugging for deployed app
+    console.log('RouteHandler mounted');
+    console.log('Current pathname:', window.location.pathname);
+    console.log('Current href:', window.location.href);
+    
+    // Force route refresh if needed
+    const currentPath = window.location.pathname;
+    if (currentPath !== '/' && !['/login', '/register', '/dashboard', '/trading', '/wallet', '/achievements', '/portfolio', '/profile', '/privacy', '/terms'].includes(currentPath)) {
+      console.log('Invalid route detected, redirecting to home');
+      navigate('/');
+    }
   }, [navigate]);
   
   return null;

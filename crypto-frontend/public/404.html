@@ -5,25 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirecting...</title>
     <script>
-        // SPA Routing Fix for Render Static Hosting
+        // SPA Routing Fix for Deployed Apps
         // This handles direct route access like /privacy, /terms, etc.
         
         // Get the current path
         const currentPath = window.location.pathname;
         const search = window.location.search;
+        const hash = window.location.hash;
         
         console.log('404 detected for route:', currentPath);
+        console.log('Search params:', search);
+        console.log('Hash:', hash);
+        
+        // List of valid routes
+        const validRoutes = [
+            '/', '/login', '/register', '/dashboard', '/trading', 
+            '/wallet', '/achievements', '/portfolio', '/profile', 
+            '/privacy', '/terms'
+        ];
         
         // For BrowserRouter, we redirect to home and let React Router handle it
         // The route will be preserved in the URL for React Router to process
-        if (currentPath !== '/' && !currentPath.includes('.')) {
+        if (currentPath !== '/' && !currentPath.includes('.') && validRoutes.includes(currentPath)) {
             // Store the intended route in sessionStorage
-            sessionStorage.setItem('intendedRoute', currentPath + search);
-            console.log('Storing intended route:', currentPath + search);
+            const fullRoute = currentPath + search + hash;
+            sessionStorage.setItem('intendedRoute', fullRoute);
+            console.log('Storing intended route:', fullRoute);
+            
+            // Add a timestamp to prevent caching issues
+            sessionStorage.setItem('routeTimestamp', Date.now().toString());
         }
         
-        // Always redirect to home page
-        window.location.replace('/');
+        // Force clear any cached data that might cause routing issues
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                for (let name of names) {
+                    if (name.includes('motionfalcon') || name.includes('crypto-frontend')) {
+                        caches.delete(name);
+                        console.log('Cleared cache:', name);
+                    }
+                }
+            });
+        }
+        
+        // Always redirect to home page with cache-busting
+        const timestamp = Date.now();
+        window.location.replace('/?t=' + timestamp);
     </script>
 </head>
 <body>
@@ -40,8 +67,18 @@
             <h1>Redirecting...</h1>
             <p>Please wait while we redirect you to the correct page.</p>
             <p>If you're not redirected automatically, <a href="/" style="color: #8b5cf6;">click here</a>.</p>
+            <div style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+                <p>Route: <span id="route"></span></p>
+                <p>Time: <span id="time"></span></p>
+            </div>
         </div>
     </div>
+    
+    <script>
+        // Display current route info
+        document.getElementById('route').textContent = window.location.pathname;
+        document.getElementById('time').textContent = new Date().toLocaleString();
+    </script>
 </body>
 </html>
 

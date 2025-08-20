@@ -5,13 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirecting...</title>
     <script>
-        // Get the current path and redirect to index.html
-        const path = window.location.pathname;
-        const search = window.location.search;
-        const hash = window.location.hash;
+        // SPA Routing Fix for Render Static Hosting
+        // This handles direct route access like /privacy, /terms, etc.
         
-        // Redirect to index.html with the original path as a hash
-        window.location.href = '/index.html' + hash + (hash ? '' : '#' + path + search);
+        // Get the current path
+        const currentPath = window.location.pathname;
+        const search = window.location.search;
+        
+        console.log('404 detected for route:', currentPath);
+        
+        // For BrowserRouter, we redirect to home and let React Router handle it
+        // The route will be preserved in the URL for React Router to process
+        if (currentPath !== '/' && !currentPath.includes('.')) {
+            // Store the intended route in sessionStorage
+            sessionStorage.setItem('intendedRoute', currentPath + search);
+            console.log('Storing intended route:', currentPath + search);
+        }
+        
+        // Always redirect to home page
+        window.location.replace('/');
     </script>
 </head>
 <body>
@@ -21,13 +33,13 @@
         align-items: center;
         height: 100vh;
         font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%);
+        background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%)";
         color: white;
     ">
         <div style="text-align: center;">
             <h1>Redirecting...</h1>
             <p>Please wait while we redirect you to the correct page.</p>
-            <p>If you're not redirected automatically, <a href="/index.html" style="color: #8b5cf6;">click here</a>.</p>
+            <p>If you're not redirected automatically, <a href="/" style="color: #8b5cf6;">click here</a>.</p>
         </div>
     </div>
 </body>

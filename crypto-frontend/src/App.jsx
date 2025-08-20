@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -30,6 +30,7 @@ const RouteDebug = () => {
     }}>
       <div>Path: {location.pathname}</div>
       <div>Search: {location.search}</div>
+      <div>Hash: {location.hash}</div>
     </div>
   );
 };

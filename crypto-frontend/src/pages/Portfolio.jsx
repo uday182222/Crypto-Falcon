@@ -18,6 +18,11 @@ const Portfolio = () => {
   const [holdings, setHoldings] = useState([]);
   const [sortBy, setSortBy] = useState('value'); // value, profit, name
   const [sortOrder, setSortOrder] = useState('desc'); // asc, desc
+  const [sellModal, setSellModal] = useState(false);
+  const [selectedHolding, setSelectedHolding] = useState(null);
+  const [sellAmount, setSellAmount] = useState('');
+  const [sellPrice, setSellPrice] = useState(0);
+  const [isSelling, setIsSelling] = useState(false);
 
   useEffect(() => {
     fetchPortfolioData();
@@ -120,16 +125,67 @@ const Portfolio = () => {
   };
 
   const handleSell = (holding) => {
-    // TODO: Implement sell functionality
-    console.log('Sell clicked for:', holding.coin_symbol);
-    // This will be implemented to open a sell modal or redirect to sell page
-    alert(`Sell functionality for ${holding.coin_symbol} will be implemented here.`);
+    setSelectedHolding(holding);
+    setSellAmount('');
+    setSellPrice(parseFloat(holding.current_value) / parseFloat(holding.quantity));
+    setSellModal(true);
   };
 
   const handleBuyMore = (holding) => {
     // Navigate to trading page with the specific coin selected
     console.log('Buy more clicked for:', holding.coin_symbol);
     navigate(`/trading?coin=${holding.coin_symbol}`);
+  };
+
+  const executeSell = async () => {
+    if (!sellAmount || parseFloat(sellAmount) <= 0) {
+      alert('Please enter a valid amount to sell');
+      return;
+    }
+
+    if (parseFloat(sellAmount) > parseFloat(selectedHolding.quantity)) {
+      alert('You cannot sell more than you own');
+      return;
+    }
+
+    try {
+      setIsSelling(true);
+      
+      // TODO: Implement actual sell API call
+      // const response = await dashboardAPI.sellCrypto({
+      //   coin_symbol: selectedHolding.coin_symbol,
+      //   quantity: parseFloat(sellAmount),
+      //   price: sellPrice
+      // });
+
+      // Simulate API call for now
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Success - close modal and refresh portfolio
+      setSellModal(false);
+      setSelectedHolding(null);
+      setSellAmount('');
+      setSellPrice(0);
+      
+      // Refresh portfolio data
+      fetchPortfolioData();
+      
+      // Show success message
+      alert(`Successfully sold ${sellAmount} ${selectedHolding.coin_symbol}`);
+      
+    } catch (error) {
+      console.error('Error executing sell:', error);
+      alert('Failed to execute sell. Please try again.');
+    } finally {
+      setIsSelling(false);
+    }
+  };
+
+  const closeSellModal = () => {
+    setSellModal(false);
+    setSelectedHolding(null);
+    setSellAmount('');
+    setSellPrice(0);
   };
 
   if (isLoading) {
@@ -851,6 +907,295 @@ const Portfolio = () => {
           </div>
         </div>
       </div>
+
+      {/* Sell Modal */}
+      {sellModal && selectedHolding && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          backdropFilter: 'blur(8px)'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            border: '1px solid rgba(51, 65, 85, 0.5)',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            backdropFilter: 'blur(20px)',
+            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '1.5rem',
+              paddingBottom: '1rem',
+              borderBottom: '1px solid rgba(51, 65, 85, 0.3)'
+            }}>
+              <h2 style={{
+                color: '#f8fafc',
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                margin: 0
+              }}>
+                Sell {selectedHolding.coin_symbol}
+              </h2>
+              <button
+                onClick={closeSellModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                  borderRadius: '0.5rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                  e.currentTarget.style.color = '#ef4444';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'none';
+                  e.currentTarget.style.color = '#94a3b8';
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Holding Info */}
+            <div style={{
+              background: 'rgba(15, 23, 42, 0.3)',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              marginBottom: '1.5rem',
+              border: '1px solid rgba(51, 65, 85, 0.3)'
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '1rem',
+                fontSize: '0.875rem'
+              }}>
+                <div>
+                  <span style={{ color: '#94a3b8' }}>Available:</span>
+                  <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                    {parseFloat(selectedHolding.quantity).toFixed(4)} {selectedHolding.coin_symbol}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8' }}>Current Value:</span>
+                  <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                    ${parseFloat(selectedHolding.current_value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8' }}>Avg Buy Price:</span>
+                  <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                    ${parseFloat(selectedHolding.avg_buy_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8' }}>Current Price:</span>
+                  <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                    ${sellPrice.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sell Form */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{
+                display: 'block',
+                color: '#94a3b8',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                marginBottom: '0.5rem'
+              }}>
+                Amount to Sell ({selectedHolding.coin_symbol})
+              </label>
+              <input
+                type="number"
+                value={sellAmount}
+                onChange={(e) => setSellAmount(e.target.value)}
+                placeholder={`0.0000 ${selectedHolding.coin_symbol}`}
+                step="0.0001"
+                min="0"
+                max={selectedHolding.quantity}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  background: 'rgba(15, 23, 42, 0.5)',
+                  border: '1px solid rgba(51, 65, 85, 0.5)',
+                  borderRadius: '0.5rem',
+                  color: '#f8fafc',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'rgba(20, 184, 166, 0.5)';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(20, 184, 166, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(51, 65, 85, 0.5)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+              
+              {/* Quick Amount Buttons */}
+              <div style={{
+                display: 'flex',
+                gap: '0.5rem',
+                marginTop: '0.75rem'
+              }}>
+                {[25, 50, 75, 100].map((percent) => (
+                  <button
+                    key={percent}
+                    onClick={() => {
+                      const amount = (parseFloat(selectedHolding.quantity) * percent) / 100;
+                      setSellAmount(amount.toFixed(4));
+                    }}
+                    style={{
+                      background: 'rgba(20, 184, 166, 0.1)',
+                      border: '1px solid rgba(20, 184, 166, 0.3)',
+                      color: '#14b8a6',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.75rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)';
+                      e.currentTarget.style.borderColor = 'rgba(20, 184, 166, 0.5)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(20, 184, 166, 0.1)';
+                      e.currentTarget.style.borderColor = 'rgba(20, 184, 166, 0.3)';
+                    }}
+                  >
+                    {percent}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sell Summary */}
+            {sellAmount && parseFloat(sellAmount) > 0 && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '0.75rem',
+                padding: '1rem',
+                marginBottom: '1.5rem'
+              }}>
+                <h4 style={{
+                  color: '#ef4444',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  margin: '0 0 0.75rem 0'
+                }}>
+                  Sell Summary
+                </h4>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.75rem',
+                  fontSize: '0.875rem'
+                }}>
+                  <div>
+                    <span style={{ color: '#94a3b8' }}>Amount:</span>
+                    <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                      {parseFloat(sellAmount).toFixed(4)} {selectedHolding.coin_symbol}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8' }}>Price:</span>
+                    <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                      ${sellPrice.toFixed(2)}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8' }}>Total Value:</span>
+                    <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                      ${(parseFloat(sellAmount) * sellPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8' }}>Remaining:</span>
+                    <span style={{ color: '#f8fafc', fontWeight: '600', marginLeft: '0.5rem' }}>
+                      {(parseFloat(selectedHolding.quantity) - parseFloat(sellAmount)).toFixed(4)} {selectedHolding.coin_symbol}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end'
+            }}>
+              <Button
+                variant="ghost"
+                onClick={closeSellModal}
+                style={{
+                  background: 'rgba(51, 65, 85, 0.3)',
+                  color: '#94a3b8',
+                  border: '1px solid rgba(51, 65, 85, 0.5)'
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={executeSell}
+                disabled={!sellAmount || parseFloat(sellAmount) <= 0 || parseFloat(sellAmount) > parseFloat(selectedHolding.quantity) || isSelling}
+                style={{
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: 'white',
+                  border: 'none',
+                  minWidth: '100px'
+                }}
+              >
+                {isSelling ? (
+                  <>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid white',
+                      borderTop: '2px solid transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                      marginRight: '0.5rem'
+                    }} />
+                    Selling...
+                  </>
+                ) : (
+                  `Sell ${selectedHolding.coin_symbol}`
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

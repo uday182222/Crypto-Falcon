@@ -10,11 +10,46 @@ import Wallet from './pages/Wallet'
 import Achievements from './pages/Achievements'
 import Portfolio from './pages/Portfolio'
 import Profile from './pages/Profile'
-import PrivacyPolicy from './pages/PrivacyPolicy'
-import TermsOfService from './pages/TermsOfService'
+// import PrivacyPolicy from './pages/PrivacyPolicy'
+// import TermsOfService from './pages/TermsOfService'
 import './App.css'
 
+// Inline component for testing
+const PrivacyPolicy = () => (
+  <div style={{
+    minHeight: '100vh',
+    background: 'red',
+    color: 'white',
+    padding: '2rem',
+    fontSize: '2rem',
+    textAlign: 'center'
+  }}>
+    <h1>PRIVACY POLICY TEST</h1>
+    <p>If you can see this RED page with white text, the component is working!</p>
+    <p>Current URL: {window.location.href}</p>
+    <p>Time: {new Date().toLocaleString()}</p>
+  </div>
+);
+
+const TermsOfService = () => (
+  <div style={{
+    minHeight: '100vh',
+    background: 'blue',
+    color: 'white',
+    padding: '2rem',
+    fontSize: '2rem',
+    textAlign: 'center'
+  }}>
+    <h1>TERMS OF SERVICE TEST</h1>
+    <p>If you can see this BLUE page with white text, the component is working!</p>
+    <p>Current URL: {window.location.href}</p>
+    <p>Time: {new Date().toLocaleString()}</p>
+  </div>
+);
+
 function App() {
+  console.log('App component rendering, routes should be available');
+  
   return (
     <Router>
       <div className="App">
@@ -62,6 +97,22 @@ function App() {
               <Navbar />
               <Profile />
             </>
+          } />
+          
+          {/* Catch-all route for debugging */}
+          <Route path="*" element={
+            <div style={{
+              minHeight: '100vh',
+              background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%)',
+              color: 'white',
+              padding: '2rem',
+              textAlign: 'center'
+            }}>
+              <h1>404 - Page Not Found</h1>
+              <p>Current URL: {window.location.href}</p>
+              <p>This route is not defined in the application.</p>
+              <p>Available routes: /, /login, /register, /privacy, /terms, /dashboard, /trading, /wallet, /achievements, /portfolio, /profile</p>
+            </div>
           } />
         </Routes>
       </div>

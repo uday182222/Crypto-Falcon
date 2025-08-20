@@ -22,11 +22,11 @@ const PrivacyPolicy = () => {
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span><strong>Effective Date:</strong> January 1, 2025</span>
+              <span><strong>Effective Date:</strong> January 15, 2025</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span><strong>Last Updated:</strong> January 1, 2025</span>
+              <span><strong>Last Updated:</strong> January 15, 2025</span>
             </div>
           </div>
         </div>
@@ -46,9 +46,9 @@ const PrivacyPolicy = () => {
             </div>
             <div className="text-gray-300 space-y-4 leading-relaxed text-lg">
               <p>
-                This Privacy Policy ("Policy") describes how Motion Falcon ("Company," "we," "our," or "us"), 
+                  This Privacy Policy ("Policy") describes how BitcoinPro ("Company," "we," "our," or "us"), 
                 a company incorporated under the laws of India, collects, uses, processes, stores, shares, 
-                and protects your personal information when you use our MotionFalcon crypto trading simulation 
+                and protects your personal information when you use our BitcoinPro crypto trading simulation 
                 platform ("Service," "Platform," "Game," or "App").
               </p>
               <p>
@@ -344,8 +344,8 @@ const PrivacyPolicy = () => {
                         <Users className="w-5 h-5 text-blue-400" />
                       </div>
                       <div>
-                        <p className="font-semibold text-white">Motion Falcon Privacy Team</p>
-                        <p className="text-gray-300">Email: privacy@motionfalcon.com</p>
+                        <p className="font-semibold text-white">BitcoinPro Privacy Team</p>
+                        <p className="text-gray-300">Email: privacy@bitcoinpro.in</p>
                         <p className="text-gray-300">Address: [Company Address]</p>
                       </div>
                     </div>
@@ -357,7 +357,7 @@ const PrivacyPolicy = () => {
                       </div>
                       <div>
                         <p className="font-semibold text-white">Grievance Officer (India)</p>
-                        <p className="text-gray-300">Email: grievance@motionfalcon.com</p>
+                        <p className="text-gray-300">Email: grievance@bitcoinpro.in</p>
                         <p className="text-gray-300">Phone: [Phone Number]</p>
                       </div>
                     </div>
@@ -371,11 +371,14 @@ const PrivacyPolicy = () => {
           <div className="mt-16 pt-8 border-t border-slate-600 text-center">
             <div className="bg-slate-700/30 p-6 rounded-xl">
               <p className="text-gray-300 mb-4 text-lg">
-                This Privacy Policy is effective as of January 1, 2025 and was last updated on January 1, 2025.
+                This Privacy Policy is effective as of January 15, 2025 and was last updated on January 15, 2025.
               </p>
-              <p className="text-gray-400">
+              <p className="text-gray-400 mb-4">
                 For questions about this Privacy Policy or our data practices, please don't hesitate to
                 contact us using the information provided above.
+              </p>
+              <p className="text-gray-300 text-lg font-semibold">
+                ©️ 2025 BitcoinPro is owned by MotionFalcon. All rights reserved. Trade smart, Trade safe.
               </p>
             </div>
           </div>

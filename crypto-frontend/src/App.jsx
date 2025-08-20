@@ -12,6 +12,9 @@ import Portfolio from './pages/Portfolio'
 import Profile from './pages/Profile'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService'
+import Blog from './pages/Blog'
+import ContactUs from './pages/ContactUs'
+import CancellationsAndRefunds from './pages/CancellationsAndRefunds'
 import './App.css'
 
 
@@ -36,7 +39,13 @@ const RouteHandler = () => {
     
     // Force route refresh if needed
     const currentPath = window.location.pathname;
-    if (currentPath !== '/' && !['/login', '/register', '/dashboard', '/trading', '/wallet', '/achievements', '/portfolio', '/profile', '/privacy', '/terms'].includes(currentPath)) {
+    const validRoutes = [
+      '/', '/login', '/register', '/dashboard', '/trading', '/wallet', 
+      '/achievements', '/portfolio', '/profile', '/privacy', '/terms',
+      '/blog', '/contact-us', '/cancellations-and-refunds'
+    ];
+    
+    if (currentPath !== '/' && !validRoutes.includes(currentPath)) {
       console.log('Invalid route detected, redirecting to home');
       navigate('/');
     }
@@ -63,6 +72,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/cancellations-and-refunds" element={<CancellationsAndRefunds />} />
           
           {/* Protected Routes - with Navbar */}
           <Route path="/dashboard" element={
@@ -114,7 +126,7 @@ function App() {
               <h1>404 - Page Not Found</h1>
               <p>Current URL: {window.location.href}</p>
               <p>This route is not defined in the application.</p>
-              <p>Available routes: /, /login, /register, /privacy, /terms, /dashboard, /trading, /wallet, /achievements, /portfolio, /profile</p>
+              <p>Available routes: /, /login, /register, /privacy, /terms, /blog, /contact-us, /cancellations-and-refunds, /dashboard, /trading, /wallet, /achievements, /portfolio, /profile</p>
               <p>Current pathname: {window.location.pathname}</p>
             </div>
           } />

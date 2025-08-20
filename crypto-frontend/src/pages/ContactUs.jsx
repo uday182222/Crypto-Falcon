@@ -46,8 +46,8 @@ const ContactUs = () => {
       icon: MessageCircle,
       title: "Live Chat",
       description: "Chat with our support team in real-time during business hours",
-      contact: "Available 9 AM - 6 PM IST",
-      response: "Instant response",
+      contact: "Coming Soon",
+      response: "Coming Soon",
       color: "green"
     },
     {
@@ -221,10 +221,10 @@ const ContactUs = () => {
           </div>
         </div>
 
-        {/* Contact Form and Office Locations */}
-        <div className="grid lg:grid-cols-2 gap-12 mb-16">
+        {/* Contact Form - Full Width */}
+        <div className="mb-16">
           {/* Contact Form */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-slate-700/50">
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-slate-700/50 max-w-4xl mx-auto">
             <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <Send className="w-6 h-6 text-blue-400" />
               Send us a Message

@@ -116,11 +116,11 @@ const CancellationsAndRefunds = () => {
           <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span><strong>Effective Date:</strong> January 1, 2025</span>
+              <span><strong>Effective Date:</strong> January 15, 2025</span>
             </div>
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              <span><strong>Last Updated:</strong> January 1, 2025</span>
+              <span><strong>Last Updated:</strong> January 15, 2025</span>
             </div>
           </div>
         </div>
@@ -477,8 +477,8 @@ const CancellationsAndRefunds = () => {
             <div className="bg-gradient-to-r from-orange-900/30 to-red-900/30 border-l-4 border-orange-500 p-6 rounded-r-xl">
               <h3 className="text-2xl font-bold text-orange-300 mb-4">Final Declaration</h3>
               <p className="text-gray-200 mb-4">
-                This Cancellation and Refund Policy is effective as of January 1, 2025 and was last
-                updated on January 1, 2025.
+                This Cancellation and Refund Policy is effective as of January 15, 2025 and was last
+                updated on January 15, 2025.
               </p>
               <p className="text-gray-200 mb-4">By using our Service and making any purchases, you acknowledge that you have:</p>
               <div className="space-y-2 text-gray-200">

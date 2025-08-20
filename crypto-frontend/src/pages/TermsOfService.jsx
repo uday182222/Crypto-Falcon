@@ -20,14 +20,14 @@ const TermsOfService = () => {
             Please read these terms carefully. They govern your use of our platform and outline your rights and responsibilities.
           </p>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span><strong>Effective Date:</strong> January 1, 2025</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              <span><strong>Last Updated:</strong> January 1, 2025</span>
-            </div>
+                          <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span><strong>Effective Date:</strong> January 15, 2025</span>
+              </div>
+                          <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span><strong>Last Updated:</strong> January 15, 2025</span>
+              </div>
           </div>
         </div>
       </div>
@@ -519,7 +519,7 @@ const TermsOfService = () => {
               </p>
               <div className="flex items-center justify-center gap-2 text-gray-400">
                 <Calendar className="w-4 h-4" />
-                <span>This document was last updated on January 1, 2025 and becomes effective immediately upon posting.</span>
+                <span>This document was last updated on January 15, 2025 and becomes effective immediately upon posting.</span>
               </div>
             </div>
           </div>

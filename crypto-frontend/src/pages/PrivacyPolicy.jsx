@@ -373,9 +373,7 @@ const PrivacyPolicy = () => {
           {/* Footer */}
           <div className="mt-16 pt-8 border-t border-slate-600 text-center">
             <div className="bg-slate-700/30 p-6 rounded-xl">
-              <p className="text-gray-300 mb-4 text-lg">
-                This Privacy Policy is effective as of January 15, 2025 and was last updated on January 15, 2025.
-              </p>
+
               <p className="text-gray-400 mb-4">
                 For questions about this Privacy Policy or our data practices, please don't hesitate to
                 contact us using the information provided above.

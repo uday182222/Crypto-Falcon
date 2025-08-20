@@ -302,7 +302,7 @@ const Login = () => {
                     {/* Logo Image */}
                     <img 
                       src="/yqRCvprlca2HEIUhFc404ozGNPI.avif"
-                      alt="MotionFalcon Logo"
+                      alt="BitcoinPro Logo"
                       style={{
                         width: '12px',
                         height: '12px',

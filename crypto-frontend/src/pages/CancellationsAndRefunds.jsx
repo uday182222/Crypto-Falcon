@@ -140,9 +140,9 @@ const CancellationsAndRefunds = () => {
             </div>
             <div className="text-gray-300 space-y-4 leading-relaxed text-lg">
               <p>
-                This Cancellation and Refund Policy ("Policy") explains the terms under which Motion Falcon
+                This Cancellation and Refund Policy ("Policy") explains the terms under which BitcoinPro
                 ("Company," "we," "our," or "us") accepts cancellations and offers refunds for purchases made
-                within our Motion Falcon crypto trading simulation platform ("Service," "Platform," "Game," or "App").
+                within our BitcoinPro crypto trading simulation platform ("Service," "Platform," "Game," or "App").
               </p>
               <p>
                 This Policy applies to all users and should be read in conjunction with our Terms of Service and
@@ -451,9 +451,9 @@ const CancellationsAndRefunds = () => {
                   Company Details
                 </h4>
                 <div className="space-y-2 text-gray-300">
-                  <p><strong>Motion Falcon</strong></p>
-                  <p>Email: support@motionfalcon.com</p>
-                  <p>Website: motionfalcon.com</p>
+                  <p><strong>BitcoinPro</strong></p>
+                  <p>Email: support@bitcoinpro.in</p>
+                  <p>Website: bitcoinpro.in</p>
                 </div>
               </div>
               
@@ -463,10 +463,10 @@ const CancellationsAndRefunds = () => {
                   Department Contacts
                 </h4>
                 <div className="space-y-2 text-gray-300 text-sm">
-                  <p><strong>Refunds:</strong> support@motionfalcon.com</p>
-                  <p><strong>Billing:</strong> billing@motionfalcon.com</p>
-                  <p><strong>Technical Support:</strong> tech@motionfalcon.com</p>
-                  <p><strong>Legal:</strong> legal@motionfalcon.com</p>
+                  <p><strong>Refunds:</strong> support@bitcoinpro.in</p>
+                  <p><strong>Billing:</strong> info@bitcoinpro.in</p>
+                  <p><strong>Technical Support:</strong> support@bitcoinpro.in</p>
+                  <p><strong>Legal:</strong> info@bitcoinpro.in</p>
                 </div>
               </div>
             </div>

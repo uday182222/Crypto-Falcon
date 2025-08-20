@@ -378,7 +378,7 @@ const Achievements = () => {
             color: '#f8fafc',
             marginBottom: '0.5rem'
           }}>
-            MotionFalcon
+            BitcoinPro
           </h1>
           <p style={{ color: '#94a3b8' }}>Loading Achievements...</p>
         </div>

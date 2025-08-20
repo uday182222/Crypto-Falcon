@@ -227,7 +227,7 @@ const Wallet = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B', // Use your test key
         amount: orderData.amount_inr * 100, // Convert to paise
         currency: 'INR',
-        name: 'MotionFalcon',
+        name: 'BitcoinPro',
         description: `Wallet Top-up - ₹${amount}`,
         order_id: orderData.order_id,
         handler: async function (response) {
@@ -290,7 +290,7 @@ const Wallet = () => {
         },
         prefill: {
           name: 'Demo User',
-          email: 'demo@motionfalcon.com'
+          email: 'demo@bitcoinpro.in'
         },
         theme: {
           color: '#14b8a6'
@@ -604,7 +604,7 @@ const Wallet = () => {
         },
         prefill: {
           name: 'Demo User',
-          email: 'demo@motionfalcon.com'
+          email: 'demo@bitcoinpro.in'
         },
         theme: {
           color: '#14b8a6'

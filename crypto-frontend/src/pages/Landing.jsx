@@ -1062,7 +1062,7 @@ const Landing = () => {
             }}>
               Terms of Service
             </Link>
-            <Link to="/contact" style={{
+            <Link to="/contact-us" style={{
               color: '#94a3b8',
               textDecoration: 'none',
               fontSize: '0.875rem',
@@ -1089,7 +1089,16 @@ const Landing = () => {
             fontSize: '0.875rem',
             margin: 0
           }}>
-            ©️ 2025 Bitcoinpro is owned by Motion falcon. All rights reserved. Trade smart, Trade safe
+
+
+          </p>
+          <p style={{ 
+            color: '#94a3b8',
+            fontSize: '0.75rem',
+            margin: '0.5rem 0 0 0',
+            fontStyle: 'italic'
+          }}>
+            2025 Bitcoinpro is owned by Motion falcon. All rights reserved. Trade smart, Trade safe
           </p>
         </div>
       </footer>

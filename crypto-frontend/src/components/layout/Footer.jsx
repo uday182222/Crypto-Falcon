@@ -96,7 +96,7 @@ const Footer = () => {
           }}>
             Terms of Service
           </Link>
-          <Link to="/contact" style={{
+          <Link to="/contact-us" style={{
             color: '#94a3b8',
             textDecoration: 'none',
             fontSize: '0.875rem',

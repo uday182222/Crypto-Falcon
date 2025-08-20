@@ -335,10 +335,6 @@ const ContactUs = () => {
               </button>
             </form>
           </div>
-
-
-            
-
         </div>
 
         {/* FAQ Section */}

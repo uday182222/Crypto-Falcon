@@ -100,7 +100,7 @@ const Blog = () => {
             </div>
           </div>
           <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-green-500 mb-6">
-            Motion Falcon Blog
+            BitcoinPro Blog
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Stay updated with the latest insights, strategies, and educational content about cryptocurrency trading and market analysis.

@@ -1,5 +1,5 @@
 // BitcoinPro API Service for React Components
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://motionfalcon-backend.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://bitcoinpro-backend.onrender.com';
 
 class BitcoinProAPI {
   constructor() {

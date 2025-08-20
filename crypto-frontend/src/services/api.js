@@ -391,6 +391,26 @@ export const dashboardAPI = {
     } catch (error) {
       return { success: false, error: error.message };
     }
+  },
+
+  // Sell cryptocurrency
+  sellCrypto: async (sellData) => {
+    try {
+      const response = await api.post('/trade/sell', sellData);
+      return { success: true, ...response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Get updated wallet balance after trade
+  getUpdatedBalance: async () => {
+    try {
+      const response = await api.get('/wallet/balance');
+      return { success: true, ...response };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 };
 

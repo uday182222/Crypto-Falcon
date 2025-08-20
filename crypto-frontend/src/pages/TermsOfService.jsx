@@ -479,8 +479,8 @@ const TermsOfService = () => {
                 </div>
                 
                 {/* Company Details */}
-                <div className="grid md:grid-cols-2 gap-8 pt-6 border-t border-blue-500/30">
-                  <div className="space-y-4">
+                <div className="pt-6 border-t border-blue-500/30">
+                  <div className="flex items-center justify-center">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-500/20 rounded-lg">
                         <Building className="w-5 h-5 text-blue-400" />
@@ -489,18 +489,6 @@ const TermsOfService = () => {
                         <p className="font-semibold text-white text-lg">BitcoinPro</p>
                         <p className="text-gray-300">Email: info@bitcoinpro.in</p>
                         <p className="text-gray-300">Phone: [PHONE_NUMBER]</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-500/20 rounded-lg">
-                        <MapPin className="w-5 h-5 text-indigo-400" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white text-lg">Address</p>
-                        <p className="text-gray-300">[COMPANY_ADDRESS]</p>
-                        <p className="text-gray-300">Pune, Maharashtra, India</p>
                       </div>
                     </div>
                   </div>

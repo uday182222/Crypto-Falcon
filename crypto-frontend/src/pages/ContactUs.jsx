@@ -60,22 +60,7 @@ const ContactUs = () => {
     }
   ];
 
-  const officeLocations = [
-    {
-      city: "Pune, Maharashtra",
-      address: "[COMPANY_ADDRESS]",
-      country: "India",
-      icon: Building,
-      color: "indigo"
-    },
-    {
-      city: "Mumbai, Maharashtra",
-      address: "[BRANCH_ADDRESS]",
-      country: "India",
-      icon: Globe,
-      color: "blue"
-    }
-  ];
+
 
   const faqs = [
     {
@@ -348,56 +333,9 @@ const ContactUs = () => {
             </form>
           </div>
 
-          {/* Office Locations */}
-          <div className="space-y-6">
-            <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-              <MapPin className="w-6 h-6 text-green-400" />
-              Our Offices
-            </h3>
-            
-            {officeLocations.map((office, index) => (
-              <div
-                key={index}
-                className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-slate-700/50 hover:border-${office.color}-500/50 transition-all duration-300`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 bg-${office.color}-500/20 rounded-lg`}>
-                    <office.icon className={`w-6 h-6 text-${office.color}-400`} />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-white mb-2">{office.city}</h4>
-                    <p className="text-gray-300 mb-1">{office.address}</p>
-                    <p className="text-gray-400 text-sm">{office.country}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
 
-            {/* Business Hours */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-slate-700/50">
-              <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-3">
-                <Clock className="w-5 h-5 text-yellow-400" />
-                Business Hours
-              </h4>
-              <div className="space-y-2 text-gray-300">
-                <div className="flex justify-between">
-                  <span>Monday - Friday:</span>
-                  <span>9:00 AM - 6:00 PM IST</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Saturday:</span>
-                  <span>10:00 AM - 4:00 PM IST</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sunday:</span>
-                  <span>Closed</span>
-                </div>
-                <div className="pt-2 border-t border-slate-600/50">
-                  <span className="text-green-400 font-medium">24/7 Online Support Available</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            
+
         </div>
 
         {/* FAQ Section */}

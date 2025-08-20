@@ -9,7 +9,7 @@ const Blog = () => {
       title: "Getting Started with Crypto Trading: A Beginner's Guide",
       excerpt: "Learn the fundamentals of cryptocurrency trading, from understanding blockchain technology to making your first virtual trade on our simulation platform.",
       author: "BitcoinPro Team",
-      date: "January 15, 2025",
+                    date: "20 August, 2025",
       readTime: "8 min read",
       category: "Beginner Guide",
       tags: ["crypto", "trading", "beginner"],

@@ -55,7 +55,7 @@ const ContactUs = () => {
       title: "Phone Support",
       description: "Speak directly with our customer support representatives",
       contact: "Coming Soon",
-      response: "Available 9 AM - 6 PM IST",
+      response: "Coming Soon",
       color: "purple"
     }
   ];

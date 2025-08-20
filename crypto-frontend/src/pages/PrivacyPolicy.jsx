@@ -373,7 +373,7 @@ const PrivacyPolicy = () => {
           <div className="mt-16 pt-8 border-t border-slate-600 text-center">
             <div className="bg-slate-700/30 p-6 rounded-xl">
               <p className="text-gray-300 mb-4 text-lg">
-                This Privacy Policy is effective as of January 15, 2025 and was last updated on January 15, 2025.
+                This Privacy Policy is effective as of 20 August, 2025 and was last updated on 20 August, 2025.
               </p>
 
               <p className="text-gray-400 mb-4">

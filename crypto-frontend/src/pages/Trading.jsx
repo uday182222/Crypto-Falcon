@@ -160,12 +160,18 @@ const Trading = () => {
 
   const fetchBalance = async () => {
     try {
+      console.log('Fetching balance...');
       const walletResponse = await dashboardAPI.getWalletSummary();
       if (walletResponse.success) {
-        // The backend returns balance directly, not nested under data
-        setBalance(parseFloat(walletResponse.balance || walletResponse.data?.balance || 0));
-        console.log('Updated balance:', walletResponse.balance || walletResponse.data?.balance);
+        const newBalance = parseFloat(walletResponse.balance || walletResponse.data?.balance || 0);
+        setBalance(newBalance);
+        setLastUpdate(new Date().toISOString());
+        console.log('Balance updated successfully:', {
+          newBalance: newBalance,
+          response: walletResponse
+        });
       } else {
+        console.error('Failed to fetch wallet balance:', walletResponse);
         setError('Failed to fetch wallet balance.');
       }
     } catch (error) {
@@ -264,28 +270,38 @@ const Trading = () => {
         throw new Error(tradeResult.error || 'Trade failed');
       }
       
+      // Extract the new balance from the response
+      const newBalance = tradeResult.new_balance || tradeResult.newBalance || 
+                        (tradeType === 'buy' ? balance - totalCost : balance + totalCost);
+      
+      console.log('Balance calculation:', {
+        currentBalance: balance,
+        totalCost: totalCost,
+        tradeType: tradeType,
+        newBalance: newBalance,
+        responseNewBalance: tradeResult.new_balance,
+        responseNewBalanceAlt: tradeResult.newBalance
+      });
+      
       // Show trade confirmation
       setTradeConfirmation({
         type: tradeType,
         coin: selectedCoin,
         amount: tradeAmount,
-        price: price,
+        price: currentPrice,
         total: totalCost,
         message: tradeResult.message || 'Trade executed successfully',
-        newBalance: tradeResult.new_balance || balance - totalCost
+        newBalance: newBalance
       });
       
       // Update local state
       setAmount('');
       
-      // Update balance immediately with the new balance from the trade
-      if (tradeResult.new_balance !== undefined) {
-        setBalance(tradeResult.new_balance);
-        console.log('Balance updated to:', tradeResult.new_balance);
-      }
+      // Update balance immediately with the calculated new balance
+      setBalance(newBalance);
+      console.log('Balance updated to:', newBalance);
       
-      // Refresh all data after trade
-      fetchBalance();
+      // Refresh coins data after trade (but don't override the balance we just set)
       fetchCoins();
       
       // Force refresh portfolio data to show new holdings
@@ -1029,20 +1045,64 @@ const Trading = () => {
                 alignItems: 'center',
                 gap: '0.5rem',
                 marginBottom: '0.5rem',
-                justifyContent: 'center'
+                justifyContent: 'space-between'
               }}>
                 <div style={{
-                  padding: '0.25rem',
-                  background: 'rgba(20, 184, 166, 0.2)',
-                  borderRadius: '0.375rem',
-                  color: '#14b8a6'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
                 }}>
-                  <Coins size={16} />
+                  <div style={{
+                    padding: '0.25rem',
+                    background: 'rgba(20, 184, 166, 0.2)',
+                    borderRadius: '0.375rem',
+                    color: '#14b8a6'
+                  }}>
+                    <Coins size={16} />
+                  </div>
+                  <span style={{ color: '#14b8a6', fontWeight: '600', fontSize: '0.875rem' }}>Balance</span>
                 </div>
-                <span style={{ color: '#14b8a6', fontWeight: '600', fontSize: '0.875rem' }}>Balance</span>
+                <button
+                  onClick={fetchBalance}
+                  style={{
+                    background: 'rgba(20, 184, 166, 0.2)',
+                    border: '1px solid rgba(20, 184, 166, 0.4)',
+                    borderRadius: '0.375rem',
+                    padding: '0.25rem',
+                    color: '#14b8a6',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(20, 184, 166, 0.3)';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(20, 184, 166, 0.2)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  title="Refresh Balance"
+                >
+                  <RefreshCw size={14} />
+                </button>
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>
+              <div style={{ 
+                fontSize: '1.25rem', 
+                fontWeight: '700', 
+                color: '#f8fafc',
+                transition: 'all 0.3s ease'
+              }}>
                 ${balance.toLocaleString()}
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#64748b',
+                marginTop: '0.25rem'
+              }}>
+                Last updated: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : 'Never'}
               </div>
             </div>
             
@@ -1406,6 +1466,17 @@ const Trading = () => {
                 <span style={{ color: '#14b8a6', fontWeight: '600', marginLeft: '0.5rem' }}>
                   ${tradeConfirmation.newBalance.toLocaleString()}
                 </span>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: tradeConfirmation.type === 'buy' ? '#ef4444' : '#10b981',
+                  marginTop: '0.25rem',
+                  fontWeight: '500'
+                }}>
+                  {tradeConfirmation.type === 'buy' ? '−' : '+'}${tradeConfirmation.total.toLocaleString()}
+                  <span style={{ color: '#94a3b8', marginLeft: '0.25rem' }}>
+                    ({tradeConfirmation.type === 'buy' ? 'deducted' : 'added'})
+                  </span>
+                </div>
               </div>
             </div>
             

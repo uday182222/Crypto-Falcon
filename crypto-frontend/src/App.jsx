@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -10,42 +10,70 @@ import Wallet from './pages/Wallet'
 import Achievements from './pages/Achievements'
 import Portfolio from './pages/Portfolio'
 import Profile from './pages/Profile'
-// import PrivacyPolicy from './pages/PrivacyPolicy'
-// import TermsOfService from './pages/TermsOfService'
 import './App.css'
 
-// Inline component for testing
-const PrivacyPolicy = () => (
-  <div style={{
-    minHeight: '100vh',
-    background: 'red',
-    color: 'white',
-    padding: '2rem',
-    fontSize: '2rem',
-    textAlign: 'center'
-  }}>
-    <h1>PRIVACY POLICY TEST</h1>
-    <p>If you can see this RED page with white text, the component is working!</p>
-    <p>Current URL: {window.location.href}</p>
-    <p>Time: {new Date().toLocaleString()}</p>
-  </div>
-);
+// Debug component to show current route
+const RouteDebug = () => {
+  const location = useLocation();
+  console.log('Current location:', location);
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '10px',
+      right: '10px',
+      background: 'rgba(0,0,0,0.8)',
+      color: 'white',
+      padding: '10px',
+      borderRadius: '5px',
+      fontSize: '12px',
+      zIndex: 9999
+    }}>
+      <div>Path: {location.pathname}</div>
+      <div>Search: {location.search}</div>
+    </div>
+  );
+};
 
-const TermsOfService = () => (
-  <div style={{
-    minHeight: '100vh',
-    background: 'blue',
-    color: 'white',
-    padding: '2rem',
-    fontSize: '2rem',
-    textAlign: 'center'
-  }}>
-    <h1>TERMS OF SERVICE TEST</h1>
-    <p>If you can see this BLUE page with white text, the component is working!</p>
-    <p>Current URL: {window.location.href}</p>
-    <p>Time: {new Date().toLocaleString()}</p>
-  </div>
-);
+// Inline component for testing
+const PrivacyPolicy = () => {
+  console.log('PrivacyPolicy component rendering');
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'red',
+      color: 'white',
+      padding: '2rem',
+      fontSize: '2rem',
+      textAlign: 'center'
+    }}>
+      <h1>PRIVACY POLICY TEST</h1>
+      <p>If you can see this RED page with white text, the component is working!</p>
+      <p>Current URL: {window.location.href}</p>
+      <p>Time: {new Date().toLocaleString()}</p>
+      <p>✅ SUCCESS: Route is working!</p>
+    </div>
+  );
+};
+
+const TermsOfService = () => {
+  console.log('TermsOfService component rendering');
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'blue',
+      color: 'white',
+      padding: '2rem',
+      fontSize: '2rem',
+      textAlign: 'center'
+    }}>
+      <h1>TERMS OF SERVICE TEST</h1>
+      <p>If you can see this BLUE page with white text, the component is working!</p>
+      <p>Current URL: {window.location.href}</p>
+      <p>Time: {new Date().toLocaleString()}</p>
+      <p>✅ SUCCESS: Route is working!</p>
+    </div>
+  );
+};
 
 function App() {
   console.log('App component rendering, routes should be available');
@@ -53,6 +81,7 @@ function App() {
   return (
     <Router>
       <div className="App">
+        <RouteDebug />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
@@ -112,6 +141,7 @@ function App() {
               <p>Current URL: {window.location.href}</p>
               <p>This route is not defined in the application.</p>
               <p>Available routes: /, /login, /register, /privacy, /terms, /dashboard, /trading, /wallet, /achievements, /portfolio, /profile</p>
+              <p>Current pathname: {window.location.pathname}</p>
             </div>
           } />
         </Routes>

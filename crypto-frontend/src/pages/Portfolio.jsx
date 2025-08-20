@@ -165,9 +165,8 @@ const Portfolio = () => {
       try {
         response = await dashboardAPI.sellCrypto({
           coin_symbol: selectedHolding.coin_symbol,
-          quantity: parseFloat(sellAmount),
-          price: sellPrice,
-          total_value: parseFloat(sellAmount) * sellPrice
+          trade_type: "sell",
+          quantity: parseFloat(sellAmount)
         });
       } catch (apiError) {
         console.log('API call failed, using fallback for testing:', apiError);
@@ -181,6 +180,17 @@ const Portfolio = () => {
         setSelectedHolding(null);
         setSellAmount('');
         setSellPrice(0);
+        
+        // Get the actual trade data from backend response
+        const tradeData = response.trade || response;
+        const newBalance = response.new_balance || response.newBalance;
+        const message = response.message || 'Trade completed successfully';
+        
+        console.log('Sell transaction successful:', {
+          trade: tradeData,
+          newBalance: newBalance,
+          message: message
+        });
         
         // Update portfolio immediately with new data
         const updatedHoldings = holdings.map(holding => {
@@ -225,7 +235,7 @@ const Portfolio = () => {
 
         // Show success message with transaction details
         const soldValue = (parseFloat(sellAmount) * sellPrice).toFixed(2);
-        alert(`Successfully sold ${sellAmount} ${selectedHolding.coin_symbol} for $${soldValue}`);
+        alert(`${message}\n\nAmount: ${sellAmount} ${selectedHolding.coin_symbol}\nValue: $${soldValue}\nNew Balance: $${newBalance ? newBalance.toLocaleString() : 'Updated'}`);
         
         // Trigger portfolio refresh event for other components
         window.dispatchEvent(new CustomEvent('portfolio-updated', {
@@ -233,7 +243,8 @@ const Portfolio = () => {
             action: 'sell',
             coin: selectedHolding.coin_symbol,
             amount: sellAmount,
-            value: soldValue
+            value: soldValue,
+            newBalance: newBalance
           }
         }));
 
@@ -244,7 +255,7 @@ const Portfolio = () => {
             coin: selectedHolding.coin_symbol,
             amount: sellAmount,
             value: soldValue,
-            newBalance: 'updated' // Signal to refresh balance
+            newBalance: newBalance
           }
         }));
         
@@ -254,7 +265,21 @@ const Portfolio = () => {
       
     } catch (error) {
       console.error('Error executing sell:', error);
-      alert(`Failed to execute sell: ${error.message}`);
+      
+      // Try to extract more specific error information
+      let errorMessage = 'Failed to execute sell transaction';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.detail) {
+        errorMessage = error.detail;
+      } else if (typeof error === 'object' && error.error) {
+        errorMessage = error.error;
+      }
+      
+      // Show detailed error message
+      alert(`Sell Transaction Failed:\n\n${errorMessage}\n\nPlease check:\n• You have sufficient ${selectedHolding.coin_symbol} to sell\n• The amount is valid\n• Your connection is stable`);
+      
     } finally {
       setIsSelling(false);
     }

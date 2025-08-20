@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
@@ -30,6 +30,8 @@ const RouteDebug = () => {
     }}>
       <div>Path: {location.pathname}</div>
       <div>Search: {location.search}</div>
+      <div>Hash: {location.hash}</div>
+      <div>Full Path: {location.pathname + location.search + location.hash}</div>
     </div>
   );
 };
@@ -51,6 +53,7 @@ const PrivacyPolicy = () => {
       <p>Current URL: {window.location.href}</p>
       <p>Time: {new Date().toLocaleString()}</p>
       <p>✅ SUCCESS: Route is working!</p>
+      <p>Hash Router: {window.location.hash}</p>
     </div>
   );
 };
@@ -71,6 +74,7 @@ const TermsOfService = () => {
       <p>Current URL: {window.location.href}</p>
       <p>Time: {new Date().toLocaleString()}</p>
       <p>✅ SUCCESS: Route is working!</p>
+      <p>Hash Router: {window.location.hash}</p>
     </div>
   );
 };
@@ -142,6 +146,7 @@ function App() {
               <p>This route is not defined in the application.</p>
               <p>Available routes: /, /login, /register, /privacy, /terms, /dashboard, /trading, /wallet, /achievements, /portfolio, /profile</p>
               <p>Current pathname: {window.location.pathname}</p>
+              <p>Hash: {window.location.hash}</p>
             </div>
           } />
         </Routes>

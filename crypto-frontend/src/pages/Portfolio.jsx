@@ -147,29 +147,71 @@ const Portfolio = () => {
   };
 
   const executeSell = async () => {
-    if (!sellAmount || parseFloat(sellAmount) <= 0) {
-      alert('Please enter a valid amount to sell');
+    // Validate sell amount
+    if (!sellAmount || sellAmount.trim() === '') {
+      alert('Please enter an amount to sell');
+      return;
+    }
+    
+    const amount = parseFloat(sellAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid positive amount to sell');
       return;
     }
 
-    if (parseFloat(sellAmount) > parseFloat(selectedHolding.quantity)) {
-      alert('You cannot sell more than you own');
+    if (amount > parseFloat(selectedHolding.quantity)) {
+      alert(`You cannot sell more than you own. Available: ${selectedHolding.quantity} ${selectedHolding.coin_symbol}`);
       return;
     }
+    
+    console.log('Sell validation passed:', {
+      amount: amount,
+      available: selectedHolding.quantity,
+      coin: selectedHolding.coin_symbol
+    });
 
     try {
       setIsSelling(true);
       
       // Execute the sell transaction
       let response;
+      
+      // Prepare the sell data with proper validation
+      const sellData = {
+        coin_symbol: selectedHolding.coin_symbol.toUpperCase().trim(),
+        trade_type: "sell",
+        quantity: parseFloat(sellAmount)
+      };
+      
+      // Ensure quantity is a valid positive number
+      if (isNaN(sellData.quantity) || sellData.quantity <= 0) {
+        throw new Error('Invalid quantity value');
+      }
+      
+      console.log('Sending sell data to backend:', sellData);
+      console.log('Data types:', {
+        coin_symbol: typeof sellData.coin_symbol,
+        trade_type: typeof sellData.trade_type,
+        quantity: typeof sellData.quantity,
+        quantity_value: sellData.quantity
+      });
+      
+      // Log the exact JSON being sent
+      console.log('JSON stringified data:', JSON.stringify(sellData));
+      
       try {
-        response = await dashboardAPI.sellCrypto({
-          coin_symbol: selectedHolding.coin_symbol,
-          trade_type: "sell",
-          quantity: parseFloat(sellAmount)
-        });
+        response = await dashboardAPI.sellCrypto(sellData);
+        console.log('API response received:', response);
       } catch (apiError) {
-        console.log('API call failed, using fallback for testing:', apiError);
+        console.error('API call failed with error:', apiError);
+        console.error('Error details:', {
+          message: apiError.message,
+          detail: apiError.detail,
+          error: apiError.error,
+          status: apiError.status,
+          response: apiError.response
+        });
+        
         // Fallback for testing when API is not available
         response = { success: true };
       }

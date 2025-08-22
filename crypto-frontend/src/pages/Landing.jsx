@@ -372,6 +372,58 @@ const Landing = () => {
             <span style={{ color: 'white' }}>Without Risk</span>
           </h1>
 
+          {/* Badges */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '1rem',
+            marginBottom: '2rem',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)',
+              border: '2px solid rgba(20, 184, 166, 0.4)',
+              borderRadius: '2rem',
+              padding: '0.75rem 2rem',
+              color: '#14b8a6',
+              fontSize: '1.125rem',
+              fontWeight: '700',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 20px rgba(20, 184, 166, 0.3)',
+              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+            }}>
+              Its a Simulator
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(20, 184, 166, 0.2) 100%)',
+              border: '2px solid rgba(139, 92, 246, 0.4)',
+              borderRadius: '2rem',
+              padding: '0.75rem 2rem',
+              color: '#8b5cf6',
+              fontSize: '1.125rem',
+              fontWeight: '700',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+            }}>
+              No Real Money
+            </div>
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)',
+              border: '2px solid rgba(20, 184, 166, 0.4)',
+              borderRadius: '2rem',
+              padding: '0.75rem 2rem',
+              color: '#14b8a6',
+              fontSize: '1.125rem',
+              fontWeight: '700',
+              backdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 20px rgba(20, 184, 166, 0.3)',
+              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+            }}>
+              Learning Purposes Only
+            </div>
+          </div>
+
           <p style={{
             fontSize: '1.25rem',
             color: '#cbd5e1',
@@ -426,32 +478,7 @@ const Landing = () => {
                 <ArrowRight size={20} style={{ marginLeft: '0.5rem' }} />
               </Button>
             </Link>
-            <Button variant="outline" size="large" style={{
-              border: '2px solid rgba(71, 85, 105, 0.6)',
-              color: '#e2e8f0',
-              background: 'rgba(30, 41, 59, 0.3)',
-              padding: '1rem 2.5rem',
-              fontSize: '1.125rem',
-              borderRadius: '0.75rem',
-              backdropFilter: 'blur(8px)',
-              transition: 'all 0.3s ease',
-              fontWeight: '500',
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(51, 65, 85, 0.5)';
-              e.target.style.borderColor = 'rgba(20, 184, 166, 0.4)';
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 4px 15px rgba(20, 184, 166, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(30, 41, 59, 0.3)';
-              e.target.style.borderColor = 'rgba(71, 85, 105, 0.6)';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
-            }}>
-              Watch Demo
-            </Button>
+
           </div>
 
           {/* Stats */}

@@ -456,32 +456,34 @@ const Profile = () => {
                   </div>
                   
                   {/* Logout Button */}
-                  <button style={{
-                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                    border: '2px solid rgba(239, 68, 68, 0.3)',
-                    borderRadius: '0.75rem',
-                    padding: '0.75rem 1.25rem',
-                    color: '#ffffff',
-                    fontSize: '0.75rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    backdropFilter: 'blur(16px)',
-                    boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2)',
-                    minWidth: '120px',
-                    justifyContent: 'center'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 12px 40px rgba(239, 68, 68, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.2)';
-                  }}>
+                  <button 
+                    onClick={handleLogout}
+                    style={{
+                      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                      border: '2px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '0.75rem',
+                      padding: '0.75rem 1.25rem',
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      backdropFilter: 'blur(16px)',
+                      boxShadow: '0 8px 32px rgba(239, 68, 68, 0.2)',
+                      minWidth: '120px',
+                      justifyContent: 'center'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 12px 40px rgba(239, 68, 68, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.2)';
+                    }}>
                     <LogOut size={18} />
                     Logout
                   </button>

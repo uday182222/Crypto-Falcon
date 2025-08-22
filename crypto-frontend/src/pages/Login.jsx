@@ -403,7 +403,7 @@ const Login = () => {
               boxShadow: '0 4px 20px rgba(20, 184, 166, 0.2)'
             }}>
               <Star size={14} style={{ marginRight: '0.5rem' }} />
-              Welcome Back
+              Welcome
             </div>
             
             <h1 style={{

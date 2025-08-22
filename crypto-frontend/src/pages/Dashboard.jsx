@@ -232,7 +232,7 @@ const Dashboard = () => {
             color: '#f8fafc',
             marginBottom: '0.5rem'
           }}>
-            Welcome back, Trader! 👋
+            Welcome, Trader! 👋
           </h1>
           <p style={{
             color: '#94a3b8',

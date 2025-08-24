@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Wallet as WalletIcon, Coins, ArrowUpRight, ArrowDownRight, RefreshCw, TrendingUp, TrendingDown, Plus, Minus, History, Package, Trophy } from 'lucide-react';
 import Button from '../components/ui/Button';
 import LoadingAnimation from '../components/ui/LoadingAnimation';
 import { dashboardAPI } from '../services/api';
 
 const Wallet = () => {
+  const navigate = useNavigate();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,9 +22,17 @@ const Wallet = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    // Check authentication first
+    if (!isAuthenticated()) {
+      console.log('User not authenticated, redirecting to login');
+      navigate('/login');
+      return;
+    }
+    
+    console.log('User authenticated, proceeding with wallet data fetch');
     fetchWalletData();
     loadRazorpay();
-  }, []);
+  }, [navigate]);
 
   // Add CSS for spinner animation
   useEffect(() => {
@@ -79,7 +89,15 @@ const Wallet = () => {
     } else {
       setLoading(true);
     }
+    
     try {
+      // Check authentication first
+      if (!isAuthenticated()) {
+        console.log('User not authenticated in fetchWalletData, redirecting to login');
+        navigate('/login');
+        return;
+      }
+
       // Fetch wallet balance
       const walletResponse = await dashboardAPI.getWalletSummary();
       if (walletResponse.success) {
@@ -133,25 +151,44 @@ const Wallet = () => {
 
   const fetchWalletTransactions = async () => {
     try {
-      // Try to fetch wallet-specific transactions if available
-              const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/transactions`, {
+      const token = localStorage.getItem('bitcoinpro_token');
+      if (!token) {
+        console.log('No token found, redirecting to login');
+        navigate('/login');
+        return { success: false, data: [] };
+      }
+
+      console.log('Fetching wallet transactions with token:', token.substring(0, 20) + '...');
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/transactions`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('motionfalcon_token')}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
       
+      console.log('Wallet transactions response status:', response.status);
+      console.log('Wallet transactions response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (response.ok) {
         const data = await response.json();
-        console.log('Wallet transactions response:', data);
-        return { success: true, data: data.data }; // Extract the actual transactions array
+        console.log('Wallet transactions response data:', data);
+        return { success: true, data: data.data || [] }; // Extract the actual transactions array
+      } else if (response.status === 401) {
+        console.log('Unauthorized access, token might be invalid');
+        localStorage.removeItem('bitcoinpro_token');
+        localStorage.removeItem('bitcoinpro_user');
+        navigate('/login');
+        return { success: false, data: [] };
       } else {
-        // If endpoint doesn't exist, return empty array
-        console.log('Wallet transactions endpoint not found, status:', response.status);
-        return { success: true, data: [] };
+        console.log('Wallet transactions endpoint error, status:', response.status);
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
+        return { success: false, data: [], error: errorText };
       }
     } catch (error) {
-      console.log('Wallet transactions endpoint not available, using trade history only');
-      return { success: true, data: [] };
+      console.error('Wallet transactions fetch error:', error);
+      return { success: false, data: [], error: error.message };
     }
   };
 
@@ -175,7 +212,7 @@ const Wallet = () => {
     }
     
     // Check if user is authenticated
-    const token = localStorage.getItem('motionfalcon_token');
+    const token = localStorage.getItem('bitcoinpro_token');
     if (!token) {
       addNotification('warning', 'Authentication Required', 'Please login first to top up your wallet');
       return;
@@ -507,7 +544,7 @@ const Wallet = () => {
     }
 
     // Check if user is authenticated
-    const token = localStorage.getItem('motionfalcon_token');
+    const token = localStorage.getItem('bitcoinpro_token');
     if (!token) {
       addNotification('warning', 'Authentication Required', 'Please login first to top up your wallet');
       return;
@@ -540,7 +577,7 @@ const Wallet = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B',
         amount: orderData.amount_inr * 100, // Convert to paise
         currency: 'INR',
-        name: 'MotionFalcon',
+        name: 'BitcoinPro',
         description: `${packageData.name} - $${packageData.usdAmount} USD`,
         order_id: orderData.order_id,
         handler: async function (response) {
@@ -627,6 +664,44 @@ const Wallet = () => {
     }
   };
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    const token = localStorage.getItem('bitcoinpro_token');
+    if (!token) {
+      console.log('No token found in localStorage');
+      return false;
+    }
+    
+    try {
+      // Basic token validation (check if it's a valid JWT format)
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.log('Invalid token format');
+        localStorage.removeItem('bitcoinpro_token');
+        localStorage.removeItem('bitcoinpro_user');
+        return false;
+      }
+      
+      console.log('Token format is valid, length:', token.length);
+      return true;
+    } catch (error) {
+      console.log('Token validation error:', error);
+      localStorage.removeItem('bitcoinpro_token');
+      localStorage.removeItem('bitcoinpro_user');
+      return false;
+    }
+  };
+
+  // Debug function to check authentication state
+  const debugAuth = () => {
+    console.log('=== Authentication Debug ===');
+    console.log('bitcoinpro_token:', localStorage.getItem('bitcoinpro_token') ? 'EXISTS' : 'NOT FOUND');
+    console.log('bitcoinpro_user:', localStorage.getItem('bitcoinpro_user') ? 'EXISTS' : 'NOT FOUND');
+    console.log('Token length:', localStorage.getItem('bitcoinpro_token')?.length || 0);
+    console.log('Is authenticated:', isAuthenticated());
+    console.log('===========================');
+  };
+
   const addNotification = (type, title, message, details = []) => {
     const id = Date.now();
     const notification = {
@@ -695,6 +770,29 @@ const Wallet = () => {
         </div>
         
         {/* Action Buttons */}
+        <div style={{
+          display: 'flex',
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          {/* Debug Button - Remove this in production */}
+          <button
+            onClick={debugAuth}
+            style={{
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #14b8a6 100%)',
+              border: 'none',
+              borderRadius: '0.5rem',
+              padding: '0.5rem 1rem',
+              color: 'white',
+              fontSize: '0.875rem',
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}
+          >
+            Debug Auth
+          </button>
+        </div>
+        
         <div style={{
           display: 'flex',
           justifyContent: 'flex-end',

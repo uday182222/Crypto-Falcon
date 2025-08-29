@@ -1839,6 +1839,13 @@ const Wallet = () => {
                               variant="ghost"
                               onClick={() => {
                                 console.log('🖱️ Invoice button clicked for transaction:', transaction);
+                                console.log('🔍 Transaction object keys:', Object.keys(transaction));
+                                console.log('🔍 Transaction ID type:', typeof transaction.id);
+                                console.log('🔍 Transaction ID value:', transaction.id);
+                                console.log('🔍 Transaction user_id:', transaction.user_id);
+                                console.log('🔍 Transaction amount:', transaction.amount);
+                                console.log('🔍 Transaction status:', transaction.status);
+                                console.log('🔍 Full transaction object:', JSON.stringify(transaction, null, 2));
                                 handleInvoiceDownloadForTransaction(transaction);
                               }}
                               style={{

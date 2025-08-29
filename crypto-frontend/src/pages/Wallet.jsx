@@ -431,6 +431,18 @@ const Wallet = () => {
     try {
       console.log('🔍 Starting invoice generation for transaction:', transaction);
       
+      // Validate transaction object and ID
+      if (!transaction || !transaction.id) {
+        throw new Error('Invalid transaction: missing transaction ID');
+      }
+      
+      const transactionId = parseInt(transaction.id);
+      if (isNaN(transactionId) || transactionId <= 0) {
+        throw new Error(`Invalid transaction ID: ${transaction.id}`);
+      }
+      
+      console.log('✅ Valid transaction ID:', transactionId);
+      
       const token = localStorage.getItem('bitcoinpro_token');
       console.log('🔑 Token from localStorage:', token ? 'Present' : 'Missing');
       
@@ -438,7 +450,7 @@ const Wallet = () => {
         throw new Error('No authentication token found. Please login again.');
       }
       
-      const requestBody = { transaction_id: transaction.id };
+      const requestBody = { transaction_id: transactionId };
       console.log('📤 Sending request body:', requestBody);
       
       // Send transaction ID to backend for invoice generation

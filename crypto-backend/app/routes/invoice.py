@@ -13,6 +13,7 @@ from app.models.user import User
 from app.models.purchase import Purchase, DemoCoinPackage
 from app.schemas.invoice import InvoiceData, InvoiceResponse
 from app.services.invoice_service import InvoiceService
+from app.models.wallet_transaction import WalletTransaction
 
 router = APIRouter(prefix="/invoice", tags=["invoice"])
 
@@ -80,6 +81,43 @@ async def generate_invoice(
                 Purchase.status == "completed"
             ).order_by(Purchase.created_at.desc()).first()
             print(f"   - Found any completed purchase: {purchase}")
+            
+            # Debug: Show ALL purchases in the database
+            all_purchases_all_users = db.query(Purchase).all()
+            print(f"🔍 ALL purchases in database (all users):")
+            for p in all_purchases_all_users:
+                print(f"   - Purchase ID: {p.id}, User ID: {p.user_id}, Amount: {p.amount}, Status: {p.status}")
+            
+            # Debug: Show ALL wallet transactions in the database
+            all_wallet_transactions = db.query(WalletTransaction).all()
+            print(f"🔍 ALL wallet transactions in database (all users):")
+            for wt in all_wallet_transactions:
+                print(f"   - Transaction ID: {wt.id}, User ID: {wt.user_id}, Amount: {wt.amount}, Status: {wt.status}, Type: {wt.transaction_type}")
+            
+            # If no purchase found, try to find a wallet transaction
+            if not purchase:
+                print(f"🔍 Searching for wallet transaction with ID: {request.transaction_id}")
+                wallet_transaction = db.query(WalletTransaction).filter(
+                    WalletTransaction.id == request.transaction_id,
+                    WalletTransaction.user_id == current_user.id,
+                    WalletTransaction.status == "completed"
+                ).first()
+                print(f"   - Found wallet transaction: {wallet_transaction}")
+                
+                if wallet_transaction:
+                    # Create a virtual purchase record from the wallet transaction
+                    print(f"🔍 Creating virtual purchase from wallet transaction")
+                    purchase = type('obj', (object,), {
+                        'id': wallet_transaction.id,
+                        'user_id': wallet_transaction.user_id,
+                        'amount': float(wallet_transaction.amount),
+                        'status': wallet_transaction.status,
+                        'razorpay_order_id': wallet_transaction.order_id or f"WT_{wallet_transaction.id}",
+                        'razorpay_payment_id': wallet_transaction.payment_id or f"PAY_{wallet_transaction.id}",
+                        'created_at': wallet_transaction.created_at,
+                        'package_id': wallet_transaction.package_id or 'wallet_topup'
+                    })()
+                    print(f"   - Virtual purchase created: {purchase}")
 
         if not purchase:
             print(f"❌ No purchase found for user {current_user.id}")

@@ -427,12 +427,58 @@ const Wallet = () => {
     }
   };
 
+  const handleInvoiceDownloadForTransaction = async (transaction) => {
+    try {
+      // Generate invoice data for existing transaction
+      const invoiceData = {
+        paymentId: transaction.payment_id || `PAY-${transaction.id}`,
+        orderId: transaction.order_id || `ORD-${transaction.id}`,
+        amount: transaction.total || transaction.amount || 0,
+        packageName: transaction.type === 'package' ? transaction.type : 'Wallet Top-up'
+      };
+      
+      // Call the invoice generation API
+      await invoiceAPI.generateAndDownloadInvoice(invoiceData.paymentId, invoiceData.orderId);
+      
+      addNotification('success', 
+        'Invoice Downloaded!', 
+        'Your invoice has been generated and downloaded successfully',
+        [
+          { icon: '📄', text: 'Invoice saved to your device' }
+        ]
+      );
+      
+    } catch (error) {
+      console.error('Error generating invoice for transaction:', error);
+      addNotification('error', 
+        'Invoice Generation Failed', 
+        'Failed to generate invoice. Please try again or contact support.',
+        [
+          { icon: '❌', text: 'Invoice generation failed' }
+        ]
+      );
+    }
+  };
+
   const fetchInvoiceHistory = async () => {
     try {
-      const response = await invoiceAPI.listInvoices();
-      if (response.success) {
-        setInvoiceHistory(response.invoices || []);
-      }
+      // Use existing transactions data instead of calling API
+      // Filter for completed wallet transactions
+      const completedTransactions = transactions.filter(tx => 
+        tx.status === 'completed' && tx.category === 'wallet'
+      );
+      
+      // Transform transactions to invoice format
+      const invoiceData = completedTransactions.map(tx => ({
+        invoice_number: `INV-${tx.id || Date.now()}`,
+        date: tx.date ? formatDate(tx.date) : 'N/A',
+        amount: tx.total || tx.amount || 0,
+        package_name: tx.type === 'package' ? tx.type : 'Wallet Top-up',
+        payment_id: tx.payment_id || `PAY-${tx.id || Date.now()}`,
+        order_id: tx.order_id || `ORD-${tx.id || Date.now()}`
+      }));
+      
+      setInvoiceHistory(invoiceData);
     } catch (error) {
       console.error('Error fetching invoice history:', error);
     }
@@ -1642,6 +1688,7 @@ const Wallet = () => {
                     <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Total</th>
                     <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Date</th>
                     <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Status</th>
+                    <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Invoice</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1712,6 +1759,23 @@ const Wallet = () => {
                         }}>
                           {transaction.status}
                         </span>
+                      </td>
+                      <td style={{ textAlign: 'center', padding: '1rem' }}>
+                        {transaction.status === 'completed' && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleInvoiceDownloadForTransaction(transaction)}
+                            style={{
+                              color: '#14b8a6',
+                              background: 'rgba(20, 184, 166, 0.1)',
+                              border: '1px solid rgba(20, 184, 166, 0.3)',
+                              padding: '0.5rem 1rem',
+                              fontSize: '0.875rem'
+                            }}
+                          >
+                            📥 Download
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}

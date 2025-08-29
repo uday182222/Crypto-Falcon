@@ -135,9 +135,22 @@ async def generate_invoice(
         # Get package details if available
         package = None
         if purchase.package_id:
-            package = db.query(DemoCoinPackage).filter(
-                DemoCoinPackage.id == purchase.package_id
-            ).first()
+            # Handle both integer package IDs (from Purchase) and string package IDs (from WalletTransaction)
+            if isinstance(purchase.package_id, int):
+                # Integer package ID - query DemoCoinPackage table
+                package = db.query(DemoCoinPackage).filter(
+                    DemoCoinPackage.id == purchase.package_id
+                ).first()
+            else:
+                # String package ID - create virtual package object for wallet transactions
+                print(f"🔍 Creating virtual package for string package_id: {purchase.package_id}")
+                package = type('obj', (object,), {
+                    'id': purchase.package_id,
+                    'name': purchase.package_id.replace('-', ' ').title(),
+                    'coins_per_inr': 500,  # Default conversion rate
+                    'bonus_percentage': 0
+                })()
+                print(f"   - Virtual package created: {package}")
         
         # Generate invoice number
         invoice_number = f"INV-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"

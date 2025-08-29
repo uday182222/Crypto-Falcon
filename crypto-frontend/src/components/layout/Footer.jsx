@@ -133,7 +133,7 @@ const Footer = () => {
           margin: '0.5rem 0 0 0',
           fontStyle: 'italic'
         }}>
-          Owned by MotionFalcon
+         
         </p>
       </div>
     </footer>

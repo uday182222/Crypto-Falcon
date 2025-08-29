@@ -4,7 +4,7 @@ import subprocess
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.routes import auth, trade, leaderboard, achievement, purchase, currency, wallet
+from app.routes import auth, trade, leaderboard, achievement, purchase, currency, wallet, invoice
 
 # Suppress deprecation warnings for production
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resources")
@@ -64,6 +64,7 @@ app.include_router(achievement.router)
 app.include_router(purchase.router)
 app.include_router(currency.router)
 app.include_router(wallet.router)
+app.include_router(invoice.router)
 
 @app.get("/")
 def read_root():

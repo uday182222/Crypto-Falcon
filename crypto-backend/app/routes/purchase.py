@@ -219,7 +219,10 @@ async def verify_payment(
                                 "amount_paid_inr": amount_inr,
                                 "coins_received": coins_to_add,
                                 "new_balance": float(wallet_result['new_balance']),
-                                "conversion_rate": "₹1 = 50 coins"
+                                "conversion_rate": "₹1 = 50 coins",
+                                "order_id": razorpay_order_id,
+                                "payment_id": razorpay_payment_id,
+                                "invoice_ready": True
                             }
                         except Exception as wallet_error:
                             print(f"Wallet service error: {wallet_error}")
@@ -233,7 +236,10 @@ async def verify_payment(
                                 "amount_paid_inr": amount_inr,
                                 "coins_received": coins_to_add,
                                 "new_balance": float(current_user.demo_balance),
-                                "conversion_rate": "₹1 = 50 coins"
+                                "conversion_rate": "₹1 = 50 coins",
+                                "order_id": razorpay_order_id,
+                                "payment_id": razorpay_payment_id,
+                                "invoice_ready": True
                             }
                     else:
                         raise HTTPException(
@@ -298,7 +304,10 @@ async def verify_payment(
             "message": "Payment verified successfully",
             "coins_received": float(purchase.coins_received),
             "new_balance": new_balance,
-            "bonus_coins": float(bonus_coins) if package else 0
+            "bonus_coins": float(bonus_coins) if package else 0,
+            "order_id": razorpay_order_id,
+            "payment_id": razorpay_payment_id,
+            "invoice_ready": True
         }
         
     except Exception as e:

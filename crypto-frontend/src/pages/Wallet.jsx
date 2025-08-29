@@ -4,6 +4,7 @@ import { Wallet as WalletIcon, Coins, ArrowUpRight, ArrowDownRight, RefreshCw, T
 import Button from '../components/ui/Button';
 import LoadingAnimation from '../components/ui/LoadingAnimation';
 import { dashboardAPI } from '../services/api';
+import { invoiceAPI } from '../services/invoiceAPI';
 
 const Wallet = () => {
   const navigate = useNavigate();
@@ -20,6 +21,11 @@ const Wallet = () => {
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [transactionFilter, setTransactionFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showInvoiceButton, setShowInvoiceButton] = useState(false);
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [invoiceHistory, setInvoiceHistory] = useState([]);
+  const [showInvoiceHistory, setShowInvoiceHistory] = useState(false);
 
   useEffect(() => {
     // Check authentication first
@@ -306,14 +312,20 @@ const Wallet = () => {
               };
               setTransactions(prev => [newTransaction, ...prev]);
               
-              // Show success notification
+              // Show success notification with invoice download
               addNotification('success', 
                 'Top-up Successful!', 
                 `Added $${gameUsdAmount.toLocaleString()} USD to your wallet`,
                 [
-                  { icon: '💰', text: `Added $${gameUsdAmount.toLocaleString()} USD` }
+                  { icon: '💰', text: `Added $${gameUsdAmount.toLocaleString()} USD` },
+                  { icon: '📄', text: 'Invoice ready for download' }
                 ]
               );
+              
+              // Show invoice download button
+              if (result.invoice_ready && result.order_id && result.payment_id) {
+                showInvoiceDownloadButton(result.payment_id, result.order_id, gameUsdAmount);
+              }
               
               // Refresh wallet data
               fetchWalletData();
@@ -370,6 +382,67 @@ const Wallet = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const showInvoiceDownloadButton = (paymentId, orderId, amount, packageName = null) => {
+    setInvoiceData({
+      paymentId,
+      orderId,
+      amount,
+      packageName
+    });
+    setShowInvoiceButton(true);
+  };
+
+  const handleInvoiceDownload = async () => {
+    if (!invoiceData) return;
+    
+    setIsGeneratingInvoice(true);
+    try {
+      await invoiceAPI.generateAndDownloadInvoice(invoiceData.paymentId, invoiceData.orderId);
+      
+      addNotification('success', 
+        'Invoice Downloaded!', 
+        'Your invoice has been generated and downloaded successfully',
+        [
+          { icon: '📄', text: 'Invoice saved to your device' }
+        ]
+      );
+      
+      // Hide the invoice button after successful download
+      setShowInvoiceButton(false);
+      setInvoiceData(null);
+      
+    } catch (error) {
+      console.error('Error generating invoice:', error);
+      addNotification('error', 
+        'Invoice Generation Failed', 
+        'Failed to generate invoice. Please try again or contact support.',
+        [
+          { icon: '❌', text: 'Invoice generation failed' }
+        ]
+      );
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
+  };
+
+  const fetchInvoiceHistory = async () => {
+    try {
+      const response = await invoiceAPI.listInvoices();
+      if (response.success) {
+        setInvoiceHistory(response.invoices || []);
+      }
+    } catch (error) {
+      console.error('Error fetching invoice history:', error);
+    }
+  };
+
+  const handleShowInvoiceHistory = () => {
+    setShowInvoiceHistory(!showInvoiceHistory);
+    if (!showInvoiceHistory) {
+      fetchInvoiceHistory();
+    }
   };
 
   const getTransactionIcon = (type) => {
@@ -620,14 +693,20 @@ const Wallet = () => {
               };
               setTransactions(prev => [newTransaction, ...prev]);
               
-              // Show success notification
+              // Show success notification with invoice download
               addNotification('success', 
                 `Successfully purchased ${packageData.name}!`, 
                 'Your USD has been added to your wallet',
                 [
-                  { icon: '💰', text: `Added $${totalAmount.toLocaleString()} USD` }
+                  { icon: '💰', text: `Added $${totalAmount.toLocaleString()} USD` },
+                  { icon: '📄', text: 'Invoice ready for download' }
                 ]
               );
+              
+              // Show invoice download button
+              if (result.invoice_ready && result.order_id && result.payment_id) {
+                showInvoiceDownloadButton(result.payment_id, result.order_id, packageData.checkoutPrice, packageData.name);
+              }
               
               // Refresh wallet data
               fetchWalletData();
@@ -816,6 +895,20 @@ const Wallet = () => {
             </Button>
           )}
           <Button
+            variant="ghost"
+            onClick={handleShowInvoiceHistory}
+            style={{
+              color: '#94a3b8',
+              background: 'rgba(51, 65, 85, 0.3)',
+              border: '1px solid rgba(51, 65, 85, 0.5)',
+              fontSize: '0.875rem',
+              padding: '0.75rem 1.5rem',
+              fontWeight: '600'
+            }}
+          >
+            📄 Invoice History
+          </Button>
+          <Button
             variant="primary"
             onClick={() => setShowTopUpSubpage(true)}
             style={{
@@ -831,6 +924,71 @@ const Wallet = () => {
             Top Up
           </Button>
         </div>
+
+        {/* Invoice Download Button */}
+        {showInvoiceButton && invoiceData && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '2rem',
+            padding: '1.5rem',
+            background: 'rgba(34, 197, 94, 0.1)',
+            border: '2px solid rgba(34, 197, 94, 0.3)',
+            borderRadius: '1rem',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{
+              textAlign: 'center'
+            }}>
+              <h3 style={{
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                color: '#22c55e',
+                margin: '0 0 1rem 0'
+              }}>
+                📄 Invoice Ready for Download
+              </h3>
+              <p style={{
+                color: '#94a3b8',
+                fontSize: '1rem',
+                margin: '0 0 1.5rem 0'
+              }}>
+                {invoiceData.packageName 
+                  ? `Package: ${invoiceData.packageName} - ₹${invoiceData.amount}`
+                  : `Amount: ₹${invoiceData.amount}`
+                }
+              </p>
+              <Button
+                variant="primary"
+                onClick={handleInvoiceDownload}
+                disabled={isGeneratingInvoice}
+                style={{
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '1rem 2rem',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  borderRadius: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                {isGeneratingInvoice ? (
+                  <>
+                    <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                    Generating Invoice...
+                  </>
+                ) : (
+                  <>
+                    📥 Download Invoice
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Notifications */}
         <div style={{
@@ -1613,6 +1771,126 @@ const Wallet = () => {
             </div>
           )}
         </div>
+
+        {/* Invoice History Section */}
+        {showInvoiceHistory && (
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.8)',
+            border: '1px solid rgba(51, 65, 85, 0.5)',
+            borderRadius: '1rem',
+            padding: '2rem',
+            marginBottom: '2rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem'
+            }}>
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: '600',
+                color: '#f8fafc',
+                margin: 0
+              }}>
+                📄 Invoice History
+              </h3>
+              <Button
+                variant="ghost"
+                onClick={handleShowInvoiceHistory}
+                style={{
+                  color: '#94a3b8',
+                  background: 'transparent',
+                  border: '1px solid rgba(51, 65, 85, 0.5)',
+                  padding: '0.5rem',
+                  minWidth: 'auto'
+                }}
+              >
+                ✕
+              </Button>
+            </div>
+
+            {invoiceHistory.length > 0 ? (
+              <div style={{
+                background: 'rgba(15, 23, 42, 0.8)',
+                border: '1px solid rgba(51, 65, 85, 0.5)',
+                borderRadius: '1rem',
+                overflow: 'hidden'
+              }}>
+                <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse'
+                }}>
+                  <thead>
+                    <tr style={{
+                      background: 'linear-gradient(135deg, rgba(51, 65, 85, 0.4) 0%, rgba(51, 65, 85, 0.2) 100%)',
+                      borderBottom: '1px solid rgba(51, 65, 85, 0.5)'
+                    }}>
+                      <th style={{ padding: '1rem', textAlign: 'left', color: '#f8fafc', fontWeight: '600' }}>Invoice #</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Date</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Amount</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Package</th>
+                      <th style={{ padding: '1rem', textAlign: 'center', color: '#f8fafc', fontWeight: '600' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoiceHistory.map((invoice, index) => (
+                      <tr key={index} style={{
+                        borderBottom: '1px solid rgba(51, 65, 85, 0.3)',
+                        transition: 'all 0.2s ease'
+                      }} onMouseEnter={(e) => {
+                        e.target.closest('tr').style.background = 'rgba(51, 65, 85, 0.2)';
+                      }} onMouseLeave={(e) => {
+                        e.target.closest('tr').style.background = 'transparent';
+                      }}>
+                        <td style={{ padding: '1rem', color: '#f8fafc', fontWeight: '600' }}>
+                          {invoice.invoice_number}
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '1rem', color: '#94a3b8' }}>
+                          {invoice.date}
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '1rem', color: '#f8fafc', fontWeight: '600' }}>
+                          ₹{invoice.amount.toLocaleString()}
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '1rem', color: '#94a3b8' }}>
+                          {invoice.package_name}
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '1rem' }}>
+                          <Button
+                            variant="ghost"
+                            onClick={() => invoiceAPI.generateAndDownloadInvoice(invoice.payment_id, invoice.order_id)}
+                            style={{
+                              color: '#14b8a6',
+                              background: 'rgba(20, 184, 166, 0.1)',
+                              border: '1px solid rgba(20, 184, 166, 0.3)',
+                              padding: '0.5rem 1rem',
+                              fontSize: '0.875rem'
+                            }}
+                          >
+                            📥 Download
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{
+                textAlign: 'center',
+                padding: '2rem',
+                color: '#94a3b8'
+              }}>
+                <p style={{ fontSize: '1.125rem', marginBottom: '0.5rem' }}>
+                  No invoices found
+                </p>
+                <p style={{ fontSize: '0.875rem' }}>
+                  Complete a transaction to generate your first invoice
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Top Up Modal */}

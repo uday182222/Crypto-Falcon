@@ -436,9 +436,20 @@ const Wallet = () => {
         throw new Error('Invalid transaction: missing transaction ID');
       }
       
-      const transactionId = parseInt(transaction.id);
+      // Handle different ID formats: "wallet_13" -> 13, or just 13
+      let transactionId;
+      if (typeof transaction.id === 'string' && transaction.id.includes('_')) {
+        // Extract numeric part from string IDs like "wallet_13"
+        const numericPart = transaction.id.split('_').pop();
+        transactionId = parseInt(numericPart);
+        console.log('🔄 Converting string ID:', transaction.id, 'to numeric ID:', transactionId);
+      } else {
+        // Direct numeric ID
+        transactionId = parseInt(transaction.id);
+      }
+      
       if (isNaN(transactionId) || transactionId <= 0) {
-        throw new Error(`Invalid transaction ID: ${transaction.id}`);
+        throw new Error(`Invalid transaction ID: ${transaction.id} (converted to: ${transactionId})`);
       }
       
       console.log('✅ Valid transaction ID:', transactionId);

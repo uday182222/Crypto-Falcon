@@ -99,15 +99,16 @@ def init_database():
         CREATE TABLE wallet_transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
-            type TEXT NOT NULL,
+            transaction_type TEXT NOT NULL,
             amount REAL NOT NULL,
-            total REAL NOT NULL,
-            coin TEXT DEFAULT 'USD',
-            category TEXT DEFAULT 'wallet',
-            status TEXT DEFAULT 'completed',
+            currency TEXT DEFAULT 'USD',
             payment_id TEXT,
             order_id TEXT,
+            package_id TEXT,
+            description TEXT,
+            status TEXT DEFAULT 'completed',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     """)
@@ -157,24 +158,24 @@ def init_database():
     
     # Create sample wallet transactions
     cursor.execute("""
-        INSERT INTO wallet_transactions (user_id, type, amount, total, coin, category, status, payment_id, order_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (user_id, "package", 100000, 100000, "USD", "wallet", "completed", "PAY_001", "ORD_001"))
+        INSERT INTO wallet_transactions (user_id, transaction_type, amount, currency, status, payment_id, order_id, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, "package", 100000.0, "USD", "completed", "PAY_001", "ORD_001", "Starter Pack purchase"))
     
     cursor.execute("""
-        INSERT INTO wallet_transactions (user_id, type, amount, total, coin, category, status, payment_id, order_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (user_id, "package", 200000, 200000, "USD", "wallet", "completed", "PAY_002", "ORD_002"))
+        INSERT INTO wallet_transactions (user_id, transaction_type, amount, currency, status, payment_id, order_id, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, "package", 200000.0, "USD", "completed", "PAY_002", "ORD_002", "Premium Pack purchase"))
     
     cursor.execute("""
-        INSERT INTO wallet_transactions (user_id, type, amount, total, coin, category, status, payment_id, order_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (user_id, "package", 200000, 200000, "USD", "wallet", "completed", "PAY_003", "ORD_003"))
+        INSERT INTO wallet_transactions (user_id, transaction_type, amount, currency, status, payment_id, order_id, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, "package", 200000.0, "USD", "completed", "PAY_003", "ORD_003", "Premium Pack purchase"))
     
     cursor.execute("""
-        INSERT INTO wallet_transactions (user_id, type, amount, total, coin, category, status, payment_id, order_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (user_id, "package", 150000, 150000, "USD", "wallet", "completed", "PAY_004", "ORD_004"))
+        INSERT INTO wallet_transactions (user_id, transaction_type, amount, currency, status, payment_id, order_id, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (user_id, "package", 150000.0, "USD", "completed", "PAY_004", "ORD_004", "Starter Pack purchase"))
     
     print("✓ Created sample wallet transactions")
     

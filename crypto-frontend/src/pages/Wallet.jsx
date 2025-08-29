@@ -477,23 +477,29 @@ const Wallet = () => {
 
   const fetchInvoiceHistory = async () => {
     try {
+      console.log('Fetching invoice history...');
+      console.log('Available transactions:', transactions);
+      
       // Use existing transactions data instead of calling API
       // Filter for completed wallet transactions
       const completedTransactions = transactions.filter(tx => 
-        tx.status === 'completed' && tx.category === 'wallet'
+        tx.status === 'completed' && (tx.category === 'wallet' || tx.transaction_type)
       );
       
-              // Transform transactions to invoice format
-        const invoiceData = completedTransactions.map(tx => ({
-          invoice_number: `INV-${tx.id || Date.now()}`,
-          date: tx.date ? formatDate(tx.date) : 'N/A',
-          amount: tx.total || tx.amount || 0,
-          package_name: tx.type === 'package' ? tx.type : 'Wallet Top-up',
-          transaction_id: tx.id, // Store the actual transaction ID
-          payment_id: tx.payment_id || `PAY-${tx.id || Date.now()}`,
-          order_id: tx.order_id || `ORD-${tx.id || Date.now()}`
-        }));
+      console.log('Completed transactions:', completedTransactions);
       
+      // Transform transactions to invoice format
+      const invoiceData = completedTransactions.map(tx => ({
+        invoice_number: `INV-${tx.id || Date.now()}`,
+        date: tx.date ? formatDate(tx.date) : 'N/A',
+        amount: tx.total || tx.amount || 0,
+        package_name: (tx.transaction_type === 'package' || tx.type === 'package') ? 'Package Purchase' : 'Wallet Top-up',
+        transaction_id: tx.id, // Store the actual transaction ID
+        payment_id: tx.payment_id || `PAY-${tx.id || Date.now()}`,
+        order_id: tx.order_id || `ORD-${tx.id || Date.now()}`
+      }));
+      
+      console.log('Transformed invoice data:', invoiceData);
       setInvoiceHistory(invoiceData);
     } catch (error) {
       console.error('Error fetching invoice history:', error);
@@ -513,7 +519,10 @@ const Wallet = () => {
   };
 
   const getTransactionIcon = (type) => {
-    switch (type) {
+    // Handle both old 'type' and new 'transaction_type' fields
+    const transactionType = type || 'unknown';
+    
+    switch (transactionType) {
       case 'buy':
         return <TrendingUp size={16} color="#10b981" />;
       case 'sell':
@@ -1732,25 +1741,25 @@ const Wallet = () => {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
-                            color: getTransactionColor(transaction.type || 'unknown')
+                            color: getTransactionColor(transaction.transaction_type || transaction.type || 'unknown')
                           }}>
-                            {getTransactionIcon(transaction.type || 'unknown')}
+                            {getTransactionIcon(transaction.transaction_type || transaction.type || 'unknown')}
                             <span style={{ fontWeight: '600', textTransform: 'capitalize' }}>
-                              {getTransactionDisplayName(transaction.type || 'unknown')}
+                              {getTransactionDisplayName(transaction.transaction_type || transaction.type || 'unknown')}
                             </span>
                           </div>
-                          {transaction.category && (
+                          {(transaction.category || transaction.transaction_type) && (
                             <span style={{
                               padding: '0.25rem 0.5rem',
-                              background: transaction.category === 'trade' ? 'rgba(20, 184, 166, 0.1)' : 'rgba(139, 92, 246, 0.1)',
-                              color: transaction.category === 'trade' ? '#14b8a6' : '#8b5cf6',
+                              background: (transaction.category === 'trade' || transaction.transaction_type === 'trade') ? 'rgba(20, 184, 166, 0.1)' : 'rgba(139, 92, 246, 0.1)',
+                              color: (transaction.category === 'trade' || transaction.transaction_type === 'trade') ? '#14b8a6' : '#8b5cf6',
                               borderRadius: '0.5rem',
                               fontSize: '0.75rem',
                               fontWeight: '500',
                               border: '1px solid',
-                              borderColor: transaction.category === 'trade' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(139, 92, 246, 0.3)'
+                              borderColor: (transaction.category === 'trade' || transaction.transaction_type === 'trade') ? 'rgba(20, 184, 166, 0.3)' : 'rgba(139, 92, 246, 0.3)'
                             }}>
-                              {transaction.category}
+                              {transaction.transaction_type || transaction.category || 'wallet'}
                             </span>
                           )}
                         </div>

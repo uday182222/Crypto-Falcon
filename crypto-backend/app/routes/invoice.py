@@ -36,30 +36,53 @@ async def generate_invoice(
 ):
     """Generate invoice for a completed payment or existing transaction"""
     try:
-        purchase = None
+        print(f"🔍 Invoice generation request received:")
+        print(f"   - User ID: {current_user.id}")
+        print(f"   - User email: {current_user.email}")
+        print(f"   - Request data: {request}")
+        print(f"   - Transaction ID: {request.transaction_id}")
+        print(f"   - Order ID: {request.order_id}")
+        print(f"   - Payment ID: {request.payment_id}")
         
+        purchase = None
+
         # Try to find purchase by order_id first (for new payments)
         if request.order_id:
+            print(f"🔍 Searching for purchase by order_id: {request.order_id}")
             purchase = db.query(Purchase).filter(
                 Purchase.razorpay_order_id == request.order_id,
                 Purchase.user_id == current_user.id
             ).first()
-        
+            print(f"   - Found purchase by order_id: {purchase}")
+
         # If not found and we have transaction_id, try to find by transaction ID
         if not purchase and request.transaction_id:
+            print(f"🔍 Searching for purchase by transaction_id: {request.transaction_id}")
             purchase = db.query(Purchase).filter(
                 Purchase.id == request.transaction_id,
                 Purchase.user_id == current_user.id
             ).first()
-        
+            print(f"   - Found purchase by transaction_id: {purchase}")
+            
+            # Also check all purchases for this user
+            all_purchases = db.query(Purchase).filter(
+                Purchase.user_id == current_user.id
+            ).all()
+            print(f"🔍 All purchases for user {current_user.id}:")
+            for p in all_purchases:
+                print(f"   - Purchase ID: {p.id}, Amount: {p.amount}, Status: {p.status}")
+
         # If still not found, try to find any completed purchase for this user
         if not purchase:
+            print(f"🔍 Searching for any completed purchase for user: {current_user.id}")
             purchase = db.query(Purchase).filter(
                 Purchase.user_id == current_user.id,
                 Purchase.status == "completed"
             ).order_by(Purchase.created_at.desc()).first()
-        
+            print(f"   - Found any completed purchase: {purchase}")
+
         if not purchase:
+            print(f"❌ No purchase found for user {current_user.id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No completed purchase found for this user"

@@ -483,15 +483,16 @@ const Wallet = () => {
         tx.status === 'completed' && tx.category === 'wallet'
       );
       
-      // Transform transactions to invoice format
-      const invoiceData = completedTransactions.map(tx => ({
-        invoice_number: `INV-${tx.id || Date.now()}`,
-        date: tx.date ? formatDate(tx.date) : 'N/A',
-        amount: tx.total || tx.amount || 0,
-        package_name: tx.type === 'package' ? tx.type : 'Wallet Top-up',
-        payment_id: tx.payment_id || `PAY-${tx.id || Date.now()}`,
-        order_id: tx.order_id || `ORD-${tx.id || Date.now()}`
-      }));
+              // Transform transactions to invoice format
+        const invoiceData = completedTransactions.map(tx => ({
+          invoice_number: `INV-${tx.id || Date.now()}`,
+          date: tx.date ? formatDate(tx.date) : 'N/A',
+          amount: tx.total || tx.amount || 0,
+          package_name: tx.type === 'package' ? tx.type : 'Wallet Top-up',
+          transaction_id: tx.id, // Store the actual transaction ID
+          payment_id: tx.payment_id || `PAY-${tx.id || Date.now()}`,
+          order_id: tx.order_id || `ORD-${tx.id || Date.now()}`
+        }));
       
       setInvoiceHistory(invoiceData);
     } catch (error) {
@@ -500,8 +501,13 @@ const Wallet = () => {
   };
 
   const handleShowInvoiceHistory = () => {
+    console.log('Invoice History button clicked');
+    console.log('Current showInvoiceHistory state:', showInvoiceHistory);
+    console.log('Current transactions state:', transactions);
+    
     setShowInvoiceHistory(!showInvoiceHistory);
     if (!showInvoiceHistory) {
+      console.log('Fetching invoice history...');
       fetchInvoiceHistory();
     }
   };
@@ -1937,7 +1943,7 @@ const Wallet = () => {
                         <td style={{ textAlign: 'center', padding: '1rem' }}>
                           <Button
                             variant="ghost"
-                            onClick={() => invoiceAPI.generateAndDownloadInvoice(invoice.payment_id, invoice.order_id)}
+                            onClick={() => handleInvoiceDownloadForTransaction({ id: invoice.transaction_id })}
                             style={{
                               color: '#14b8a6',
                               background: 'rgba(20, 184, 166, 0.1)',

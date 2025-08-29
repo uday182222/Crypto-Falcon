@@ -463,6 +463,9 @@ const Wallet = () => {
       
       const requestBody = { transaction_id: transactionId };
       console.log('📤 Sending request body:', requestBody);
+      console.log('🔍 Original transaction.id:', transaction.id);
+      console.log('🔍 Converted transactionId:', transactionId);
+      console.log('🔍 Request URL:', `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/invoice/generate`);
       
       // Send transaction ID to backend for invoice generation
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/invoice/generate`, {

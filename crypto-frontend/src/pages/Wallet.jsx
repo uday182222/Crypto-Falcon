@@ -429,27 +429,44 @@ const Wallet = () => {
 
   const handleInvoiceDownloadForTransaction = async (transaction) => {
     try {
+      console.log('🔍 Starting invoice generation for transaction:', transaction);
+      
+      const token = localStorage.getItem('bitcoinpro_token');
+      console.log('🔑 Token from localStorage:', token ? 'Present' : 'Missing');
+      
+      if (!token) {
+        throw new Error('No authentication token found. Please login again.');
+      }
+      
+      const requestBody = { transaction_id: transaction.id };
+      console.log('📤 Sending request body:', requestBody);
+      
       // Send transaction ID to backend for invoice generation
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/invoice/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('bitcoinpro_token')}`
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          transaction_id: transaction.id
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Response error text:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const result = await response.json();
+      console.log('📄 Response result:', result);
       
       if (result.success && result.pdf_url) {
         // Download the generated invoice
         const filename = result.pdf_url.split('/').pop();
+        console.log('📥 Downloading invoice:', filename);
         await invoiceAPI.downloadInvoice(filename);
         
         addNotification('success', 
@@ -464,10 +481,10 @@ const Wallet = () => {
       }
       
     } catch (error) {
-      console.error('Error generating invoice for transaction:', error);
+      console.error('❌ Error generating invoice for transaction:', error);
       addNotification('error', 
         'Invoice Generation Failed', 
-        'Failed to generate invoice. Please try again or contact support.',
+        `Failed to generate invoice: ${error.message}`,
         [
           { icon: '❌', text: 'Invoice generation failed' }
         ]
@@ -1792,10 +1809,13 @@ const Wallet = () => {
                       </td>
                       <td style={{ textAlign: 'center', padding: '1rem' }}>
                         {transaction.status === 'completed' && (
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleInvoiceDownloadForTransaction(transaction)}
-                            style={{
+                                                      <Button
+                              variant="ghost"
+                              onClick={() => {
+                                console.log('🖱️ Invoice button clicked for transaction:', transaction);
+                                handleInvoiceDownloadForTransaction(transaction);
+                              }}
+                              style={{
                               color: '#14b8a6',
                               background: 'rgba(20, 184, 166, 0.1)',
                               border: '1px solid rgba(20, 184, 166, 0.3)',

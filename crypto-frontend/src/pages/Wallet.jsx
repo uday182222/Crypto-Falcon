@@ -429,24 +429,39 @@ const Wallet = () => {
 
   const handleInvoiceDownloadForTransaction = async (transaction) => {
     try {
-      // Generate invoice data for existing transaction
-      const invoiceData = {
-        paymentId: transaction.payment_id || `PAY-${transaction.id}`,
-        orderId: transaction.order_id || `ORD-${transaction.id}`,
-        amount: transaction.total || transaction.amount || 0,
-        packageName: transaction.type === 'package' ? transaction.type : 'Wallet Top-up'
-      };
+      // Send transaction ID to backend for invoice generation
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/invoice/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('bitcoinpro_token')}`
+        },
+        body: JSON.stringify({
+          transaction_id: transaction.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       
-      // Call the invoice generation API
-      await invoiceAPI.generateAndDownloadInvoice(invoiceData.paymentId, invoiceData.orderId);
-      
-      addNotification('success', 
-        'Invoice Downloaded!', 
-        'Your invoice has been generated and downloaded successfully',
-        [
-          { icon: '📄', text: 'Invoice saved to your device' }
-        ]
-      );
+      if (result.success && result.pdf_url) {
+        // Download the generated invoice
+        const filename = result.pdf_url.split('/').pop();
+        await invoiceAPI.downloadInvoice(filename);
+        
+        addNotification('success', 
+          'Invoice Downloaded!', 
+          'Your invoice has been generated and downloaded successfully',
+          [
+            { icon: '📄', text: 'Invoice saved to your device' }
+          ]
+        );
+      } else {
+        throw new Error(result.message || 'Failed to generate invoice');
+      }
       
     } catch (error) {
       console.error('Error generating invoice for transaction:', error);

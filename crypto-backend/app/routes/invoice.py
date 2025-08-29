@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Body
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 import os
 from datetime import datetime
 import uuid
+from pydantic import BaseModel
 
 from app.auth import get_current_user
 from app.db import SessionLocal
@@ -15,6 +16,11 @@ from app.services.invoice_service import InvoiceService
 
 router = APIRouter(prefix="/invoice", tags=["invoice"])
 
+class InvoiceRequest(BaseModel):
+    payment_id: Optional[str] = None
+    order_id: Optional[str] = None
+    transaction_id: Optional[int] = None
+
 def get_db():
     db = SessionLocal()
     try:
@@ -24,23 +30,39 @@ def get_db():
 
 @router.post("/generate", response_model=InvoiceResponse)
 async def generate_invoice(
-    payment_id: str,
-    order_id: str,
+    request: InvoiceRequest = Body(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Generate invoice for a completed payment"""
+    """Generate invoice for a completed payment or existing transaction"""
     try:
-        # Find the purchase record
-        purchase = db.query(Purchase).filter(
-            Purchase.razorpay_order_id == order_id,
-            Purchase.user_id == current_user.id
-        ).first()
+        purchase = None
+        
+        # Try to find purchase by order_id first (for new payments)
+        if request.order_id:
+            purchase = db.query(Purchase).filter(
+                Purchase.razorpay_order_id == request.order_id,
+                Purchase.user_id == current_user.id
+            ).first()
+        
+        # If not found and we have transaction_id, try to find by transaction ID
+        if not purchase and request.transaction_id:
+            purchase = db.query(Purchase).filter(
+                Purchase.id == request.transaction_id,
+                Purchase.user_id == current_user.id
+            ).first()
+        
+        # If still not found, try to find any completed purchase for this user
+        if not purchase:
+            purchase = db.query(Purchase).filter(
+                Purchase.user_id == current_user.id,
+                Purchase.status == "completed"
+            ).order_by(Purchase.created_at.desc()).first()
         
         if not purchase:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Purchase record not found"
+                detail="No completed purchase found for this user"
             )
         
         if purchase.status != "completed":
@@ -58,6 +80,10 @@ async def generate_invoice(
         
         # Generate invoice number
         invoice_number = f"INV-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+        
+        # Use actual payment_id and order_id if available, otherwise generate them
+        payment_id = request.payment_id or purchase.razorpay_payment_id or f"PAY-{purchase.id}"
+        order_id = request.order_id or purchase.razorpay_order_id or f"ORD-{purchase.id}"
         
         # Prepare invoice data
         invoice_data = {

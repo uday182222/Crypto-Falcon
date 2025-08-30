@@ -198,7 +198,7 @@ class InvoiceService:
             transaction_data.append([
                 f"Package: {data['package_name']}",
                 f"Demo Coins: {data.get('coins_received', 0):,}",
-                f"₹{data.get('base_price', data['amount_paid']):,.2f}"
+                f"Rs. {data.get('base_price', data['amount_paid']):,.2f}"
             ])
             
             if data.get('bonus_coins', 0) > 0:
@@ -212,7 +212,7 @@ class InvoiceService:
             transaction_data.append([
                 "Direct Top-up",
                 f"Demo Coins: {data.get('coins_received', 0):,}",
-                f"₹{data.get('base_price', data['amount_paid']):,.2f}"
+                f"Rs. {data.get('base_price', data['amount_paid']):,.2f}"
             ])
         
         # Add conversion rate if available
@@ -228,19 +228,19 @@ class InvoiceService:
             transaction_data.append([
                 "Base Amount",
                 "",
-                f"₹{data['base_price']:,.2f}"
+                f"Rs. {data['base_price']:,.2f}"
             ])
             transaction_data.append([
                 "Charges & Fees",
                 "",
-                f"₹{data['charges']:,.2f}"
+                f"Rs. {data['charges']:,.2f}"
             ])
         
         # Add total row
         transaction_data.append([
             "<b>TOTAL AMOUNT PAID</b>",
             "",
-            f"<b>₹{data['total_amount']:,.2f}</b>"
+            f"<b>Rs. {data['total_amount']:,.2f}</b>"
         ])
         
         # Create transaction table
@@ -258,6 +258,10 @@ class InvoiceService:
             ('RIGHTPADDING', (0, 0), (-1, -1), 10),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            # Add special styling for price breakdown rows
+            ('BACKGROUND', (0, -4), (-1, -3), colors.lightyellow),  # Base Amount row
+            ('BACKGROUND', (0, -3), (-1, -2), colors.lightyellow),  # Charges row
+            ('FONTNAME', (0, -4), (-1, -2), 'Helvetica-Bold'),     # Bold for breakdown
         ]))
         
         elements.append(transaction_table)

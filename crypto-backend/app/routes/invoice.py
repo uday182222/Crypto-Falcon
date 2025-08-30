@@ -180,7 +180,7 @@ async def generate_invoice(
                 "package_name": package.name,
                 "coins_received": int(purchase.coins_received) if purchase.coins_received else 0,
                 "bonus_coins": int(purchase.coins_received * (package.bonus_percentage / 100)) if package.bonus_percentage else 0,
-                "conversion_rate": f"₹1 = {package.coins_per_inr} coins"
+                "conversion_rate": f"Rs. 1 = {package.coins_per_inr} coins"
             })
         else:
             # Direct top-up
@@ -188,12 +188,13 @@ async def generate_invoice(
                 "package_name": "Direct Top-up",
                 "coins_received": int(purchase.coins_received) if purchase.coins_received else 0,
                 "bonus_coins": 0,
-                "conversion_rate": "₹1 = 500 coins"
+                "conversion_rate": "Rs. 1 = 500 coins"
             })
         
-        # Calculate price breakdown
-        base_price = float(purchase.amount) * 0.95  # 95% of total amount
-        charges = float(purchase.amount) * 0.05     # 5% charges
+        # Calculate price breakdown - more realistic approach
+        # For demo purposes, let's use a simpler calculation
+        base_price = float(purchase.amount) * 0.98  # 98% base amount
+        charges = float(purchase.amount) * 0.02     # 2% processing fee
         
         invoice_data.update({
             "base_price": base_price,

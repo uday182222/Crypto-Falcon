@@ -191,14 +191,14 @@ async def generate_invoice(
                 "conversion_rate": "Rs. 1 = 500 coins"
             })
         
-        # Calculate price breakdown - more realistic approach
-        # For demo purposes, let's use a simpler calculation
-        base_price = float(purchase.amount) * 0.98  # 98% base amount
-        charges = float(purchase.amount) * 0.02     # 2% processing fee
+        # Calculate price breakdown - match the spreadsheet format
+        # Base amount is the package price, then add 18% GST
+        base_price = float(purchase.amount) / 1.18  # Remove GST to get base price
+        gst_tax = float(purchase.amount) - base_price  # Calculate GST amount
         
         invoice_data.update({
             "base_price": base_price,
-            "charges": charges,
+            "gst_tax": gst_tax,
             "total_amount": float(purchase.amount)
         })
         

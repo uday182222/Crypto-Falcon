@@ -197,21 +197,21 @@ class InvoiceService:
         if data.get('package_name'):
             transaction_data.append([
                 f"Package: {data['package_name']}",
-                f"Demo Coins: {data.get('coins_received', 0):,}",
+                f"Mock Coins: {data.get('coins_received', 0):,}",
                 f"Rs. {data.get('base_price', data['amount_paid']):,.2f}"
             ])
             
             if data.get('bonus_coins', 0) > 0:
                 transaction_data.append([
                     "Bonus Coins",
-                    f"+{data['bonus_coins']:,} Demo Coins",
+                    f"+{data['bonus_coins']:,} Mock Coins",
                     "FREE"
                 ])
         else:
             # Direct top-up
             transaction_data.append([
                 "Direct Top-up",
-                f"Demo Coins: {data.get('coins_received', 0):,}",
+                f"Mock Coins: {data.get('coins_received', 0):,}",
                 f"Rs. {data.get('base_price', data['amount_paid']):,.2f}"
             ])
         
@@ -223,23 +223,18 @@ class InvoiceService:
                 ""
             ])
         
-        # Add price breakdown
-        if data.get('base_price') and data.get('charges'):
+        # Add price breakdown - match spreadsheet format
+        if data.get('base_price') and data.get('gst_tax'):
             transaction_data.append([
-                "Base Amount",
-                "",
-                f"Rs. {data['base_price']:,.2f}"
-            ])
-            transaction_data.append([
-                "Charges & Fees",
-                "",
-                f"Rs. {data['charges']:,.2f}"
+                "Tax",
+                "18% GST",
+                f"Rs. {data['gst_tax']:,.2f}"
             ])
         
         # Add total row
         transaction_data.append([
-            "<b>TOTAL AMOUNT PAID</b>",
             "",
+            "Total Service Fee",
             f"<b>Rs. {data['total_amount']:,.2f}</b>"
         ])
         
@@ -258,10 +253,9 @@ class InvoiceService:
             ('RIGHTPADDING', (0, 0), (-1, -1), 10),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            # Add special styling for price breakdown rows
-            ('BACKGROUND', (0, -4), (-1, -3), colors.lightyellow),  # Base Amount row
-            ('BACKGROUND', (0, -3), (-1, -2), colors.lightyellow),  # Charges row
-            ('FONTNAME', (0, -4), (-1, -2), 'Helvetica-Bold'),     # Bold for breakdown
+            # Add special styling for tax row
+            ('BACKGROUND', (0, -2), (-1, -2), colors.lightyellow),  # Tax row
+            ('FONTNAME', (0, -2), (-1, -2), 'Helvetica-Bold'),     # Bold for tax
         ]))
         
         elements.append(transaction_table)

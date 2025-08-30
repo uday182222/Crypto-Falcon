@@ -108,36 +108,42 @@ async def generate_invoice(
                     # Create a virtual purchase record from the wallet transaction
                     print(f"🔍 Creating virtual purchase from wallet transaction")
                     
-                    # Map package IDs to their actual INR prices
-                    package_prices = {
-                        'crypto-crumbs': 10.0,      # ₹10
-                        'rookie-pack': 20.0,        # ₹20
-                        'lambo-baron': 50.0,        # ₹50
-                        'ramen-bubble': 100.0,      # ₹100
-                        'digi-dynasty': 250.0,      # ₹250
-                        'block-mogul': 500.0,       # ₹500
-                        'satoshi-vault': 1000.0,    # ₹1000
-                    }
-                    
-                    # Get the actual INR amount paid for this package
-                    actual_inr_amount = package_prices.get(wallet_transaction.package_id, 0.0)
-                    if actual_inr_amount == 0.0:
-                        # If package not found, use a default calculation
-                        actual_inr_amount = float(wallet_transaction.amount) / 10000  # Rough estimate
-                    
-                    purchase = type('obj', (object,), {
-                        'id': wallet_transaction.id,
-                        'user_id': wallet_transaction.user_id,
-                        'amount': actual_inr_amount,  # Use actual INR amount
-                        'status': wallet_transaction.status,
-                        'razorpay_order_id': wallet_transaction.order_id or f"WT_{wallet_transaction.id}",
-                        'razorpay_payment_id': wallet_transaction.payment_id or f"PAY_{wallet_transaction.id}",
-                        'created_at': wallet_transaction.created_at,
-                        'package_id': wallet_transaction.package_id or 'wallet_topup',
-                        'coins_received': float(wallet_transaction.amount)  # USD amount
-                    })()
-                    print(f"   - Virtual purchase created: {purchase}")
-                    print(f"   - Package: {wallet_transaction.package_id}, INR Amount: {actual_inr_amount}")
+                                    # Map package IDs to their actual frontend prices (base + GST)
+                package_prices = {
+                    'crypto-crumbs': {'base': 10.0, 'total': 12.0},      # ₹10 base + ₹2 GST = ₹12
+                    'rookie-pack': {'base': 20.0, 'total': 23.0},        # ₹20 base + ₹3 GST = ₹23
+                    'lambo-baron': {'base': 50.0, 'total': 55.0},        # ₹50 base + ₹5 GST = ₹55
+                    'ramen-bubble': {'base': 100.0, 'total': 110.0},     # ₹100 base + ₹10 GST = ₹110
+                    'digi-dynasty': {'base': 250.0, 'total': 265.0},     # ₹250 base + ₹15 GST = ₹265
+                    'block-mogul': {'base': 500.0, 'total': 525.0},      # ₹500 base + ₹25 GST = ₹525
+                    'satoshi-vault': {'base': 1000.0, 'total': 1050.0},  # ₹1000 base + ₹50 GST = ₹1050
+                }
+                
+                # Get the actual INR amounts for this package
+                package_info = package_prices.get(wallet_transaction.package_id, {'base': 0.0, 'total': 0.0})
+                base_amount = package_info['base']
+                total_amount = package_info['total']
+                
+                if base_amount == 0.0:
+                    # If package not found, use a default calculation
+                    base_amount = float(wallet_transaction.amount) / 10000  # Rough estimate
+                    total_amount = base_amount * 1.18  # Add 18% GST
+                
+                purchase = type('obj', (object,), {
+                    'id': wallet_transaction.id,
+                    'user_id': wallet_transaction.user_id,
+                    'amount': total_amount,  # Use total amount (checkoutPrice)
+                    'status': wallet_transaction.status,
+                    'razorpay_order_id': wallet_transaction.order_id or f"WT_{wallet_transaction.id}",
+                    'razorpay_payment_id': wallet_transaction.payment_id or f"PAY_{wallet_transaction.id}",
+                    'created_at': wallet_transaction.created_at,
+                    'package_id': wallet_transaction.package_id or 'wallet_topup',
+                    'coins_received': float(wallet_transaction.amount),  # USD amount
+                    'base_price': base_amount,  # Store base price separately
+                    'gst_amount': total_amount - base_amount  # Store GST amount separately
+                })()
+                print(f"   - Virtual purchase created: {purchase}")
+                print(f"   - Package: {wallet_transaction.package_id}, Base: ₹{base_amount}, Total: ₹{total_amount}")
 
         if not purchase:
             print(f"❌ No purchase found for user {current_user.id}")
@@ -222,10 +228,15 @@ async def generate_invoice(
                 "bonus_coins": 0
             })
         
-        # Calculate price breakdown - match the spreadsheet format
-        # Base amount is the package price, then add 18% GST
-        base_price = float(purchase.amount) / 1.18  # Remove GST to get base price
-        gst_tax = float(purchase.amount) - base_price  # Calculate GST amount
+        # Calculate price breakdown - use stored values from virtual purchase
+        if hasattr(purchase, 'base_price') and hasattr(purchase, 'gst_amount'):
+            # Use pre-calculated values from virtual purchase
+            base_price = purchase.base_price
+            gst_tax = purchase.gst_amount
+        else:
+            # Fallback calculation for regular purchases
+            base_price = float(purchase.amount) / 1.18  # Remove GST to get base price
+            gst_tax = float(purchase.amount) - base_price  # Calculate GST amount
         
         invoice_data.update({
             "base_price": base_price,

@@ -215,14 +215,6 @@ class InvoiceService:
                 f"Rs. {data.get('base_price', data['amount_paid']):,.2f}"
             ])
         
-        # Add conversion rate if available
-        if data.get('conversion_rate'):
-            transaction_data.append([
-                "Conversion Rate",
-                data['conversion_rate'],
-                ""
-            ])
-        
         # Add price breakdown - match spreadsheet format
         if data.get('base_price') and data.get('gst_tax'):
             transaction_data.append([

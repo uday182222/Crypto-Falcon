@@ -212,16 +212,14 @@ async def generate_invoice(
             invoice_data.update({
                 "package_name": package.name,
                 "coins_received": int(purchase.coins_received) if purchase.coins_received else 0,
-                "bonus_coins": int(purchase.coins_received * (package.bonus_percentage / 100)) if package.bonus_percentage else 0,
-                "conversion_rate": f"Rs. 1 = {package.coins_per_inr} coins"
+                "bonus_coins": int(purchase.coins_received * (package.bonus_percentage / 100)) if package.bonus_percentage else 0
             })
         else:
             # Direct top-up
             invoice_data.update({
                 "package_name": "Direct Top-up",
                 "coins_received": int(purchase.coins_received) if purchase.coins_received else 0,
-                "bonus_coins": 0,
-                "conversion_rate": "Rs. 1 = 500 coins"
+                "bonus_coins": 0
             })
         
         # Calculate price breakdown - match the spreadsheet format

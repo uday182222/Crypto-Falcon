@@ -227,7 +227,7 @@ class InvoiceService:
         transaction_data.append([
             "",
             "Total Service Fee",
-            f"<b>Rs. {data['total_amount']:,.2f}</b>"
+            f"Rs. {data['total_amount']:,.2f}"
         ])
         
         # Create transaction table
@@ -248,6 +248,8 @@ class InvoiceService:
             # Add special styling for tax row
             ('BACKGROUND', (0, -2), (-1, -2), colors.lightyellow),  # Tax row
             ('FONTNAME', (0, -2), (-1, -2), 'Helvetica-Bold'),     # Bold for tax
+            # Make total row bold
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),     # Bold for total row
         ]))
         
         elements.append(transaction_table)

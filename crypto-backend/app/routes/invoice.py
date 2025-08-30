@@ -115,7 +115,8 @@ async def generate_invoice(
                         'razorpay_order_id': wallet_transaction.order_id or f"WT_{wallet_transaction.id}",
                         'razorpay_payment_id': wallet_transaction.payment_id or f"PAY_{wallet_transaction.id}",
                         'created_at': wallet_transaction.created_at,
-                        'package_id': wallet_transaction.package_id or 'wallet_topup'
+                        'package_id': wallet_transaction.package_id or 'wallet_topup',
+                        'coins_received': float(wallet_transaction.amount)  # Add missing attribute
                     })()
                     print(f"   - Virtual purchase created: {purchase}")
 

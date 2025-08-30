@@ -429,11 +429,10 @@ const Wallet = () => {
 
   const handleInvoiceDownloadForTransaction = async (transaction) => {
     try {
-      console.log('🔍 Starting invoice generation for transaction:', transaction);
+      const token = localStorage.getItem('bitcoinpro_token');
       
-      // Validate transaction object and ID
-      if (!transaction || !transaction.id) {
-        throw new Error('Invalid transaction: missing transaction ID');
+      if (!token) {
+        throw new Error('No authentication token found. Please login again.');
       }
       
       // Handle different ID formats: "wallet_13" -> 13, or just 13
@@ -442,7 +441,6 @@ const Wallet = () => {
         // Extract numeric part from string IDs like "wallet_13"
         const numericPart = transaction.id.split('_').pop();
         transactionId = parseInt(numericPart);
-        console.log('🔄 Converting string ID:', transaction.id, 'to numeric ID:', transactionId);
       } else {
         // Direct numeric ID
         transactionId = parseInt(transaction.id);
@@ -452,20 +450,7 @@ const Wallet = () => {
         throw new Error(`Invalid transaction ID: ${transaction.id} (converted to: ${transactionId})`);
       }
       
-      console.log('✅ Valid transaction ID:', transactionId);
-      
-      const token = localStorage.getItem('bitcoinpro_token');
-      console.log('🔑 Token from localStorage:', token ? 'Present' : 'Missing');
-      
-      if (!token) {
-        throw new Error('No authentication token found. Please login again.');
-      }
-      
       const requestBody = { transaction_id: transactionId };
-      console.log('📤 Sending request body:', requestBody);
-      console.log('🔍 Original transaction.id:', transaction.id);
-      console.log('🔍 Converted transactionId:', transactionId);
-      console.log('🔍 Request URL:', `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/invoice/generate`);
       
       // Send transaction ID to backend for invoice generation
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/invoice/generate`, {
@@ -476,27 +461,21 @@ const Wallet = () => {
         },
         body: JSON.stringify(requestBody)
       });
-
-      console.log('📥 Response status:', response.status);
-      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
-
+      
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Response error text:', errorText);
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
-
+      
       const result = await response.json();
-      console.log('📄 Response result:', result);
       
       if (result.success && result.pdf_url) {
         // Download the generated invoice
         const filename = result.pdf_url.split('/').pop();
-        console.log('📥 Downloading invoice:', filename);
         await invoiceAPI.downloadInvoice(filename);
         
-        addNotification('success', 
-          'Invoice Downloaded!', 
+        addNotification('success',
+          'Invoice Downloaded!',
           'Your invoice has been generated and downloaded successfully',
           [
             { icon: '📄', text: 'Invoice saved to your device' }
@@ -507,9 +486,9 @@ const Wallet = () => {
       }
       
     } catch (error) {
-      console.error('❌ Error generating invoice for transaction:', error);
-      addNotification('error', 
-        'Invoice Generation Failed', 
+      console.error('Error generating invoice for transaction:', error);
+      addNotification('error',
+        'Invoice Generation Failed',
         `Failed to generate invoice: ${error.message}`,
         [
           { icon: '❌', text: 'Invoice generation failed' }
@@ -1835,29 +1814,19 @@ const Wallet = () => {
                       </td>
                       <td style={{ textAlign: 'center', padding: '1rem' }}>
                         {transaction.status === 'completed' && (
-                                                      <Button
-                              variant="ghost"
-                              onClick={() => {
-                                console.log('🖱️ Invoice button clicked for transaction:', transaction);
-                                console.log('🔍 Transaction object keys:', Object.keys(transaction));
-                                console.log('🔍 Transaction ID type:', typeof transaction.id);
-                                console.log('🔍 Transaction ID value:', transaction.id);
-                                console.log('🔍 Transaction user_id:', transaction.user_id);
-                                console.log('🔍 Transaction amount:', transaction.amount);
-                                console.log('🔍 Transaction status:', transaction.status);
-                                console.log('🔍 Full transaction object:', JSON.stringify(transaction, null, 2));
-                                handleInvoiceDownloadForTransaction(transaction);
-                              }}
-                              style={{
-                              color: '#14b8a6',
-                              background: 'rgba(20, 184, 166, 0.1)',
-                              border: '1px solid rgba(20, 184, 166, 0.3)',
-                              padding: '0.5rem 1rem',
-                              fontSize: '0.875rem'
-                            }}
-                          >
-                            📥 Download
-                          </Button>
+                                                                  <Button
+                variant="ghost"
+                onClick={() => handleInvoiceDownloadForTransaction(transaction)}
+                style={{
+                    color: '#14b8a6',
+                    background: 'rgba(20, 184, 166, 0.1)',
+                    border: '1px solid rgba(20, 184, 166, 0.3)',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem'
+                }}
+            >
+                📥 Download
+            </Button>
                         )}
                       </td>
                     </tr>

@@ -170,7 +170,7 @@ async def generate_invoice(
             "payment_id": payment_id,
             "order_id": order_id,
             "business_name": "MotionFalcon Pvt. Ltd.",
-            "business_address": "123 Tech Park, Hinjewadi, Pune, Maharashtra 411057, India",
+            "business_email": "support@motionfalcon.com",
             "gst_number": "27ABCDE1234F1Z5"
         }
         
@@ -188,8 +188,18 @@ async def generate_invoice(
                 "package_name": "Direct Top-up",
                 "coins_received": int(purchase.coins_received) if purchase.coins_received else 0,
                 "bonus_coins": 0,
-                "conversion_rate": "₹1 = 50 coins"
+                "conversion_rate": "₹1 = 500 coins"
             })
+        
+        # Calculate price breakdown
+        base_price = float(purchase.amount) * 0.95  # 95% of total amount
+        charges = float(purchase.amount) * 0.05     # 5% charges
+        
+        invoice_data.update({
+            "base_price": base_price,
+            "charges": charges,
+            "total_amount": float(purchase.amount)
+        })
         
         # Generate PDF invoice
         invoice_service = InvoiceService()

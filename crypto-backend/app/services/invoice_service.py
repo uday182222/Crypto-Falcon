@@ -92,10 +92,8 @@ class InvoiceService:
         # Business details (left side)
         business_info = [
             Paragraph(f"<b>{data['business_name']}</b>", self.styles['BusinessName']),
-            Paragraph(data['business_address'], self.styles['NormalText']),
-            Paragraph(f"GSTIN: {data['gst_number']}", self.styles['NormalText']),
-            Paragraph("Email: support@motionfalcon.com", self.styles['NormalText']),
-            Paragraph("Phone: +91-20-1234-5678", self.styles['NormalText'])
+            Paragraph(f"Email: {data['business_email']}", self.styles['NormalText']),
+            Paragraph(f"GSTIN: {data['gst_number']}", self.styles['NormalText'])
         ]
         
         # Invoice title (right side)
@@ -200,7 +198,7 @@ class InvoiceService:
             transaction_data.append([
                 f"Package: {data['package_name']}",
                 f"Demo Coins: {data.get('coins_received', 0):,}",
-                f"₹{data['amount_paid']:,.2f}"
+                f"₹{data.get('base_price', data['amount_paid']):,.2f}"
             ])
             
             if data.get('bonus_coins', 0) > 0:
@@ -214,7 +212,7 @@ class InvoiceService:
             transaction_data.append([
                 "Direct Top-up",
                 f"Demo Coins: {data.get('coins_received', 0):,}",
-                f"₹{data['amount_paid']:,.2f}"
+                f"₹{data.get('base_price', data['amount_paid']):,.2f}"
             ])
         
         # Add conversion rate if available
@@ -225,11 +223,24 @@ class InvoiceService:
                 ""
             ])
         
+        # Add price breakdown
+        if data.get('base_price') and data.get('charges'):
+            transaction_data.append([
+                "Base Amount",
+                "",
+                f"₹{data['base_price']:,.2f}"
+            ])
+            transaction_data.append([
+                "Charges & Fees",
+                "",
+                f"₹{data['charges']:,.2f}"
+            ])
+        
         # Add total row
         transaction_data.append([
             "<b>TOTAL AMOUNT PAID</b>",
             "",
-            f"<b>₹{data['amount_paid']:,.2f}</b>"
+            f"<b>₹{data['total_amount']:,.2f}</b>"
         ])
         
         # Create transaction table

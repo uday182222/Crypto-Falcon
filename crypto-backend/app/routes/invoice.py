@@ -107,18 +107,37 @@ async def generate_invoice(
                 if wallet_transaction:
                     # Create a virtual purchase record from the wallet transaction
                     print(f"🔍 Creating virtual purchase from wallet transaction")
+                    
+                    # Map package IDs to their actual INR prices
+                    package_prices = {
+                        'crypto-crumbs': 10.0,      # ₹10
+                        'rookie-pack': 20.0,        # ₹20
+                        'lambo-baron': 50.0,        # ₹50
+                        'ramen-bubble': 100.0,      # ₹100
+                        'digi-dynasty': 250.0,      # ₹250
+                        'block-mogul': 500.0,       # ₹500
+                        'satoshi-vault': 1000.0,    # ₹1000
+                    }
+                    
+                    # Get the actual INR amount paid for this package
+                    actual_inr_amount = package_prices.get(wallet_transaction.package_id, 0.0)
+                    if actual_inr_amount == 0.0:
+                        # If package not found, use a default calculation
+                        actual_inr_amount = float(wallet_transaction.amount) / 10000  # Rough estimate
+                    
                     purchase = type('obj', (object,), {
                         'id': wallet_transaction.id,
                         'user_id': wallet_transaction.user_id,
-                        'amount': float(wallet_transaction.amount),
+                        'amount': actual_inr_amount,  # Use actual INR amount
                         'status': wallet_transaction.status,
                         'razorpay_order_id': wallet_transaction.order_id or f"WT_{wallet_transaction.id}",
                         'razorpay_payment_id': wallet_transaction.payment_id or f"PAY_{wallet_transaction.id}",
                         'created_at': wallet_transaction.created_at,
                         'package_id': wallet_transaction.package_id or 'wallet_topup',
-                        'coins_received': float(wallet_transaction.amount)  # Add missing attribute
+                        'coins_received': float(wallet_transaction.amount)  # USD amount
                     })()
                     print(f"   - Virtual purchase created: {purchase}")
+                    print(f"   - Package: {wallet_transaction.package_id}, INR Amount: {actual_inr_amount}")
 
         if not purchase:
             print(f"❌ No purchase found for user {current_user.id}")
@@ -145,10 +164,24 @@ async def generate_invoice(
             else:
                 # String package ID - create virtual package object for wallet transactions
                 print(f"🔍 Creating virtual package for string package_id: {purchase.package_id}")
+                
+                # Map package IDs to proper names
+                package_names = {
+                    'crypto-crumbs': 'Crypto Crumbs',
+                    'rookie-pack': 'Rookie Pack',
+                    'lambo-baron': 'Lambo Baron',
+                    'ramen-bubble': 'Ramen Bubble',
+                    'digi-dynasty': 'Digi Dynasty',
+                    'block-mogul': 'Block Mogul',
+                    'satoshi-vault': 'Satoshi Vault'
+                }
+                
+                package_name = package_names.get(purchase.package_id, purchase.package_id.replace('-', ' ').title())
+                
                 package = type('obj', (object,), {
                     'id': purchase.package_id,
-                    'name': purchase.package_id.replace('-', ' ').title(),
-                    'coins_per_inr': 500,  # Default conversion rate
+                    'name': package_name,
+                    'coins_per_inr': 10000,  # Based on wallet top-up rates
                     'bonus_percentage': 0
                 })()
                 print(f"   - Virtual package created: {package}")

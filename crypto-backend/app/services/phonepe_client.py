@@ -66,11 +66,14 @@ class PhonePeClient:
             "amount": amount_paise,
             "redirectUrl": self.redirect_url,
             "redirectMode": "GET",
-            "callbackUrl": self.callback_url,
             "paymentInstrument": {
                 "type": "PAY_PAGE",
             },
         }
+        
+        # Only add callbackUrl if it's not empty
+        if self.callback_url:
+            payload["callbackUrl"] = self.callback_url
 
         # Optional metadata
         if package_id:
@@ -87,7 +90,17 @@ class PhonePeClient:
 
         url = f"{self.base_url}{self.pay_endpoint}"
         response = self._client.post(url, json={"request": payload_b64}, headers=headers)
-        response.raise_for_status()
+        
+        # Better error handling for debugging
+        if not response.is_success:
+            error_text = response.text
+            print(f"PhonePe API Error: {response.status_code} - {error_text}")
+            print(f"Request URL: {url}")
+            print(f"Request Headers: {headers}")
+            print(f"Request Body: {{'request': '{payload_b64}'}}")
+            print(f"Decoded Payload: {payload_str}")
+            response.raise_for_status()
+            
         data = response.json()
 
         # Extract redirect URL defensively

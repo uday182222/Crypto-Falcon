@@ -15,6 +15,7 @@ class PhonePeClient:
         self.merchant_id = os.getenv("PHONEPE_MERCHANT_ID", "")
         self.salt_key = os.getenv("PHONEPE_SALT_KEY", "")
         self.key_index = os.getenv("PHONEPE_SALT_INDEX", "1")
+        self.test_mode = os.getenv("PHONEPE_TEST_MODE", "false").lower() == "true"
 
         # Default to sandbox if not specified
         base_url = os.getenv(
@@ -34,7 +35,7 @@ class PhonePeClient:
         # HTTP client
         self._client = httpx.Client(timeout=30.0)
 
-        if not self.merchant_id or not self.salt_key:
+        if not self.test_mode and (not self.merchant_id or not self.salt_key):
             raise ValueError("PhonePe credentials not configured")
 
     def _compute_x_verify_for_pay(self, payload_b64: str) -> str:
@@ -58,6 +59,16 @@ class PhonePeClient:
     ) -> Dict[str, Any]:
         """Create a PhonePe Pay Page transaction and return redirect URL + metadata."""
         amount_paise = int(round(amount_in_inr * 100))
+
+        # Test mode - return mock response
+        if self.test_mode:
+            mock_redirect_url = f"{self.redirect_url}?code=PAYMENT_SUCCESS&transactionId={merchant_transaction_id}&amount={amount_in_inr}"
+            return {
+                "raw": {"success": True, "code": "PAYMENT_INITIATED", "message": "Test mode"},
+                "redirect_url": mock_redirect_url,
+                "merchant_transaction_id": merchant_transaction_id,
+                "amount_paise": amount_paise,
+            }
 
         payload = {
             "merchantId": self.merchant_id,
@@ -124,6 +135,21 @@ class PhonePeClient:
 
     def get_status(self, merchant_transaction_id: str) -> Dict[str, Any]:
         """Fetch transaction status from PhonePe."""
+        # Test mode - return mock success
+        if self.test_mode:
+            return {
+                "success": True,
+                "code": "PAYMENT_SUCCESS",
+                "message": "Test mode payment success",
+                "data": {
+                    "merchantId": self.merchant_id or "TEST_MERCHANT",
+                    "merchantTransactionId": merchant_transaction_id,
+                    "paymentInstrument": {
+                        "transactionId": f"TXN_{merchant_transaction_id}",
+                    }
+                }
+            }
+            
         path = f"{self.status_endpoint_prefix}/{self.merchant_id}/{merchant_transaction_id}"
         url = f"{self.base_url}{path}"
         headers = {

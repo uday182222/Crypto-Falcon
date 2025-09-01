@@ -42,7 +42,8 @@ const Wallet = () => {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       const txnId = params.get('transactionId') || sessionStorage.getItem('mf_phonepe_txn');
-      const amountParam = params.get('amount');
+      const amountParam = params.get('amount') || sessionStorage.getItem('mf_phonepe_amount');
+      const pkgId = sessionStorage.getItem('mf_phonepe_pkg') || 'custom';
       if (code && txnId) {
         const token = localStorage.getItem('bitcoinpro_token');
         if (token) {
@@ -55,7 +56,7 @@ const Wallet = () => {
             body: JSON.stringify({
               merchant_transaction_id: txnId,
               amount: amountParam ? parseFloat(amountParam) : 0,
-              package_id: 'custom'
+              package_id: pkgId
             })
           }).then(async (res) => {
             if (res.ok) {
@@ -70,6 +71,8 @@ const Wallet = () => {
             }
           }).finally(() => {
             sessionStorage.removeItem('mf_phonepe_txn');
+            sessionStorage.removeItem('mf_phonepe_pkg');
+            sessionStorage.removeItem('mf_phonepe_amount');
             const url = new URL(window.location.href);
             url.search = '';
             window.history.replaceState({}, '', url);
@@ -278,7 +281,10 @@ const Wallet = () => {
         throw new Error('Invalid PhonePe response');
       }
 
+      // Persist context for verification after redirect
       sessionStorage.setItem('mf_phonepe_txn', data.merchant_transaction_id);
+      sessionStorage.setItem('mf_phonepe_pkg', 'custom');
+      sessionStorage.setItem('mf_phonepe_amount', String(amount));
       window.location.href = data.redirect_url;
     } catch (error) {
       console.error('Top-up error:', error);
@@ -660,7 +666,10 @@ const Wallet = () => {
         throw new Error('Invalid PhonePe response');
       }
 
+      // Persist context for verification after redirect
       sessionStorage.setItem('mf_phonepe_txn', data.merchant_transaction_id);
+      sessionStorage.setItem('mf_phonepe_pkg', packageData.id);
+      sessionStorage.setItem('mf_phonepe_amount', String(packageData.checkoutPrice));
       window.location.href = data.redirect_url;
     } catch (error) {
       console.error('Package top-up error:', error);

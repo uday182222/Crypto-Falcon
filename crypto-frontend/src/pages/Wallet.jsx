@@ -629,11 +629,6 @@ const Wallet = () => {
 
 
   const handlePackageTopUp = async (packageData) => {
-    if (!razorpayLoaded) {
-      addNotification('warning', 'Payment Gateway Loading', 'Please wait a moment for the payment system to initialize');
-      return;
-    }
-
     // Check if user is authenticated
     const token = localStorage.getItem('bitcoinpro_token');
     if (!token) {
@@ -1958,24 +1953,7 @@ const Wallet = () => {
               </Button>
             </div>
             
-            {!razorpayLoaded && (
-              <div style={{
-                marginTop: '1rem',
-                padding: '0.75rem',
-                background: 'rgba(59, 130, 246, 0.1)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
-                borderRadius: '0.5rem',
-                textAlign: 'center'
-              }}>
-                <p style={{
-                  color: '#3b82f6',
-                  fontSize: '0.875rem',
-                  margin: 0
-                }}>
-                  Loading payment gateway...
-                </p>
-              </div>
-            )}
+            
           </div>
         </div>
       )}

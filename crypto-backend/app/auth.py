@@ -54,10 +54,10 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
     
     # Special handling for test token
     if token == "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwidXNlcl9pZCI6MSwiZXhwIjoxNzM1NzQ0MDAwfQ.test-signature":
-        # Return a mock user for testing
+        # Return a virtual user for testing
         from datetime import datetime
         
-        class MockUser:
+        class VirtualUser:
             def __init__(self):
                 self.id = 1
                 self.username = "testuser"
@@ -79,7 +79,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 self.preferred_currency = "USD"
                 self.preferences = "{}"  # JSON string as expected by schema
         
-        return MockUser()
+        return VirtualUser()
     
     # Regular JWT validation
     payload = verify_token(token)

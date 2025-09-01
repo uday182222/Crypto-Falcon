@@ -362,7 +362,7 @@ async def get_portfolio(
 ):
     """Get user's portfolio with holdings and performance"""
     try:
-        # Always calculate portfolio from real trades - no more mock data
+        # Always calculate portfolio from real trades - no more virtual data
         print(f"Calculating portfolio for user: {current_user.username} (ID: {current_user.id})")
         
         # Get user's trades

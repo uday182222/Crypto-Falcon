@@ -26,14 +26,14 @@ import {
 } from 'lucide-react';
 
 const CancellationsAndRefunds = () => {
-  const mockCashPackages = [
-    { name: "Crypto Crumbs", price: "₹10", units: "100,000 Mock Cash Units" },
-    { name: "Rookie Pack", price: "₹20", units: "200,000 Mock Cash Units" },
-    { name: "Lambo Baron", price: "₹50", units: "500,000 Mock Cash Units" },
-    { name: "Ramen Bubble", price: "₹100", units: "1,000,000 Mock Cash Units" },
-    { name: "Digi Dynasty", price: "₹250", units: "2,500,000 Mock Cash Units" },
-    { name: "Block Mogul", price: "₹500", units: "5,000,000 Mock Cash Units" },
-    { name: "Satoshi's Vault", price: "₹1000", units: "100,000,000 Mock Cash Units" }
+  const virtualCashPackages = [
+    { name: "Crypto Crumbs", price: "₹10", units: "100,000 Virtual Cash Units" },
+    { name: "Rookie Pack", price: "₹20", units: "200,000 Virtual Cash Units" },
+    { name: "Lambo Baron", price: "₹50", units: "500,000 Virtual Cash Units" },
+    { name: "Ramen Bubble", price: "₹100", units: "1,000,000 Virtual Cash Units" },
+    { name: "Digi Dynasty", price: "₹250", units: "2,500,000 Virtual Cash Units" },
+    { name: "Block Mogul", price: "₹500", units: "5,000,000 Virtual Cash Units" },
+    { name: "Satoshi's Vault", price: "₹1000", units: "100,000,000 Virtual Cash Units" }
   ];
 
   const paymentMethods = [
@@ -183,7 +183,7 @@ const CancellationsAndRefunds = () => {
                 {[
                   'Educational Content: Cryptocurrency trading tutorials and learning materials',
                   'Simulation Environment: Virtual trading platform for practice and learning',
-                  'Virtual Currency: "Mock Cash" for use exclusively within the simulation',
+                  'Virtual Currency: "Virtual Cash" for use exclusively within the simulation',
                   'Premium Features: Enhanced functionality and advanced tools (if applicable)'
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-3 bg-slate-700/30 p-4 rounded-lg">
@@ -242,10 +242,10 @@ const CancellationsAndRefunds = () => {
             
             <h3 className="text-2xl font-semibold text-green-300 mb-6 flex items-center gap-3">
               <Coins className="w-5 h-5" />
-              3.1 Virtual Currency (Mock Cash) Packages
+              3.1 Virtual Currency (Virtual Cash) Packages
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {mockCashPackages.map((pkg, index) => (
+              {virtualCashPackages.map((pkg, index) => (
                 <div key={index} className="bg-slate-700/30 p-4 rounded-xl border border-slate-600/50 hover:border-green-500/50 transition-all duration-300">
                   <h4 className="font-semibold text-white mb-2">{pkg.name}</h4>
                   <p className="text-green-400 font-bold text-lg mb-1">{pkg.price}</p>
@@ -371,11 +371,11 @@ const CancellationsAndRefunds = () => {
             </h3>
             <div className="space-y-6 mb-8">
               <div className="bg-gradient-to-r from-red-900/30 to-red-800/30 border-l-4 border-red-500 p-6 rounded-r-xl">
-                <h4 className="font-semibold text-red-300 text-lg mb-3">Virtual Currency (Mock Cash) - NO REFUNDS:</h4>
+                <h4 className="font-semibold text-red-300 text-lg mb-3">Virtual Currency (Virtual Cash) - NO REFUNDS:</h4>
                 <div className="space-y-2 text-gray-200">
-                  <p>• All Mock Cash purchases are final and non-refundable</p>
-                  <p>• Mock Cash has no real-world value and cannot be converted to money</p>
-                  <p>• Unused Mock Cash cannot be refunded upon account closure</p>
+                  <p>• All Virtual Cash purchases are final and non-refundable</p>
+                  <p>• Virtual Cash has no real-world value and cannot be converted to money</p>
+                  <p>• Unused Virtual Cash cannot be refunded upon account closure</p>
                   <p>• This policy is clearly disclosed before every purchase</p>
                 </div>
               </div>

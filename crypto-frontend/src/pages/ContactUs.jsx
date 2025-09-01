@@ -73,7 +73,7 @@ const ContactUs = () => {
     },
     {
       question: "Can I use real money for trading?",
-      answer: "No, our platform is designed for educational purposes only. We use virtual currency (Mock Cash) that has no real-world value. This allows you to learn without financial risk."
+      answer: "No, our platform is designed for educational purposes only. We use virtual currency (Virtual Cash) that has no real-world value. This allows you to learn without financial risk."
     },
     {
       question: "What if I encounter technical issues?",

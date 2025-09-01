@@ -197,21 +197,21 @@ class InvoiceService:
         if data.get('package_name'):
             transaction_data.append([
                 f"Package: {data['package_name']}",
-                f"Mock Coins: {data.get('coins_received', 0):,}",
+                f"Virtual Coins: {data.get('coins_received', 0):,}",
                 f"Rs. {data.get('base_price', data['amount_paid']):,.2f}"
             ])
             
             if data.get('bonus_coins', 0) > 0:
                 transaction_data.append([
                     "Bonus Coins",
-                    f"+{data['bonus_coins']:,} Mock Coins",
+                    f"+{data['bonus_coins']:,} Virtual Coins",
                     "FREE"
                 ])
         else:
             # Direct top-up
             transaction_data.append([
                 "Direct Top-up",
-                f"Mock Coins: {data.get('coins_received', 0):,}",
+                f"Virtual Coins: {data.get('coins_received', 0):,}",
                 f"Rs. {data.get('base_price', data['amount_paid']):,.2f}"
             ])
         

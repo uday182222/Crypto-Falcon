@@ -2329,7 +2329,7 @@ const Wallet = () => {
                         fontSize: '1rem',
                         margin: 0
                       }}>
-                        MOCK USD
+                        VIRTUAL USD
                       </p>
                     </div>
 

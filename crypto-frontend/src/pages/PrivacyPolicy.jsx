@@ -120,8 +120,8 @@ const PrivacyPolicy = () => {
                     {[
                       'Billing name and address',
                       'Payment information handled by trusted third-party processors',
-                      'Purchase history and transaction records for mock cash purchases',
-                      'Mock cash purchase amounts and transaction dates',
+                      'Purchase history and transaction records for virtual cash purchases',
+                      'Virtual cash purchase amounts and transaction dates',
                       'Refund and dispute information'
                     ].map((item, index) => (
                       <li key={index} className="flex items-start gap-3">
@@ -151,7 +151,7 @@ const PrivacyPolicy = () => {
                 {[
                   { title: 'Account Management', desc: 'Creating, maintaining, and managing user accounts', icon: Users, color: 'blue' },
                   { title: 'Service Delivery', desc: 'Providing core crypto trading simulation features', icon: Shield, color: 'green' },
-                  { title: 'Transaction Processing', desc: 'Processing and fulfilling mock cash purchases', icon: Lock, color: 'purple' },
+                  { title: 'Transaction Processing', desc: 'Processing and fulfilling virtual cash purchases', icon: Lock, color: 'purple' },
                   { title: 'Customer Support', desc: 'Providing technical assistance and support services', icon: Users, color: 'blue' },
                   { title: 'Educational Content', desc: 'Delivering personalized educational content and simulations', icon: FileText, color: 'green' },
                   { title: 'Platform Security', desc: 'Maintaining security, integrity, and preventing unauthorized access', icon: Shield, color: 'red' }

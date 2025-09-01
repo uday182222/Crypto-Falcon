@@ -146,7 +146,7 @@ class PurchaseService:
         }
         
         if self.is_test_mode:
-            # Test mode - create mock order
+            # Test mode - create virtual order
             razorpay_order = {
                 "id": f"order_test_{user.id}_{int(datetime.now().timestamp())}",
                 "amount": int(amount_inr * 100),

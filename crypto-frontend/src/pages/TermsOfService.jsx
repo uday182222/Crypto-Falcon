@@ -76,7 +76,7 @@ const TermsOfService = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 {[
                   'Practice cryptocurrency trading strategies using virtual currency with real-time data',
-                  'Purchase virtual "Mock Cash" with real money for enhanced gameplay',
+                                     'Purchase virtual "Virtual Cash" with real money for enhanced gameplay',
                   'Access educational content about cryptocurrency markets and trading principles',
                   'Participate in simulated market activities and competitions'
                 ].map((item, index) => (
@@ -183,15 +183,15 @@ const TermsOfService = () => {
             
             <h3 className="text-2xl font-semibold text-yellow-300 mb-6 flex items-center gap-3">
               <CreditCard className="w-5 h-5" />
-              4.1 Mock Cash System
+              4.1 Virtual Cash System
             </h3>
             <div className="text-gray-300 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  'Nature: "Mock Cash" is virtual currency used exclusively within the Platform',
-                  'No Real Value: Mock Cash has zero real-world value and cannot be exchanged, redeemed, or converted to real money',
-                  'Non-Transferable: Mock Cash cannot be transferred between accounts or sold to third parties',
-                  'Expiration: All Mock Cash expires upon account termination or suspension'
+                                  'Nature: "Virtual Cash" is virtual currency used exclusively within the Platform',
+                'No Real Value: Virtual Cash has zero real-world value and cannot be exchanged, redeemed, or converted to real money',
+                'Non-Transferable: Virtual Cash cannot be transferred between accounts or sold to third parties',
+                'Expiration: All Virtual Cash expires upon account termination or suspension'
                 ].map((item, index) => (
                   <div key={index} className="flex items-start gap-3 bg-slate-700/30 p-4 rounded-lg">
                     <Info className="w-5 h-5 text-yellow-400 mt-1 flex-shrink-0" />
@@ -208,7 +208,7 @@ const TermsOfService = () => {
             <div className="text-gray-300 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  'Final Sales: All Mock Cash purchases are final and non-refundable, except where required by applicable law',
+                  'Final Sales: All Virtual Cash purchases are final and non-refundable, except where required by applicable law',
                   'Payment Authorization: You authorize charges to your selected payment method for all purchases',
                   'Third-Party Processing: Payments are processed through secure third-party processors',
                   'Price Changes: Prices may change without prior notice'

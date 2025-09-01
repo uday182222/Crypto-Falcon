@@ -33,6 +33,16 @@ class WalletTopUpVerifyRequest(BaseModel):
     amount: float
     package_id: str = None  # Optional package ID for game USD conversion
 
+# PhonePe integration types
+class PhonePeTopUpOrderRequest(BaseModel):
+    amount: float
+    package_id: str | None = None
+
+class PhonePeTopUpVerifyRequest(BaseModel):
+    merchant_transaction_id: str
+    amount: float
+    package_id: str | None = None
+
 router = APIRouter(prefix="/wallet", tags=["wallet"])
 
 # Initialize Razorpay client
@@ -40,6 +50,13 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_rjWYPFN2F7k22B")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "NPN4XO7rYHETmevYRTUu0UWO")
 
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
+# PhonePe client (lazy import to avoid hard dependency if not configured)
+try:
+    from app.services.phonepe_client import PhonePeClient
+    phonepe_client: PhonePeClient | None = PhonePeClient()
+except Exception:
+    phonepe_client = None
 
 def get_db():
     db = SessionLocal()
@@ -310,6 +327,43 @@ async def create_wallet_topup_order(
                 detail=f"Failed to create order: {error_msg}"
             )
 
+@router.post("/create-topup-order-phonepe")
+async def create_wallet_topup_order_phonepe(
+    request: PhonePeTopUpOrderRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create a PhonePe Pay Page order and return redirect URL."""
+    if phonepe_client is None:
+        raise HTTPException(status_code=500, detail="PhonePe is not configured")
+
+    if request.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than 0")
+
+    amount_inr = request.amount
+    # Create a unique merchant transaction id
+    merchant_txn_id = f"MFWT_{current_user.id}_{int(datetime.utcnow().timestamp())}"
+
+    try:
+        result = phonepe_client.create_pay_page(
+            merchant_transaction_id=merchant_txn_id,
+            merchant_user_id=str(current_user.id),
+            amount_in_inr=float(amount_inr),
+            package_id=request.package_id,
+        )
+
+        return {
+            "success": True,
+            "merchant_transaction_id": result["merchant_transaction_id"],
+            "redirect_url": result.get("redirect_url"),
+            "amount": float(amount_inr),
+            "currency": "INR",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PhonePe order failed: {str(e)}")
+
 @router.post("/verify-topup-payment")
 async def verify_wallet_topup_payment(
     request: WalletTopUpVerifyRequest,
@@ -458,3 +512,82 @@ async def get_wallet_transactions(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch transactions: {str(e)}"
         ) 
+
+@router.post("/verify-topup-payment-phonepe")
+async def verify_wallet_topup_payment_phonepe(
+    request: PhonePeTopUpVerifyRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Verify PhonePe transaction using status API and credit wallet."""
+    if phonepe_client is None:
+        raise HTTPException(status_code=500, detail="PhonePe is not configured")
+
+    try:
+        status_data = phonepe_client.get_status(request.merchant_transaction_id)
+        # Expect code == 'PAYMENT_SUCCESS' or similar status mapping
+        code = (status_data or {}).get("code")
+        success = code in ("PAYMENT_SUCCESS", "SUCCESS")
+        if not success:
+            raise HTTPException(status_code=400, detail=f"Payment not successful: {code}")
+
+        # Determine game USD amount based on package or default mapping
+        if request.package_id:
+            mapping = {
+                'crypto-crumbs': 100000,
+                'rookie-pack': 200000,
+                'lambo-baron': 500000,
+                'ramen-bubble': 1000000,
+                'digi-dynasty': 2500000,
+                'block-mogul': 5000000,
+                'satoshi-vault': 100000000,
+            }
+            game_usd_amount = mapping.get(request.package_id, request.amount * 500)
+        else:
+            game_usd_amount = request.amount * 500
+
+        wallet_service = WalletService(db)
+        result = wallet_service.top_up_wallet(current_user.id, Decimal(str(game_usd_amount)))
+
+        # Extract a payment id if present
+        payment_id = request.merchant_transaction_id
+        try:
+            payment_id = (
+                status_data.get("data", {})
+                .get("paymentInstrument", {})
+                .get("transactionId", payment_id)
+            )
+        except Exception:
+            payment_id = request.merchant_transaction_id
+
+        # Store transaction
+        transaction = WalletTransaction(
+            user_id=current_user.id,
+            transaction_type='topup' if request.package_id == 'custom' else 'package',
+            amount=Decimal(str(game_usd_amount)),
+            currency='USD',
+            payment_id=str(payment_id),
+            order_id=request.merchant_transaction_id,
+            package_id=request.package_id,
+            description=f"Added ${game_usd_amount:,} USD to wallet",
+            status='completed'
+        )
+
+        db.add(transaction)
+        db.commit()
+        db.refresh(transaction)
+
+        return {
+            "success": True,
+            "payment_id": payment_id,
+            "order_id": request.merchant_transaction_id,
+            "amount_added": game_usd_amount,
+            "new_balance": float(result['new_balance']),
+            "previous_balance": float(result['previous_balance']),
+            "message": f"Successfully added ${game_usd_amount:,} USD to wallet",
+            "timestamp": result['timestamp']
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PhonePe verification failed: {str(e)}")

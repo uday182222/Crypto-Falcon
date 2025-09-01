@@ -37,7 +37,48 @@ const Wallet = () => {
     
     console.log('User authenticated, proceeding with wallet data fetch');
     fetchWalletData();
-    loadRazorpay();
+    // Handle PhonePe redirect return
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const txnId = params.get('transactionId') || sessionStorage.getItem('mf_phonepe_txn');
+      const amountParam = params.get('amount');
+      if (code && txnId) {
+        const token = localStorage.getItem('bitcoinpro_token');
+        if (token) {
+          fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment-phonepe`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              merchant_transaction_id: txnId,
+              amount: amountParam ? parseFloat(amountParam) : 0,
+              package_id: 'custom'
+            })
+          }).then(async (res) => {
+            if (res.ok) {
+              const result = await res.json();
+              const gameUsdAmount = result.amount_added || 0;
+              setBalance(prev => prev + gameUsdAmount);
+              addNotification('success', 'Payment Successful', `Added $${gameUsdAmount.toLocaleString()} USD to your wallet`);
+              fetchWalletData(true);
+            } else {
+              const txt = await res.text();
+              addNotification('error', 'Verification Failed', txt);
+            }
+          }).finally(() => {
+            sessionStorage.removeItem('mf_phonepe_txn');
+            const url = new URL(window.location.href);
+            url.search = '';
+            window.history.replaceState({}, '', url);
+          });
+        }
+      }
+    } catch (e) {
+      console.log('PhonePe return parse error', e);
+    }
   }, [navigate]);
 
   // Add CSS for spinner animation
@@ -76,18 +117,7 @@ const Wallet = () => {
     };
   }, []);
 
-  const loadRazorpay = () => {
-    if (window.Razorpay) {
-      setRazorpayLoaded(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => setRazorpayLoaded(true);
-    document.head.appendChild(script);
-  };
+  const loadRazorpay = () => {};
 
   const fetchWalletData = async (isRefresh = false) => {
     if (isRefresh) {
@@ -229,144 +259,34 @@ const Wallet = () => {
     
     setProcessingTopUp(true);
     try {
-      console.log('Creating Razorpay order for amount:', topUpAmount);
-      console.log('API URL:', '/wallet/create-topup-order');
-      console.log('Request headers:', {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token.substring(0, 20)}...`
-      });
-      console.log('Request body:', { amount: amount });
-      
-      // Create Razorpay order
-      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order-phonepe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          amount: amount,
-          package_id: 'custom' // Send custom package ID for backend processing
-        })
+        body: JSON.stringify({ amount: amount, package_id: 'custom' })
       });
-
-      console.log('Order response status:', orderResponse.status);
-      console.log('Order response status text:', orderResponse.statusText);
-      console.log('Order response headers:', Object.fromEntries(orderResponse.headers.entries()));
 
       if (!orderResponse.ok) {
         const errorText = await orderResponse.text();
-        console.error('Order creation failed - Full response:', errorText);
-        console.error('Response status:', orderResponse.status);
-        console.error('Response headers:', Object.fromEntries(orderResponse.headers.entries()));
-        throw new Error(`Failed to create order: ${orderResponse.status} ${orderResponse.statusText} - ${errorText}`);
+        throw new Error(`Failed to create order: ${errorText}`);
       }
 
-      const orderData = await orderResponse.json();
-      console.log('Order created successfully:', orderData);
-      
-      // Initialize Razorpay payment
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B', // Use your test key
-        amount: orderData.amount_inr * 100, // Convert to paise
-        currency: 'INR',
-        name: 'BitcoinPro',
-        description: `Wallet Top-up - ₹${amount}`,
-        order_id: orderData.order_id,
-        handler: async function (response) {
-          try {
-            // Verify payment
-            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                amount: amount,
-                package_id: 'custom' // Send package ID for verification
-              })
-            });
+      const data = await orderResponse.json();
+      if (!data.redirect_url || !data.merchant_transaction_id) {
+        throw new Error('Invalid PhonePe response');
+      }
 
-            if (verifyResponse.ok) {
-              const result = await verifyResponse.json();
-              // Update local state with the game USD amount from backend
-              const gameUsdAmount = result.amount_added || amount;
-              setBalance(prev => prev + gameUsdAmount);
-              setShowTopUpModal(false);
-              setTopUpAmount('');
-              
-              // Add to transactions
-              const newTransaction = {
-                id: Date.now(),
-                type: 'topup',
-                coin: 'USD',
-                amount: gameUsdAmount,
-                price: 1,
-                total: gameUsdAmount,
-                date: new Date().toISOString(),
-                status: 'completed'
-              };
-              setTransactions(prev => [newTransaction, ...prev]);
-              
-              // Show success notification with invoice download
-              addNotification('success', 
-                'Top-up Successful!', 
-                `Added $${gameUsdAmount.toLocaleString()} USD to your wallet`,
-                [
-                  { icon: '💰', text: `Added $${gameUsdAmount.toLocaleString()} USD` },
-                  { icon: '📄', text: 'Invoice ready for download' }
-                ]
-              );
-              
-              // Show invoice download button
-              if (result.invoice_ready && result.order_id && result.payment_id) {
-                showInvoiceDownloadButton(result.payment_id, result.order_id, gameUsdAmount);
-              }
-              
-              // Refresh wallet data
-              fetchWalletData();
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            alert('Payment verification failed. Please contact support.');
-          }
-        },
-        prefill: {
-          name: 'Demo User',
-          email: 'demo@bitcoinpro.in'
-        },
-        theme: {
-          color: '#14b8a6'
-        },
-        modal: {
-          ondismiss: function() {
-            setProcessingTopUp(false);
-          }
-        }
-      };
-
-      console.log('Razorpay options:', options);
-      console.log('Razorpay loaded:', !!window.Razorpay);
-      
-      const razorpay = new window.Razorpay(options);
-      console.log('Razorpay instance created:', razorpay);
-      
-      razorpay.open();
-      console.log('Razorpay modal opened');
-      
+      sessionStorage.setItem('mf_phonepe_txn', data.merchant_transaction_id);
+      window.location.href = data.redirect_url;
     } catch (error) {
       console.error('Top-up error:', error);
       console.error('Error details:', {
         message: error.message,
         stack: error.stack,
-        razorpayLoaded: razorpayLoaded,
-        windowRazorpay: !!window.Razorpay
+        razorpayLoaded: false,
+        windowRazorpay: false
       });
       addNotification('error', 'Payment Failed', `Failed to initiate payment: ${error.message}. Please try again.`);
     } finally {
@@ -723,116 +643,30 @@ const Wallet = () => {
 
     setProcessingTopUp(true);
     try {
-      // Create Razorpay order for the package
-      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order-phonepe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          amount: packageData.checkoutPrice, // Send actual checkout amount
-          package_id: packageData.id // Send package ID for backend processing
+          amount: packageData.checkoutPrice,
+          package_id: packageData.id
         })
       });
 
       if (!orderResponse.ok) {
         const errorText = await orderResponse.text();
-        throw new Error(`Failed to create order: ${orderResponse.status} ${orderResponse.statusText} - ${errorText}`);
+        throw new Error(`Failed to create order: ${errorText}`);
       }
 
-      const orderData = await orderResponse.json();
-      
-      // Initialize Razorpay payment
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B',
-        amount: orderData.amount_inr * 100, // Convert to paise
-        currency: 'INR',
-        name: 'BitcoinPro',
-        description: `${packageData.name} - $${packageData.usdAmount} USD`,
-        order_id: orderData.order_id,
-        handler: async function (response) {
-          try {
-            // Verify payment
-            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                amount: packageData.checkoutPrice, // Send checkout price in INR
-                package_id: packageData.id // Send package ID for verification
-              })
-            });
+      const data = await orderResponse.json();
+      if (!data.redirect_url || !data.merchant_transaction_id) {
+        throw new Error('Invalid PhonePe response');
+      }
 
-            if (verifyResponse.ok) {
-              const result = await verifyResponse.json();
-              
-              // Update local state with USD amount from backend
-              const totalAmount = result.amount_added || packageData.usdAmount;
-              setBalance(prev => prev + totalAmount);
-              setShowTopUpSubpage(false);
-              
-              // Add to transactions
-              const newTransaction = {
-                id: Date.now(),
-                type: 'topup',
-                coin: 'USD',
-                amount: totalAmount,
-                price: 1,
-                total: totalAmount,
-                date: new Date().toISOString(),
-                status: 'completed',
-                category: 'wallet'
-              };
-              setTransactions(prev => [newTransaction, ...prev]);
-              
-              // Show success notification with invoice download
-              addNotification('success', 
-                `Successfully purchased ${packageData.name}!`, 
-                'Your USD has been added to your wallet',
-                [
-                  { icon: '💰', text: `Added $${totalAmount.toLocaleString()} USD` },
-                  { icon: '📄', text: 'Invoice ready for download' }
-                ]
-              );
-              
-              // Show invoice download button
-              if (result.invoice_ready && result.order_id && result.payment_id) {
-                showInvoiceDownloadButton(result.payment_id, result.order_id, packageData.checkoutPrice, packageData.name);
-              }
-              
-              // Refresh wallet data
-              fetchWalletData();
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            alert('Payment verification failed. Please contact support.');
-          }
-        },
-        prefill: {
-          name: 'Demo User',
-          email: 'demo@bitcoinpro.in'
-        },
-        theme: {
-          color: '#14b8a6'
-        },
-        modal: {
-          ondismiss: function() {
-            setProcessingTopUp(false);
-          }
-        }
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-      
+      sessionStorage.setItem('mf_phonepe_txn', data.merchant_transaction_id);
+      window.location.href = data.redirect_url;
     } catch (error) {
       console.error('Package top-up error:', error);
       addNotification('error', 'Payment Failed', 'Failed to initiate payment. Please try again.');
@@ -2112,7 +1946,7 @@ const Wallet = () => {
               <Button
                 variant="primary"
                 onClick={handleTopUp}
-                disabled={!topUpAmount || parseFloat(topUpAmount) <= 0 || processingTopUp || !razorpayLoaded}
+                disabled={!topUpAmount || parseFloat(topUpAmount) <= 0 || processingTopUp}
                 style={{
                   flex: 1,
                   background: 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
@@ -2120,7 +1954,7 @@ const Wallet = () => {
                   border: 'none'
                 }}
               >
-                {!razorpayLoaded ? 'Loading...' : processingTopUp ? 'Processing...' : 'Pay with Razorpay'}
+                {processingTopUp ? 'Processing...' : 'Pay with PhonePe'}
               </Button>
             </div>
             
@@ -2363,7 +2197,7 @@ const Wallet = () => {
                     <Button
                       variant="primary"
                       onClick={() => handlePackageTopUp(pkg)}
-                      disabled={processingTopUp || !razorpayLoaded}
+                      disabled={processingTopUp}
                       style={{
                         width: '100%',
                         background: pkg.popular 
@@ -2387,7 +2221,7 @@ const Wallet = () => {
                           Processing...
                         </div>
                       ) : (
-                        pkg.inrPrice === 0 ? 'Free Registration' : `Buy ${pkg.name} - ₹${pkg.checkoutPrice}`
+                        pkg.inrPrice === 0 ? 'Free Registration' : `Pay with PhonePe - ₹${pkg.checkoutPrice}`
                       )}
                     </Button>
                   </div>

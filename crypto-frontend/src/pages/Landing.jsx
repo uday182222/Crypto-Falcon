@@ -53,7 +53,7 @@ const Landing = () => {
     },
     {
       icon: Shield,
-      title: "Risk-Free Learning",
+      title: "Risk-Free Educational",
       description: "Practice trading strategies without risking real money in our safe simulation environment",
     },
     {
@@ -420,7 +420,7 @@ const Landing = () => {
               boxShadow: '0 4px 20px rgba(20, 184, 166, 0.3)',
               animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
             }}>
-              Learning Purposes Only
+              Educational Purposes Only
             </div>
           </div>
 

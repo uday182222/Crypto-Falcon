@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, DollarSign, Users, Activity, ArrowUpRight, ArrowDownRight, Coins, Shield, Trophy, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Users, Activity, ArrowUpRight, ArrowDownRight, Coins, Shield, Trophy, Zap, Brain } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingAnimation from '../components/ui/LoadingAnimation';
 import Footer from '../components/layout/Footer';
+import DashboardChatBot from '../components/DashboardChatBot';
 import { dashboardAPI } from '../services/api';
 
 const Dashboard = () => {
@@ -30,6 +31,7 @@ const Dashboard = () => {
   const [isRefreshingMarket, setIsRefreshingMarket] = useState(false);
   const [lastMarketUpdate, setLastMarketUpdate] = useState(null);
   const [portfolioHoldings, setPortfolioHoldings] = useState([]);
+  const [showChatBot, setShowChatBot] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -224,22 +226,70 @@ const Dashboard = () => {
       }}>
         {/* Header Section */}
         <div style={{
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem'
         }}>
-          <h1 style={{
-            fontSize: '2.5rem',
-            fontWeight: '800',
-            color: '#f8fafc',
-            marginBottom: '0.5rem'
-          }}>
-            Welcome, Trader! 👋
-          </h1>
-          <p style={{
-            color: '#94a3b8',
-            fontSize: '1.125rem'
-          }}>
-            Here's what's happening with your portfolio today
-          </p>
+          <div>
+            <h1 style={{
+              fontSize: '2.5rem',
+              fontWeight: '800',
+              color: '#f8fafc',
+              marginBottom: '0.5rem'
+            }}>
+              Welcome, Trader! 👋
+            </h1>
+            <p style={{
+              color: '#94a3b8',
+              fontSize: '1.125rem'
+            }}>
+              Here's what's happening with your portfolio today
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setShowChatBot(!showChatBot);
+              // Scroll to chatbot if opening
+              if (!showChatBot) {
+                setTimeout(() => {
+                  const chatbotElement = document.getElementById('ai-chatbot');
+                  if (chatbotElement) {
+                    chatbotElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 100);
+              }
+            }}
+            style={{
+              background: 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
+              fontWeight: '600',
+              borderRadius: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'linear-gradient(135deg, #0d9488 0%, #7c3aed 100%)';
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(20, 184, 166, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 15px rgba(20, 184, 166, 0.3)';
+            }}
+          >
+            <Brain size={20} />
+            {showChatBot ? 'Hide AI Assistant' : 'Learn with AI'}
+          </Button>
         </div>
 
         {/* Portfolio Overview Cards */}
@@ -943,6 +993,14 @@ const Dashboard = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* AI Chatbot Section */}
+        <div id="ai-chatbot">
+          <DashboardChatBot 
+            isVisible={showChatBot} 
+            onToggle={() => setShowChatBot(!showChatBot)} 
+          />
         </div>
       </div>
       <Footer />

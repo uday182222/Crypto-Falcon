@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
-import ChatBotWidget from './components/ChatBotWidget'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -66,7 +65,6 @@ function App() {
     <Router>
       <div className="App">
         <RouteHandler />
-        <ChatBotWidget />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />

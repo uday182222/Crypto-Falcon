@@ -366,11 +366,15 @@ class CoinGeckoService:
             limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
             http2=False  # Disable HTTP/2 for now to avoid import issues
         )
-        self.cache = {}
-        self.cache_duration = timedelta(seconds=30)  # Cache prices for only 30 seconds for better accuracy
+        # Multi-tier caching system
+        self.cache = {}  # Primary cache for successful API responses
+        self.fallback_cache = {}  # Fallback cache for when APIs are rate-limited
+        self.cache_duration = timedelta(minutes=5)  # Cache successful responses for 5 minutes
+        self.fallback_cache_duration = timedelta(minutes=15)  # Keep fallback data for 15 minutes
         self.last_request_time = 0
-        self.min_request_interval = 1.0  # Reduced to 1 second between requests for better responsiveness
+        self.min_request_interval = 1.0  # 1 second between requests
         self.request_count = 0
+        self.api_health_status = {}  # Track API health for smart caching
         self.rate_limit_reset = time.time()
         self.consecutive_failures = 0
         self.max_consecutive_failures = 5  # Increased tolerance for temporary API issues
@@ -402,15 +406,34 @@ class CoinGeckoService:
         self.request_count += 1
     
     def _get_cached_price(self, coin_symbol: str) -> Optional[PriceResponse]:
-        """Get cached price if available and not expired"""
+        """Get cached price from primary cache if available and not expired"""
         if coin_symbol in self.cache:
             cached_data = self.cache[coin_symbol]
             if datetime.utcnow() - cached_data.timestamp < self.cache_duration:
+                logger.info(f"Returning fresh cached price for {coin_symbol}")
                 return cached_data
             else:
-                # Remove expired cache entry
+                # Move expired cache to fallback cache
+                self._move_to_fallback_cache(coin_symbol, cached_data)
                 del self.cache[coin_symbol]
         return None
+    
+    def _get_fallback_cached_price(self, coin_symbol: str) -> Optional[PriceResponse]:
+        """Get cached price from fallback cache if available and not expired"""
+        if coin_symbol in self.fallback_cache:
+            cached_data = self.fallback_cache[coin_symbol]
+            if datetime.utcnow() - cached_data.timestamp < self.fallback_cache_duration:
+                logger.info(f"Returning fallback cached price for {coin_symbol}")
+                return cached_data
+            else:
+                # Remove expired fallback cache entry
+                del self.fallback_cache[coin_symbol]
+        return None
+    
+    def _move_to_fallback_cache(self, coin_symbol: str, price_data: PriceResponse):
+        """Move price data to fallback cache"""
+        self.fallback_cache[coin_symbol] = price_data
+        logger.info(f"Moved {coin_symbol} to fallback cache")
     
     def _cache_price(self, coin_symbol: str, price: PriceResponse):
         """Cache a price response"""
@@ -421,8 +444,12 @@ class CoinGeckoService:
         if coin_symbol:
             if coin_symbol in self.cache:
                 del self.cache[coin_symbol]
+            if coin_symbol in self.fallback_cache:
+                del self.fallback_cache[coin_symbol]
         else:
             self.cache.clear()
+            self.fallback_cache.clear()
+            logger.info("Cleared all caches")
     
     async def get_fresh_price_for_trading(self, coin_symbol: str) -> Optional[PriceResponse]:
         """Get fresh price for trading (bypasses cache) with backup API support"""
@@ -562,20 +589,25 @@ class CoinGeckoService:
         return None
     
     async def get_price(self, coin_symbol: str) -> Optional[PriceResponse]:
-        """Get current price for a single cryptocurrency"""
+        """Get current price for a single cryptocurrency with intelligent caching"""
         try:
-            # Check cache first
+            # Check primary cache first
             cached_price = self._get_cached_price(coin_symbol)
             if cached_price:
-                logger.info(f"Returning cached price for {coin_symbol}")
                 return cached_price
             
-            # If too many consecutive failures, use fallback immediately
+            # If too many consecutive failures, try fallback cache first
             if self.consecutive_failures >= self.max_consecutive_failures:
-                logger.warning(f"Too many consecutive failures ({self.consecutive_failures}), using fallback for {coin_symbol}")
+                logger.warning(f"Too many consecutive failures ({self.consecutive_failures}), checking fallback cache for {coin_symbol}")
+                fallback_cached = self._get_fallback_cached_price(coin_symbol)
+                if fallback_cached:
+                    return fallback_cached
+                
+                # If no fallback cache, use hardcoded fallback
                 fallback_price = self._get_fallback_price(coin_symbol)
-                self._cache_price(coin_symbol, fallback_price)
-                return fallback_price
+                if fallback_price:
+                    self._cache_price(coin_symbol, fallback_price)
+                    return fallback_price
             
             coin_id = self.COIN_ID_MAP.get(coin_symbol.upper())
             if not coin_id:
@@ -613,7 +645,20 @@ class CoinGeckoService:
                         logger.info(f"Successfully got price from backup API {backup_api}: {coin_symbol} = ${backup_price.price_usd}")
                         return backup_price
                 
-                logger.error(f"All APIs failed for {coin_symbol}")
+                # If all APIs fail, try fallback cache
+                fallback_cached = self._get_fallback_cached_price(coin_symbol)
+                if fallback_cached:
+                    logger.info(f"Using fallback cached price for {coin_symbol}")
+                    return fallback_cached
+                
+                # Last resort: use hardcoded fallback
+                fallback_price = self._get_fallback_price(coin_symbol)
+                if fallback_price:
+                    logger.warning(f"Using hardcoded fallback price for {coin_symbol}")
+                    self._cache_price(coin_symbol, fallback_price)
+                    return fallback_price
+                
+                logger.error(f"All APIs and fallbacks failed for {coin_symbol}")
                 return None
                 
         except Exception as e:
@@ -626,13 +671,18 @@ class CoinGeckoService:
             results = {}
             uncached_symbols = []
             
-            # First, check cache for all symbols
+            # First, check primary cache for all symbols
             for symbol in coin_symbols:
                 cached_price = self._get_cached_price(symbol.upper())
                 if cached_price:
                     results[symbol.upper()] = cached_price
                 else:
-                    uncached_symbols.append(symbol)
+                    # Check fallback cache if primary cache is empty
+                    fallback_cached = self._get_fallback_cached_price(symbol.upper())
+                    if fallback_cached:
+                        results[symbol.upper()] = fallback_cached
+                    else:
+                        uncached_symbols.append(symbol)
             
             # If all prices are cached, return them
             if not uncached_symbols:
@@ -731,9 +781,12 @@ class CoinGeckoService:
             "backup_apis": list(self.BACKUP_APIS.keys()),
             "backup_api_order": ["cryptocompare", "binance", "coinbase"],
             "cache_duration_seconds": self.cache_duration.total_seconds(),
+            "fallback_cache_duration_seconds": self.fallback_cache_duration.total_seconds(),
             "rate_limit_requests_per_minute": 8,
             "consecutive_failures": self.consecutive_failures,
-            "cache_size": len(self.cache)
+            "primary_cache_size": len(self.cache),
+            "fallback_cache_size": len(self.fallback_cache),
+            "total_cached_coins": len(self.cache) + len(self.fallback_cache)
         }
         
         # Test primary API

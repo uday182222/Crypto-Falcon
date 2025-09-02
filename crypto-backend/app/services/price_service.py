@@ -19,9 +19,9 @@ class CoinGeckoService:
     
     # Backup APIs (free tiers) with comprehensive symbol mappings
     BACKUP_APIS = {
-        "cryptocompare": {
-            "base_url": "https://min-api.cryptocompare.com/data",
-            "endpoint": "/price",
+        "mobula": {
+            "base_url": "https://api.mobula.io/api/1",
+            "endpoint": "/market/data",
             "symbol_mapping": {
                 # Major cryptocurrencies
                 "BTC": "BTC", "ETH": "ETH", "BNB": "BNB", "XRP": "XRP",
@@ -440,14 +440,14 @@ class CoinGeckoService:
     def _update_dynamic_fallback(self, coin_symbol: str, price_data: PriceResponse):
         """Update dynamic fallback with recent price data"""
         self.dynamic_fallback[coin_symbol] = price_data
-        logger.info(f"Updated dynamic fallback for {coin_symbol} at ${price_data.price}")
+        logger.info(f"Updated dynamic fallback for {coin_symbol} at ${price_data.price_usd}")
     
     def _get_dynamic_fallback_price(self, coin_symbol: str) -> Optional[PriceResponse]:
         """Get price from dynamic fallback if available and not expired"""
         if coin_symbol in self.dynamic_fallback:
             cached_data = self.dynamic_fallback[coin_symbol]
             if datetime.utcnow() - cached_data.timestamp < self.dynamic_fallback_duration:
-                logger.info(f"Using dynamic fallback price for {coin_symbol}: ${cached_data.price}")
+                logger.info(f"Using dynamic fallback price for {coin_symbol}: ${cached_data.price_usd}")
                 return cached_data
             else:
                 # Remove expired dynamic fallback entry
@@ -551,18 +551,14 @@ class CoinGeckoService:
             
             url = f"{api_config['base_url']}{api_config['endpoint']}"
             
-            if api_name == "cryptocompare":
-                # CryptoCompare API format
+            if api_name == "mobula":
+                # Mobula API format - high quota, reliable
                 url = f"{api_config['base_url']}{api_config['endpoint']}"
-                params = {"fsym": mapped_symbol, "tsyms": "USD"}
-            elif api_name == "binance":
-                # Binance API format - use 24hr ticker for better data
-                url = f"{api_config['base_url']}/ticker/24hr"
                 params = {"symbol": mapped_symbol}
-            elif api_name == "coinbase":
-                # Coinbase API format - use correct endpoint
-                url = f"{api_config['base_url']}/prices/{mapped_symbol}/spot"
-                params = {}
+            elif api_name == "binance":
+                # Binance API format - direct exchange spot price
+                url = f"{api_config['base_url']}/ticker/24hr"
+                params = {"symbol": f"{mapped_symbol}USDT"}
             else:
                 logger.warning(f"Unknown backup API: {api_name}")
                 return None
@@ -574,19 +570,16 @@ class CoinGeckoService:
                 data = response.json()
                 
                 # Extract price based on API response format
-                if api_name == "cryptocompare":
-                    price_usd = Decimal(str(data.get("USD", 0)))
-                    change_24h = Decimal("0")  # CryptoCompare doesn't provide 24h change in this endpoint
-                    change_24h_percent = Decimal("0")
+                if api_name == "mobula":
+                    # Mobula API response format
+                    price_usd = Decimal(str(data.get("price", 0)))
+                    change_24h = Decimal(str(data.get("priceChange24h", 0)))
+                    change_24h_percent = Decimal(str(data.get("priceChange24hPercent", 0)))
                 elif api_name == "binance":
+                    # Binance API response format
                     price_usd = Decimal(str(data.get("lastPrice", 0)))
                     change_24h = Decimal(str(data.get("priceChange", 0)))
                     change_24h_percent = Decimal(str(data.get("priceChangePercent", 0)))
-                elif api_name == "coinbase":
-                    price_data = data.get("data", {})
-                    price_usd = Decimal(str(price_data.get("amount", 0)))
-                    change_24h = Decimal("0")  # Coinbase doesn't provide 24h change in this endpoint
-                    change_24h_percent = Decimal("0")
                 else:
                     return None
                 
@@ -660,8 +653,8 @@ class CoinGeckoService:
             else:
                 logger.warning(f"CoinGecko API failed for {coin_symbol}, trying backup APIs...")
                 
-                # Try backup APIs in order of preference (CryptoCompare first as it's more reliable)
-                backup_apis = ["cryptocompare", "binance", "coinbase"]
+                # Try backup APIs in order of preference (Mobula first as it's more reliable)
+                backup_apis = ["mobula", "binance"]
                 for backup_api in backup_apis:
                     backup_price = await self._try_backup_api(coin_symbol, backup_api)
                     if backup_price:
@@ -678,7 +671,7 @@ class CoinGeckoService:
                 # Try dynamic fallback (recent prices from last 24 hours)
                 dynamic_fallback_price = self._get_dynamic_fallback_price(coin_symbol)
                 if dynamic_fallback_price:
-                    logger.warning(f"Using dynamic fallback price for {coin_symbol}: ${dynamic_fallback_price.price}")
+                    logger.warning(f"Using dynamic fallback price for {coin_symbol}: ${dynamic_fallback_price.price_usd}")
                     return dynamic_fallback_price
                 
                 logger.error(f"All APIs and fallbacks failed for {coin_symbol}")
@@ -807,7 +800,7 @@ class CoinGeckoService:
         status = {
             "primary_api": "CoinGecko",
             "backup_apis": list(self.BACKUP_APIS.keys()),
-            "backup_api_order": ["cryptocompare", "binance", "coinbase"],
+            "backup_api_order": ["mobula", "binance"],
             "cache_duration_seconds": self.cache_duration.total_seconds(),
             "fallback_cache_duration_seconds": self.fallback_cache_duration.total_seconds(),
             "dynamic_fallback_duration_seconds": self.dynamic_fallback_duration.total_seconds(),

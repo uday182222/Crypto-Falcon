@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 import logging
 import httpx
 import os
+import re
+from decimal import Decimal
 from app.db import SessionLocal
 from app.models.user import User
 from app.models.trade import Trade
@@ -142,6 +144,180 @@ async def fetch_market_data():
         logger.error(f"Error fetching market data: {e}")
         return {}
 
+async def simulate_trade(entry_price: float, exit_price: float, position_size: float, leverage: float = 1.0) -> Dict[str, Any]:
+    """Simulate a trade and calculate profit/loss"""
+    try:
+        # Calculate position value
+        position_value = position_size * entry_price
+        
+        # Calculate leveraged position value
+        leveraged_position_value = position_value * leverage
+        
+        # Calculate profit/loss
+        price_change = exit_price - entry_price
+        price_change_percent = (price_change / entry_price) * 100
+        
+        # Calculate leveraged profit/loss
+        leveraged_pnl = price_change * position_size * leverage
+        leveraged_pnl_percent = (leveraged_pnl / position_value) * 100
+        
+        # Calculate fees (assuming 0.1% per trade)
+        entry_fee = position_value * 0.001
+        exit_fee = (position_size * exit_price) * 0.001
+        total_fees = entry_fee + exit_fee
+        
+        # Net profit/loss after fees
+        net_pnl = leveraged_pnl - total_fees
+        net_pnl_percent = (net_pnl / position_value) * 100
+        
+        # Risk metrics
+        risk_reward_ratio = abs(leveraged_pnl / total_fees) if total_fees > 0 else 0
+        
+        return {
+            "entry_price": entry_price,
+            "exit_price": exit_price,
+            "position_size": position_size,
+            "leverage": leverage,
+            "position_value": position_value,
+            "leveraged_position_value": leveraged_position_value,
+            "price_change": price_change,
+            "price_change_percent": price_change_percent,
+            "gross_pnl": leveraged_pnl,
+            "gross_pnl_percent": leveraged_pnl_percent,
+            "entry_fee": entry_fee,
+            "exit_fee": exit_fee,
+            "total_fees": total_fees,
+            "net_pnl": net_pnl,
+            "net_pnl_percent": net_pnl_percent,
+            "risk_reward_ratio": risk_reward_ratio,
+            "is_profitable": net_pnl > 0
+        }
+    except Exception as e:
+        logger.error(f"Error simulating trade: {e}")
+        return {}
+
+def extract_trade_parameters(message: str) -> Optional[Dict[str, float]]:
+    """Extract trade parameters from user message using regex"""
+    try:
+        # Common patterns for trade simulation requests
+        patterns = {
+            'entry_price': [
+                r'entry[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'buy[:\s]*at[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'enter[:\s]*at[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'entry[:\s]*price[:\s]*\$?([0-9,]+\.?[0-9]*)'
+            ],
+            'exit_price': [
+                r'exit[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'sell[:\s]*at[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'target[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'exit[:\s]*price[:\s]*\$?([0-9,]+\.?[0-9]*)'
+            ],
+            'position_size': [
+                r'position[:\s]*size[:\s]*([0-9,]+\.?[0-9]*)',
+                r'amount[:\s]*([0-9,]+\.?[0-9]*)',
+                r'quantity[:\s]*([0-9,]+\.?[0-9]*)',
+                r'([0-9,]+\.?[0-9]*)\s*(?:btc|bitcoin|eth|ethereum|coins?|tokens?)'
+            ],
+            'leverage': [
+                r'leverage[:\s]*([0-9]+\.?[0-9]*)x?',
+                r'([0-9]+\.?[0-9]*)x\s*leverage',
+                r'([0-9]+\.?[0-9]*)x'
+            ]
+        }
+        
+        extracted = {}
+        message_lower = message.lower()
+        
+        for param, pattern_list in patterns.items():
+            for pattern in pattern_list:
+                match = re.search(pattern, message_lower)
+                if match:
+                    value_str = match.group(1).replace(',', '')
+                    try:
+                        extracted[param] = float(value_str)
+                        break
+                    except ValueError:
+                        continue
+        
+        # If we have at least entry and exit prices, we can simulate
+        if 'entry_price' in extracted and 'exit_price' in extracted:
+            # Set defaults for missing parameters
+            if 'position_size' not in extracted:
+                extracted['position_size'] = 1.0  # Default to 1 unit
+            if 'leverage' not in extracted:
+                extracted['leverage'] = 1.0  # Default to no leverage
+            
+            return extracted
+        
+        return None
+    except Exception as e:
+        logger.error(f"Error extracting trade parameters: {e}")
+        return None
+
+def format_trade_simulation_result(result: Dict[str, Any]) -> str:
+    """Format trade simulation result into conversational text"""
+    if not result:
+        return "I couldn't calculate the trade simulation. Please provide clear entry and exit prices."
+    
+    entry_price = result['entry_price']
+    exit_price = result['exit_price']
+    position_size = result['position_size']
+    leverage = result['leverage']
+    net_pnl = result['net_pnl']
+    net_pnl_percent = result['net_pnl_percent']
+    total_fees = result['total_fees']
+    is_profitable = result['is_profitable']
+    
+    # Determine trade direction
+    direction = "long" if exit_price > entry_price else "short"
+    
+    # Create conversational explanation
+    explanation = f"Let me walk you through this {direction} trade simulation:\n\n"
+    
+    explanation += f"📊 **Trade Setup:**\n"
+    explanation += f"• Entry Price: ${entry_price:,.2f}\n"
+    explanation += f"• Exit Price: ${exit_price:,.2f}\n"
+    explanation += f"• Position Size: {position_size:,.4f} units\n"
+    if leverage > 1.0:
+        explanation += f"• Leverage: {leverage:.1f}x\n"
+    
+    explanation += f"\n💰 **Results:**\n"
+    if is_profitable:
+        explanation += f"• ✅ **Profit: ${net_pnl:,.2f}** ({net_pnl_percent:+.2f}%)\n"
+        explanation += f"• 🎯 Great trade! You made a {net_pnl_percent:.1f}% return on your position.\n"
+    else:
+        explanation += f"• ❌ **Loss: ${abs(net_pnl):,.2f}** ({net_pnl_percent:+.2f}%)\n"
+        explanation += f"• ⚠️ This trade would result in a {abs(net_pnl_percent):.1f}% loss.\n"
+    
+    explanation += f"\n📈 **Breakdown:**\n"
+    explanation += f"• Price Change: {((exit_price - entry_price) / entry_price * 100):+.2f}%\n"
+    explanation += f"• Trading Fees: ${total_fees:.2f}\n"
+    if leverage > 1.0:
+        explanation += f"• Leveraged Effect: {leverage:.1f}x multiplier applied\n"
+    
+    # Add coaching advice
+    explanation += f"\n🎓 **Trading Coach Tips:**\n"
+    if is_profitable:
+        if net_pnl_percent > 10:
+            explanation += f"• Excellent trade! This is a strong {net_pnl_percent:.1f}% gain.\n"
+        elif net_pnl_percent > 5:
+            explanation += f"• Good trade! A solid {net_pnl_percent:.1f}% profit.\n"
+        else:
+            explanation += f"• Decent trade, but consider if the risk was worth the {net_pnl_percent:.1f}% gain.\n"
+    else:
+        explanation += f"• This trade shows a {abs(net_pnl_percent):.1f}% loss. Consider:\n"
+        explanation += f"  - Setting stop-losses to limit downside\n"
+        explanation += f"  - Position sizing to manage risk\n"
+        explanation += f"  - Market conditions before entering\n"
+    
+    if leverage > 1.0:
+        explanation += f"• ⚠️ Remember: {leverage:.1f}x leverage amplifies both gains AND losses!\n"
+    
+    explanation += f"• Always do your own research and never risk more than you can afford to lose."
+    
+    return explanation
+
 async def call_openai_api(user_message: str, context: str):
     """Call OpenAI API with user message and context"""
     try:
@@ -198,11 +374,46 @@ async def chatbot_endpoint(
     db: Session = Depends(get_db)
 ):
     """
-    Enhanced chatbot endpoint with OpenAI integration and personalized responses
+    Enhanced chatbot endpoint with OpenAI integration, personalized responses, and trade simulation
     """
     try:
         user_message = message_data.message.strip()
         
+        # Check if user is asking for trade simulation
+        trade_params = extract_trade_parameters(user_message)
+        if trade_params:
+            # Simulate the trade
+            simulation_result = await simulate_trade(
+                trade_params['entry_price'],
+                trade_params['exit_price'],
+                trade_params['position_size'],
+                trade_params['leverage']
+            )
+            
+            if simulation_result:
+                # Format the result conversationally
+                reply = format_trade_simulation_result(simulation_result)
+                
+                # Add context about user's portfolio for additional insights
+                portfolio_data = await fetch_user_portfolio_data(user.id, db)
+                if portfolio_data["balance"] > 0:
+                    reply += f"\n\n💡 **Portfolio Context:**\n"
+                    reply += f"With your current balance of ${portfolio_data['balance']:,.2f}, "
+                    
+                    position_value = simulation_result['position_value']
+                    if position_value <= portfolio_data['balance']:
+                        reply += f"this ${position_value:,.2f} position represents {((position_value / portfolio_data['balance']) * 100):.1f}% of your portfolio. "
+                        if simulation_result['net_pnl_percent'] > 0:
+                            reply += f"A {simulation_result['net_pnl_percent']:.1f}% gain would add ${simulation_result['net_pnl']:,.2f} to your balance."
+                        else:
+                            reply += f"A {abs(simulation_result['net_pnl_percent']):.1f}% loss would reduce your balance by ${abs(simulation_result['net_pnl']):,.2f}."
+                    else:
+                        reply += f"this ${position_value:,.2f} position exceeds your current balance. Consider position sizing!"
+                
+                logger.info(f"Trade simulation completed for user {user.id}: {user_message[:50]}...")
+                return ChatResponse(reply=reply)
+        
+        # Regular chatbot flow for non-simulation requests
         # Fetch user's portfolio and trade data
         portfolio_data = await fetch_user_portfolio_data(user.id, db)
         

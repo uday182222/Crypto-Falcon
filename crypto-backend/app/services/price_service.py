@@ -369,8 +369,10 @@ class CoinGeckoService:
         # Multi-tier caching system
         self.cache = {}  # Primary cache for successful API responses
         self.fallback_cache = {}  # Fallback cache for when APIs are rate-limited
+        self.dynamic_fallback = {}  # Dynamic fallback using recent prices (24 hours)
         self.cache_duration = timedelta(minutes=5)  # Cache successful responses for 5 minutes
         self.fallback_cache_duration = timedelta(minutes=15)  # Keep fallback data for 15 minutes
+        self.dynamic_fallback_duration = timedelta(hours=24)  # Keep recent prices for 24 hours as fallback
         self.last_request_time = 0
         self.min_request_interval = 1.0  # 1 second between requests
         self.request_count = 0
@@ -435,9 +437,28 @@ class CoinGeckoService:
         self.fallback_cache[coin_symbol] = price_data
         logger.info(f"Moved {coin_symbol} to fallback cache")
     
+    def _update_dynamic_fallback(self, coin_symbol: str, price_data: PriceResponse):
+        """Update dynamic fallback with recent price data"""
+        self.dynamic_fallback[coin_symbol] = price_data
+        logger.info(f"Updated dynamic fallback for {coin_symbol} at ${price_data.price}")
+    
+    def _get_dynamic_fallback_price(self, coin_symbol: str) -> Optional[PriceResponse]:
+        """Get price from dynamic fallback if available and not expired"""
+        if coin_symbol in self.dynamic_fallback:
+            cached_data = self.dynamic_fallback[coin_symbol]
+            if datetime.utcnow() - cached_data.timestamp < self.dynamic_fallback_duration:
+                logger.info(f"Using dynamic fallback price for {coin_symbol}: ${cached_data.price}")
+                return cached_data
+            else:
+                # Remove expired dynamic fallback entry
+                del self.dynamic_fallback[coin_symbol]
+        return None
+    
     def _cache_price(self, coin_symbol: str, price: PriceResponse):
-        """Cache a price response"""
+        """Cache a price response and update dynamic fallback"""
         self.cache[coin_symbol] = price
+        # Also update dynamic fallback with fresh price data
+        self._update_dynamic_fallback(coin_symbol, price)
     
     def clear_cache(self, coin_symbol: str = None):
         """Clear cache for specific coin or all coins"""
@@ -446,9 +467,12 @@ class CoinGeckoService:
                 del self.cache[coin_symbol]
             if coin_symbol in self.fallback_cache:
                 del self.fallback_cache[coin_symbol]
+            if coin_symbol in self.dynamic_fallback:
+                del self.dynamic_fallback[coin_symbol]
         else:
             self.cache.clear()
             self.fallback_cache.clear()
+            self.dynamic_fallback.clear()
             logger.info("Cleared all caches")
     
     async def get_fresh_price_for_trading(self, coin_symbol: str) -> Optional[PriceResponse]:
@@ -471,9 +495,9 @@ class CoinGeckoService:
         return price_response
     
     def _get_fallback_price(self, coin_symbol: str) -> Optional[PriceResponse]:
-        """No fallback prices - always return None to force API usage"""
-        logger.warning(f"No fallback price available for {coin_symbol} - API must be working for trading")
-        return None
+        """Legacy method - now uses dynamic fallback instead of hardcoded prices"""
+        # This method is kept for compatibility but now redirects to dynamic fallback
+        return self._get_dynamic_fallback_price(coin_symbol)
     
     async def _make_api_request(self, url: str, retries: int = 3) -> Optional[dict]:
         """Make API request with retry logic and better error handling"""
@@ -651,12 +675,11 @@ class CoinGeckoService:
                     logger.info(f"Using fallback cached price for {coin_symbol}")
                     return fallback_cached
                 
-                # Last resort: use hardcoded fallback
-                fallback_price = self._get_fallback_price(coin_symbol)
-                if fallback_price:
-                    logger.warning(f"Using hardcoded fallback price for {coin_symbol}")
-                    self._cache_price(coin_symbol, fallback_price)
-                    return fallback_price
+                # Try dynamic fallback (recent prices from last 24 hours)
+                dynamic_fallback_price = self._get_dynamic_fallback_price(coin_symbol)
+                if dynamic_fallback_price:
+                    logger.warning(f"Using dynamic fallback price for {coin_symbol}: ${dynamic_fallback_price.price}")
+                    return dynamic_fallback_price
                 
                 logger.error(f"All APIs and fallbacks failed for {coin_symbol}")
                 return None
@@ -682,7 +705,12 @@ class CoinGeckoService:
                     if fallback_cached:
                         results[symbol.upper()] = fallback_cached
                     else:
-                        uncached_symbols.append(symbol)
+                        # Check dynamic fallback
+                        dynamic_fallback_price = self._get_dynamic_fallback_price(symbol.upper())
+                        if dynamic_fallback_price:
+                            results[symbol.upper()] = dynamic_fallback_price
+                        else:
+                            uncached_symbols.append(symbol)
             
             # If all prices are cached, return them
             if not uncached_symbols:
@@ -782,11 +810,13 @@ class CoinGeckoService:
             "backup_api_order": ["cryptocompare", "binance", "coinbase"],
             "cache_duration_seconds": self.cache_duration.total_seconds(),
             "fallback_cache_duration_seconds": self.fallback_cache_duration.total_seconds(),
+            "dynamic_fallback_duration_seconds": self.dynamic_fallback_duration.total_seconds(),
             "rate_limit_requests_per_minute": 8,
             "consecutive_failures": self.consecutive_failures,
             "primary_cache_size": len(self.cache),
             "fallback_cache_size": len(self.fallback_cache),
-            "total_cached_coins": len(self.cache) + len(self.fallback_cache)
+            "dynamic_fallback_size": len(self.dynamic_fallback),
+            "total_cached_coins": len(self.cache) + len(self.fallback_cache) + len(self.dynamic_fallback)
         }
         
         # Test primary API

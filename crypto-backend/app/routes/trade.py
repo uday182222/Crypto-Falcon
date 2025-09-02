@@ -723,4 +723,14 @@ async def get_trade_history(
         Trade.user_id == current_user.id
     ).order_by(Trade.timestamp.desc()).all()
     
-    return [TradeResponse.from_orm(trade) for trade in trades] 
+    return [TradeResponse.from_orm(trade) for trade in trades]
+
+@router.get("/api-status")
+async def get_api_status():
+    """Get API status including dynamic fallback information"""
+    try:
+        status = await price_service.get_api_status()
+        return status
+    except Exception as e:
+        logger.error(f"Error getting API status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get API status") 

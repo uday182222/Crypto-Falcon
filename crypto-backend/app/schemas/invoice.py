@@ -11,7 +11,7 @@ class InvoiceData(BaseModel):
     amount_paid: float
     payment_id: str
     order_id: str
-    business_name: str = "BitcoinPro.in"
+    business_name: str = "BitcoinPro"
     business_address: str = "123 Tech Park, Hinjewadi, Pune, Maharashtra 411057, India"
     gst_number: str = "27ABCDE1234F1Z5"
     package_name: Optional[str] = None

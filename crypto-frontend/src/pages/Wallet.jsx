@@ -569,6 +569,17 @@ const Wallet = () => {
   // Top-up packages configuration
   const topUpPackages = [
     {
+      id: 'registration',
+      name: 'Registration',
+      usdAmount: 100000, // 100,000 USD for ₹0
+      demoCoins: 100000,
+      bonus: 0,
+      popular: false,
+      color: 'from-green-500 to-emerald-500',
+      inrPrice: 0,
+      checkoutPrice: 0
+    },
+    {
       id: 'crypto-crumbs',
       name: 'Crypto Crumbs',
       usdAmount: 100000, // 100,000 USD for ₹10
@@ -599,7 +610,7 @@ const Wallet = () => {
       popular: false,
       color: 'from-yellow-500 to-orange-500',
       inrPrice: 50,
-      checkoutPrice: 55
+      checkoutPrice: 59
     },
     {
       id: 'ramen-bubble',
@@ -610,7 +621,7 @@ const Wallet = () => {
       popular: true,
       color: 'from-purple-500 to-pink-500',
       inrPrice: 100,
-      checkoutPrice: 110
+      checkoutPrice: 118
     },
     {
       id: 'digi-dynasty',
@@ -621,7 +632,7 @@ const Wallet = () => {
       popular: false,
       color: 'from-indigo-500 to-purple-500',
       inrPrice: 250,
-      checkoutPrice: 265
+      checkoutPrice: 295
     },
     {
       id: 'block-mogul',
@@ -632,7 +643,7 @@ const Wallet = () => {
       popular: false,
       color: 'from-red-500 to-pink-500',
       inrPrice: 500,
-      checkoutPrice: 525
+      checkoutPrice: 590
     },
     {
       id: 'satoshi-vault',
@@ -643,7 +654,7 @@ const Wallet = () => {
       popular: false,
       color: 'from-yellow-400 to-orange-500',
       inrPrice: 1000,
-      checkoutPrice: 1050
+      checkoutPrice: 1180
     }
   ];
 

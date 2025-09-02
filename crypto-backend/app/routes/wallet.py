@@ -408,7 +408,9 @@ async def verify_wallet_topup_payment(
         
         if request.package_id:
             # Package-based top-up with new package IDs
-            if request.package_id == 'crypto-crumbs':
+            if request.package_id == 'registration':
+                game_usd_amount = 100000  # ₹0 = 100,000 USD (Free Registration)
+            elif request.package_id == 'crypto-crumbs':
                 game_usd_amount = 100000  # ₹10 = 100,000 USD
             elif request.package_id == 'rookie-pack':
                 game_usd_amount = 200000  # ₹20 = 200,000 USD
@@ -534,6 +536,7 @@ async def verify_wallet_topup_payment_phonepe(
         # Determine game USD amount based on package or default mapping
         if request.package_id:
             mapping = {
+                'registration': 100000,  # ₹0 = 100,000 USD (Free Registration)
                 'crypto-crumbs': 100000,
                 'rookie-pack': 200000,
                 'lambo-baron': 500000,

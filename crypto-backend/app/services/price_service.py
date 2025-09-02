@@ -19,6 +19,65 @@ class CoinGeckoService:
     
     # Backup APIs (free tiers) with comprehensive symbol mappings
     BACKUP_APIS = {
+        "cryptocompare": {
+            "base_url": "https://min-api.cryptocompare.com/data",
+            "endpoint": "/price",
+            "symbol_mapping": {
+                # Major cryptocurrencies
+                "BTC": "BTC", "ETH": "ETH", "BNB": "BNB", "XRP": "XRP",
+                "ADA": "ADA", "SOL": "SOL", "DOGE": "DOGE", "TRX": "TRX",
+                "AVAX": "AVAX", "DOT": "DOT", "MATIC": "MATIC", "LINK": "LINK",
+                "UNI": "UNI", "ATOM": "ATOM", "LTC": "LTC", "BCH": "BCH",
+                "ETC": "ETC", "XLM": "XLM", "XMR": "XMR", "DASH": "DASH",
+                "ZEC": "ZEC", "EOS": "EOS", "XTZ": "XTZ", "AAVE": "AAVE",
+                
+                # DeFi tokens
+                "COMP": "COMP", "MKR": "MKR", "SNX": "SNX", "YFI": "YFI",
+                "SUSHI": "SUSHI", "CRV": "CRV", "1INCH": "1INCH", "BAL": "BAL",
+                "LRC": "LRC", "ZRX": "ZRX", "NEAR": "NEAR", "FTM": "FTM",
+                "ALGO": "ALGO", "VET": "VET", "ICP": "ICP", "FIL": "FIL",
+                
+                # Gaming & NFT
+                "AXS": "AXS", "SAND": "SAND", "MANA": "MANA", "ENJ": "ENJ",
+                "GALA": "GALA", "ILV": "ILV", "CHZ": "CHZ", "FLOW": "FLOW",
+                "IMX": "IMX", "APE": "APE",
+                
+                # Meme coins
+                "SHIB": "SHIB", "PEPE": "PEPE", "FLOKI": "FLOKI", "BONK": "BONK",
+                "WIF": "WIF", "BABYDOGE": "BABYDOGE",
+                
+                # AI & Big Data
+                "FET": "FET", "AGIX": "AGIX", "OCEAN": "OCEAN", "GRT": "GRT",
+                "RLC": "RLC", "NUM": "NUM",
+                
+                # Storage & Infrastructure
+                "AR": "AR", "SC": "SC", "STORJ": "STORJ", "BTT": "BTT", "HOT": "HOT",
+                
+                # Privacy coins
+                "DCR": "DCR", "ZEN": "ZEN",
+                
+                # Stablecoins
+                "USDT": "USDT", "USDC": "USDC", "BUSD": "BUSD", "DAI": "DAI",
+                "TUSD": "TUSD", "USDP": "USDP", "FRAX": "FRAX", "LUSD": "LUSD",
+                
+                # Exchange tokens
+                "FTT": "FTT", "LEO": "LEO", "CRO": "CRO", "KCS": "KCS",
+                "HT": "HT", "OKB": "OKB", "GT": "GT",
+                
+                # Oracle & Data
+                "BAND": "BAND", "TRB": "TRB", "API3": "API3", "UMA": "UMA", "REP": "REP",
+                
+                # Cross-Chain & Bridges
+                "RUNE": "RUNE", "KAVA": "KAVA", "INJ": "INJ", "OSMO": "OSMO", "JUNO": "JUNO",
+                
+                # Layer 2 Solutions
+                "OP": "OP", "ARB": "ARB",
+                
+                # Emerging & Trending
+                "SUI": "SUI", "APT": "APT", "SEI": "SEI", "TIA": "TIA",
+                "JTO": "JTO", "PYTH": "PYTH", "WLD": "WLD", "BLUR": "BLUR"
+            }
+        },
         "binance": {
             "base_url": "https://api.binance.com/api/v3",
             "endpoint": "/ticker/price",
@@ -426,40 +485,57 @@ class CoinGeckoService:
         return None
     
     async def _try_backup_api(self, coin_symbol: str, api_name: str) -> Optional[PriceResponse]:
-        """Try to get price from backup API"""
+        """Try to get price from backup API with improved error handling"""
         try:
             api_config = self.BACKUP_APIS.get(api_name)
             if not api_config:
+                logger.warning(f"Backup API {api_name} not configured")
                 return None
             
             symbol_mapping = api_config.get("symbol_mapping", {})
             mapped_symbol = symbol_mapping.get(coin_symbol.upper())
             if not mapped_symbol:
+                logger.warning(f"Symbol {coin_symbol} not supported by {api_name}")
                 return None
             
             url = f"{api_config['base_url']}{api_config['endpoint']}"
             
-            if api_name == "binance":
-                # Binance API format
+            if api_name == "cryptocompare":
+                # CryptoCompare API format
+                url = f"{api_config['base_url']}{api_config['endpoint']}"
+                params = {"fsym": mapped_symbol, "tsyms": "USD"}
+            elif api_name == "binance":
+                # Binance API format - use 24hr ticker for better data
+                url = f"{api_config['base_url']}/ticker/24hr"
                 params = {"symbol": mapped_symbol}
             elif api_name == "coinbase":
-                # Coinbase API format
-                params = {"base": mapped_symbol.split('-')[0], "currency": "USD"}
+                # Coinbase API format - use correct endpoint
+                url = f"{api_config['base_url']}/prices/{mapped_symbol}/spot"
+                params = {}
             else:
+                logger.warning(f"Unknown backup API: {api_name}")
                 return None
             
-            logger.info(f"Trying backup API {api_name} for {coin_symbol}")
+            logger.info(f"Trying backup API {api_name} for {coin_symbol} at {url}")
             response = await self.client.get(url, params=params)
             
             if response.status_code == 200:
                 data = response.json()
                 
                 # Extract price based on API response format
-                if api_name == "binance":
-                    price_usd = Decimal(str(data.get("price", 0)))
+                if api_name == "cryptocompare":
+                    price_usd = Decimal(str(data.get("USD", 0)))
+                    change_24h = Decimal("0")  # CryptoCompare doesn't provide 24h change in this endpoint
+                    change_24h_percent = Decimal("0")
+                elif api_name == "binance":
+                    price_usd = Decimal(str(data.get("lastPrice", 0)))
+                    change_24h = Decimal(str(data.get("priceChange", 0)))
+                    change_24h_percent = Decimal(str(data.get("priceChangePercent", 0)))
                 elif api_name == "coinbase":
                     price_data = data.get("data", {})
                     price_usd = Decimal(str(price_data.get("amount", 0)))
+                    change_24h = Decimal("0")  # Coinbase doesn't provide 24h change in this endpoint
+                    change_24h_percent = Decimal("0")
                 else:
                     return None
                 
@@ -468,13 +544,17 @@ class CoinGeckoService:
                     price_response = PriceResponse(
                         coin_symbol=coin_symbol.upper(),
                         price_usd=price_usd,
-                        price_change_24h=Decimal("0"),  # Backup APIs may not provide 24h change
-                        price_change_percentage_24h=Decimal("0"),
+                        price_change_24h=change_24h,
+                        price_change_percentage_24h=change_24h_percent,
                         timestamp=datetime.utcnow()
                     )
                     # Add source tracking
                     price_response.source_api = api_name
                     return price_response
+                else:
+                    logger.warning(f"Invalid price from {api_name}: {price_usd}")
+            else:
+                logger.warning(f"Backup API {api_name} returned status {response.status_code}: {response.text[:100]}")
             
         except Exception as e:
             logger.error(f"Error with backup API {api_name}: {e}")
@@ -524,8 +604,8 @@ class CoinGeckoService:
             else:
                 logger.warning(f"CoinGecko API failed for {coin_symbol}, trying backup APIs...")
                 
-                # Try backup APIs in order of preference
-                backup_apis = ["binance", "coinbase"]
+                # Try backup APIs in order of preference (CryptoCompare first as it's more reliable)
+                backup_apis = ["cryptocompare", "binance", "coinbase"]
                 for backup_api in backup_apis:
                     backup_price = await self._try_backup_api(coin_symbol, backup_api)
                     if backup_price:
@@ -649,6 +729,7 @@ class CoinGeckoService:
         status = {
             "primary_api": "CoinGecko",
             "backup_apis": list(self.BACKUP_APIS.keys()),
+            "backup_api_order": ["cryptocompare", "binance", "coinbase"],
             "cache_duration_seconds": self.cache_duration.total_seconds(),
             "rate_limit_requests_per_minute": 8,
             "consecutive_failures": self.consecutive_failures,

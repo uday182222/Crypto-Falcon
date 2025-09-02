@@ -302,7 +302,7 @@ class CoinGeckoService:
                 logger.error(f"Unsupported coin symbol: {coin_symbol}")
                 return None
             
-            url = f"{self.BASE_URL}/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true"
+            url = f"{self.COINGECKO_BASE_URL}/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true"
             
             data = await self._make_api_request(url)
             if data and coin_id in data:
@@ -380,7 +380,7 @@ class CoinGeckoService:
                     # Apply rate limiting
                     await self._rate_limit()
                     
-                    url = f"{self.BASE_URL}/simple/price"
+                    url = f"{self.COINGECKO_BASE_URL}/simple/price"
                     params = {
                         "ids": ",".join(coin_ids),
                         "vs_currencies": "usd",

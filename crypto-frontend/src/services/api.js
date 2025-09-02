@@ -332,54 +332,87 @@ export const dashboardAPI = {
     }
   },
 
-  // Get real-time crypto prices from Binance API
+  // Get real-time crypto prices from backend (with backup API support)
   getCryptoPrices: async () => {
     try {
-      // Use Binance API for live prices - expanded list of popular coins
-      const symbols = [
-        'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 
-        'DOTUSDT', 'AVAXUSDT', 'MATICUSDT', 'LINKUSDT', 'UNIUSDT',
-        'LTCUSDT', 'XRPUSDT', 'BCHUSDT', 'ATOMUSDT', 'NEARUSDT',
-        'FTMUSDT', 'ALGOUSDT', 'VETUSDT', 'ICPUSDT', 'FILUSDT'
-      ];
+      // Use backend price service which has backup API support
+      const response = await api.get('/trade/prices');
       
-      const pricePromises = symbols.map(async (symbol) => {
-        try {
-          // Get 24hr ticker price change statistics
-          const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
-          const data = await response.json();
-          
-          return {
-            symbol: symbol.replace('USDT', ''),
-            name: getCoinName(symbol.replace('USDT', '')),
-            price: parseFloat(data.lastPrice),
-            change_24h: parseFloat(data.priceChange),
-            change_24h_percent: parseFloat(data.priceChangePercent),
-            volume: parseFloat(data.volume),
-            high_24h: parseFloat(data.highPrice),
-            low_24h: parseFloat(data.lowPrice),
-            last_updated: new Date().toISOString()
-          };
-        } catch (error) {
-          console.error(`Error fetching ${symbol}:`, error);
-          return null;
-        }
-      });
+      if (response && response.prices) {
+        // Format the response to match frontend expectations
+        const formattedPrices = response.prices.map(coin => ({
+          symbol: coin.symbol,
+          name: getCoinName(coin.symbol),
+          price: parseFloat(coin.price),
+          change_24h: parseFloat(coin.change_24h || 0),
+          change_24h_percent: parseFloat(coin.change_24h_percent || 0),
+          volume: parseFloat(coin.volume || 0),
+          high_24h: parseFloat(coin.high_24h || coin.price),
+          low_24h: parseFloat(coin.low_24h || coin.price),
+          last_updated: coin.last_updated || new Date().toISOString()
+        }));
 
-      const results = await Promise.all(pricePromises);
-      const validResults = results.filter(result => result !== null);
-
-      return { 
-        success: true, 
-        data: { 
-          prices: validResults,
-          source: 'Binance API',
-          timestamp: new Date().toISOString()
-        } 
-      };
+        return { 
+          success: true, 
+          data: { 
+            prices: formattedPrices,
+            source: response.source || 'Backend Price Service',
+            timestamp: response.timestamp || new Date().toISOString()
+          } 
+        };
+      } else {
+        throw new Error('Invalid response format from backend');
+      }
     } catch (error) {
-      console.error('Error fetching Binance prices:', error);
-      return { success: false, error: error.message };
+      console.error('Error fetching prices from backend:', error);
+      
+      // Fallback to direct Binance API if backend fails
+      console.log('Falling back to direct Binance API...');
+      try {
+        const symbols = [
+          'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 
+          'DOTUSDT', 'AVAXUSDT', 'MATICUSDT', 'LINKUSDT', 'UNIUSDT',
+          'LTCUSDT', 'XRPUSDT', 'BCHUSDT', 'ATOMUSDT', 'NEARUSDT',
+          'FTMUSDT', 'ALGOUSDT', 'VETUSDT', 'ICPUSDT', 'FILUSDT'
+        ];
+        
+        const pricePromises = symbols.map(async (symbol) => {
+          try {
+            const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+            const data = await response.json();
+            
+            return {
+              symbol: symbol.replace('USDT', ''),
+              name: getCoinName(symbol.replace('USDT', '')),
+              price: parseFloat(data.lastPrice),
+              change_24h: parseFloat(data.priceChange),
+              change_24h_percent: parseFloat(data.priceChangePercent),
+              volume: parseFloat(data.volume),
+              high_24h: parseFloat(data.highPrice),
+              low_24h: parseFloat(data.lowPrice),
+              last_updated: new Date().toISOString()
+            };
+          } catch (error) {
+            console.error(`Error fetching ${symbol}:`, error);
+            return null;
+          }
+        });
+
+        const results = await Promise.all(pricePromises);
+        const validResults = results.filter(result => result !== null);
+
+        return { 
+          success: true, 
+          data: { 
+            prices: validResults,
+            source: 'Binance API (Fallback)',
+            timestamp: new Date().toISOString()
+          } 
+        };
+      } catch (fallbackError) {
+        console.error('Fallback API also failed:', fallbackError);
+        return { success: false, error: 'All price sources failed' };
+      }
     }
   },
 

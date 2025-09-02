@@ -9,7 +9,7 @@ const DashboardChatBot = ({ isVisible, onToggle }) => {
     {
       id: 1,
       sender: 'bot',
-      text: '👋 **Welcome to your AI Trading Assistant!**\n\nI can help you with:\n• **Market Analysis** - Current crypto trends and prices\n• **Trading Strategies** - Buy/sell recommendations\n• **Risk Management** - Safe position sizing\n• **Portfolio Insights** - Performance analysis\n\n**What would you like to know today?**'
+      text: '👋 **Welcome to your AI Trading Assistant!**\n\nI can help you with:\n• **Portfolio Analysis** - Automatic analysis of your holdings\n• **Market Analysis** - Current crypto trends and prices\n• **Trading Strategies** - Buy/sell recommendations\n• **Risk Management** - Safe position sizing\n\n**Try asking: "Analyze my portfolio" or "What should I buy?"**'
     }
   ]);
 

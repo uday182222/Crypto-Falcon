@@ -940,6 +940,74 @@ async def chatbot_endpoint(
         if any(keyword in user_message.lower() for keyword in ['how to buy', 'how to trade', 'how to start trading']):
             return ChatResponse(reply="**How to start trading:**\n\n1. **Top up wallet** - Add funds first\n2. **Choose crypto** - BTC, ETH, SOL available\n3. **Set amount** - Start with small amounts\n4. **Place order** - Use trading page\n\n**💡 Tip:** Start with $100-500 to learn!")
         
+        # Portfolio analysis requests
+        if any(keyword in user_message.lower() for keyword in ['analyze my portfolio', 'portfolio analysis', 'analyze portfolio', 'portfolio review', 'my portfolio', 'portfolio performance']):
+            try:
+                # Get user's actual portfolio data
+                portfolio_data = await fetch_user_portfolio_data(user.id, db)
+                
+                if portfolio_data["balance"] <= 0 and not portfolio_data["holdings"]:
+                    return ChatResponse(reply="**Portfolio Analysis:**\n\n📊 **Current Status:** Empty portfolio\n\n**Recommendations:**\n• **Start with $100-500** for learning\n• **Consider BTC** for stability\n• **Diversify gradually** with ETH, SOL\n\n**💡 Tip:** Begin with small amounts to learn the market!")
+                
+                # Build portfolio analysis
+                analysis_parts = ["**📊 Portfolio Analysis:**\n"]
+                
+                # Balance analysis
+                if portfolio_data["balance"] > 0:
+                    analysis_parts.append(f"**💰 Available Balance:** ${portfolio_data['balance']:,.2f}")
+                
+                # Holdings analysis
+                if portfolio_data["holdings"]:
+                    analysis_parts.append(f"\n**📈 Current Holdings:** {len(portfolio_data['holdings'])} coins")
+                    
+                    total_value = 0
+                    for coin, data in portfolio_data["holdings"].items():
+                        quantity = data['quantity']
+                        current_price = data.get('current_price', 0)
+                        value = quantity * current_price
+                        total_value += value
+                        
+                        # Get price change if available
+                        price_change = data.get('price_change_24h', 0)
+                        change_color = "🟢" if price_change >= 0 else "🔴"
+                        
+                        analysis_parts.append(f"• **{coin}:** {quantity:.4f} coins (${value:,.2f}) {change_color} {price_change:+.2f}%")
+                    
+                    analysis_parts.append(f"\n**💎 Total Portfolio Value:** ${total_value:,.2f}")
+                    
+                    # Performance analysis
+                    if portfolio_data["recent_trades"]:
+                        profitable_trades = sum(1 for trade in portfolio_data["recent_trades"] if trade.get('profit_loss', 0) > 0)
+                        total_trades = len(portfolio_data["recent_trades"])
+                        win_rate = (profitable_trades / total_trades * 100) if total_trades > 0 else 0
+                        
+                        analysis_parts.append(f"\n**📊 Trading Performance:**")
+                        analysis_parts.append(f"• **Win Rate:** {win_rate:.1f}% ({profitable_trades}/{total_trades} trades)")
+                        analysis_parts.append(f"• **Total Trades:** {total_trades}")
+                    
+                    # Recommendations
+                    analysis_parts.append(f"\n**💡 Recommendations:**")
+                    if total_value < 1000:
+                        analysis_parts.append("• **Consider increasing position sizes** gradually")
+                    if len(portfolio_data["holdings"]) < 3:
+                        analysis_parts.append("• **Diversify** with more cryptocurrencies")
+                    analysis_parts.append("• **Monitor market trends** regularly")
+                    analysis_parts.append("• **Set stop-losses** for risk management")
+                else:
+                    analysis_parts.append(f"\n**📈 Holdings:** None")
+                    analysis_parts.append(f"\n**💡 Recommendations:**")
+                    analysis_parts.append("• **Start trading** with available balance")
+                    analysis_parts.append("• **Begin with BTC** for stability")
+                    analysis_parts.append("• **Learn gradually** with small amounts")
+                
+                reply = "\n".join(analysis_parts)
+                logger.info(f"Portfolio analysis completed for user {user.id}")
+                return ChatResponse(reply=reply)
+                
+            except Exception as e:
+                logger.error(f"Error analyzing portfolio: {e}")
+                return ChatResponse(reply="❌ **Unable to analyze portfolio right now.** Please try again later.")
+        
         # Check if user is asking for onboarding help (only for specific onboarding messages)
         if any(keyword in user_message.lower() for keyword in ['help me', 'guide me', 'mentor', 'onboarding', 'new to trading', 'first trade', 'start trading', 'begin trading', 'how to start', 'i am new', 'beginner', 'getting started']):
             

@@ -822,7 +822,9 @@ async def chatbot_endpoint(
                     crypto_name = "Bitcoin"
                 
                 # Get current crypto price
+                logger.info(f"Attempting to get price for {crypto_symbol}")
                 crypto_price = await price_service.get_price(crypto_symbol)
+                logger.info(f"Price service returned: {crypto_price}")
                 if not crypto_price:
                     # Use fallback prices if API fails
                     fallback_prices = {

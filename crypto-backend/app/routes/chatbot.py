@@ -849,16 +849,18 @@ async def chatbot_endpoint(
                 
                 # Execute the actual buy order
                 from app.routes.trade import execute_trade
+                from app.schemas.trade import TradeRequest, TradeType
+                from decimal import Decimal
                 
-                # Create the trade using execute_trade function
-                new_trade = await execute_trade(
-                    symbol=crypto_symbol,
-                    side="buy",
-                    amount=crypto_amount,
-                    price=float(crypto_price.price_usd),
-                    user=user,
-                    db=db
+                # Create the trade request
+                trade_request = TradeRequest(
+                    coin_symbol=crypto_symbol,
+                    trade_type=TradeType.buy,
+                    quantity=Decimal(str(crypto_amount))
                 )
+                
+                # Execute the trade
+                new_trade = await execute_trade(trade_request, user, db)
                 
                 if new_trade:
                     reply = f"✅ **{crypto_name} Purchase Executed!**\n\n"

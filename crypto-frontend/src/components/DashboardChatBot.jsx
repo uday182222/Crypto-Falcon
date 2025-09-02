@@ -9,9 +9,98 @@ const DashboardChatBot = ({ isVisible, onToggle }) => {
     {
       id: 1,
       sender: 'bot',
-      text: 'Hello! I\'m your AI Trading Assistant. I can help you with market analysis, trading strategies, risk management, and portfolio insights. How can I assist you today?'
+      text: '👋 **Welcome to your AI Trading Assistant!**\n\nI can help you with:\n• **Market Analysis** - Current crypto trends and prices\n• **Trading Strategies** - Buy/sell recommendations\n• **Risk Management** - Safe position sizing\n• **Portfolio Insights** - Performance analysis\n\n**What would you like to know today?**'
     }
   ]);
+
+  // Format message text for better readability
+  const formatMessageText = (text) => {
+    if (!text) return '';
+    
+    // Split text into lines and process each line
+    const lines = text.split('\n');
+    const formattedLines = lines.map((line, index) => {
+      // Handle bold text (**text**)
+      if (line.includes('**')) {
+        const parts = line.split(/(\*\*.*?\*\*)/g);
+        return (
+          <div key={index} style={{ marginBottom: '0.5rem' }}>
+            {parts.map((part, partIndex) => {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                const boldText = part.slice(2, -2);
+                // Special styling for crypto symbols and prices
+                const isCryptoSymbol = /^[A-Z]{2,5}$/.test(boldText);
+                const isPrice = /^\$[\d,]+\.?\d*$/.test(boldText);
+                const isPercentage = /^[+-]?\d+\.?\d*%$/.test(boldText);
+                
+                return (
+                  <span key={partIndex} style={{ 
+                    fontWeight: '600', 
+                    color: isCryptoSymbol ? '#8b5cf6' : isPrice ? '#10b981' : isPercentage ? (boldText.startsWith('+') ? '#10b981' : '#ef4444') : '#14b8a6',
+                    fontSize: isCryptoSymbol || isPrice ? '0.95rem' : '0.9rem',
+                    backgroundColor: isCryptoSymbol ? 'rgba(139, 92, 246, 0.1)' : isPrice ? 'rgba(16, 185, 129, 0.1)' : 'transparent',
+                    padding: isCryptoSymbol || isPrice ? '0.125rem 0.375rem' : '0',
+                    borderRadius: isCryptoSymbol || isPrice ? '0.25rem' : '0'
+                  }}>
+                    {boldText}
+                  </span>
+                );
+              }
+              return <span key={partIndex}>{part}</span>;
+            })}
+          </div>
+        );
+      }
+      
+      // Handle bullet points or list items
+      if (line.trim().startsWith('-') || line.trim().startsWith('•')) {
+        return (
+          <div key={index} style={{ 
+            marginLeft: '1rem', 
+            marginBottom: '0.25rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.5rem'
+          }}>
+            <span style={{ color: '#14b8a6', fontWeight: '600' }}>•</span>
+            <span>{line.replace(/^[-•]\s*/, '')}</span>
+          </div>
+        );
+      }
+      
+      // Handle numbered lists
+      if (/^\d+\./.test(line.trim())) {
+        return (
+          <div key={index} style={{ 
+            marginLeft: '1rem', 
+            marginBottom: '0.25rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.5rem'
+          }}>
+            <span style={{ color: '#14b8a6', fontWeight: '600', minWidth: '1.5rem' }}>
+              {line.match(/^\d+\./)[0]}
+            </span>
+            <span>{line.replace(/^\d+\.\s*/, '')}</span>
+          </div>
+        );
+      }
+      
+      // Handle empty lines
+      if (line.trim() === '') {
+        return <div key={index} style={{ height: '0.5rem' }} />;
+      }
+      
+      // Regular text
+      return (
+        <div key={index} style={{ marginBottom: '0.5rem' }}>
+          {line}
+        </div>
+      );
+    });
+    
+    return formattedLines;
+  };
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -209,19 +298,21 @@ const DashboardChatBot = ({ isVisible, onToggle }) => {
           >
             <div
               style={{
-                maxWidth: '80%',
-                padding: '0.75rem 1rem',
-                borderRadius: '1rem',
+                maxWidth: '85%',
+                padding: '1rem 1.25rem',
+                borderRadius: '1.25rem',
                 background: message.sender === 'user' 
                   ? 'linear-gradient(135deg, #14b8a6 0%, #8b5cf6 100%)'
-                  : 'rgba(15, 23, 42, 0.5)',
+                  : 'rgba(15, 23, 42, 0.7)',
                 border: message.sender === 'user' 
                   ? 'none'
-                  : '1px solid rgba(51, 65, 85, 0.3)',
+                  : '1px solid rgba(51, 65, 85, 0.4)',
                 color: message.sender === 'user' ? '#ffffff' : '#f8fafc',
                 boxShadow: message.sender === 'user' 
-                  ? '0 2px 8px rgba(20, 184, 166, 0.3)'
-                  : '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  ? '0 4px 12px rgba(20, 184, 166, 0.3)'
+                  : '0 4px 12px rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(8px)',
+                lineHeight: '1.6'
               }}
             >
               <div style={{
@@ -245,10 +336,10 @@ const DashboardChatBot = ({ isVisible, onToggle }) => {
                 )}
                 <div style={{
                   fontSize: '0.875rem',
-                  lineHeight: '1.4',
+                  lineHeight: '1.6',
                   whiteSpace: 'pre-wrap'
                 }}>
-                  {message.text}
+                  {formatMessageText(message.text)}
                 </div>
               </div>
             </div>
@@ -317,7 +408,7 @@ const DashboardChatBot = ({ isVisible, onToggle }) => {
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask me about trading strategies, market analysis, or portfolio insights..."
+          placeholder="Try: 'What's the best crypto to buy?' or 'How do I manage risk?'"
           style={{
             flex: 1,
             padding: '0.75rem 1rem',

@@ -490,6 +490,252 @@ def format_position_sizing_result(result: Dict[str, Any]) -> str:
     
     return explanation
 
+async def create_journal_entry(user_message: str, user_id: int, db: Session) -> Dict[str, Any]:
+    """Create a structured journal entry from user's reflection"""
+    try:
+        # Extract key information from the user's message
+        journal_data = {
+            "user_id": user_id,
+            "raw_reflection": user_message,
+            "trade_idea": "",
+            "emotions": "",
+            "outcome": "",
+            "lessons_learned": "",
+            "created_at": None
+        }
+        
+        # Use simple keyword extraction to identify components
+        message_lower = user_message.lower()
+        
+        # Extract trade idea (mentions of buying, selling, trading, etc.)
+        trade_keywords = ['bought', 'sold', 'traded', 'bought', 'sold', 'trade', 'position', 'entry', 'exit', 'bitcoin', 'btc', 'ethereum', 'eth']
+        if any(keyword in message_lower for keyword in trade_keywords):
+            # Extract the trade-related part
+            trade_idea = user_message
+            journal_data["trade_idea"] = trade_idea[:200] + "..." if len(trade_idea) > 200 else trade_idea
+        
+        # Extract emotions (mentions of feelings, emotions, etc.)
+        emotion_keywords = ['felt', 'feeling', 'excited', 'nervous', 'confident', 'worried', 'happy', 'sad', 'frustrated', 'proud', 'anxious', 'calm']
+        emotions = []
+        for keyword in emotion_keywords:
+            if keyword in message_lower:
+                emotions.append(keyword)
+        if emotions:
+            journal_data["emotions"] = ", ".join(emotions)
+        
+        # Extract outcome (mentions of profit, loss, results, etc.)
+        outcome_keywords = ['profit', 'loss', 'gained', 'lost', 'won', 'lost', 'successful', 'failed', 'result', 'outcome']
+        if any(keyword in message_lower for keyword in outcome_keywords):
+            journal_data["outcome"] = "Mentioned in reflection"
+        
+        # Extract lessons learned (mentions of learn, lesson, realize, understand, etc.)
+        lesson_keywords = ['learned', 'lesson', 'realize', 'understand', 'know', 'discover', 'insight', 'takeaway']
+        if any(keyword in message_lower for keyword in lesson_keywords):
+            journal_data["lessons_learned"] = "Mentioned in reflection"
+        
+        return journal_data
+    except Exception as e:
+        logger.error(f"Error creating journal entry: {e}")
+        return {}
+
+def format_journal_summary(journal_data: Dict[str, Any]) -> str:
+    """Format journal entry into a motivating summary"""
+    if not journal_data:
+        return "I couldn't process your journal entry. Please try again with more details about your trading experience."
+    
+    raw_reflection = journal_data.get("raw_reflection", "")
+    trade_idea = journal_data.get("trade_idea", "")
+    emotions = journal_data.get("emotions", "")
+    outcome = journal_data.get("outcome", "")
+    lessons_learned = journal_data.get("lessons_learned", "")
+    
+    summary = f"📝 **Your Trading Journal Entry**\n\n"
+    
+    summary += f"**Reflection:** {raw_reflection}\n\n"
+    
+    if trade_idea:
+        summary += f"🎯 **Trade Idea:** {trade_idea}\n\n"
+    
+    if emotions:
+        summary += f"💭 **Emotions:** {emotions}\n\n"
+    
+    if outcome:
+        summary += f"📊 **Outcome:** {outcome}\n\n"
+    
+    if lessons_learned:
+        summary += f"🎓 **Lessons Learned:** {lessons_learned}\n\n"
+    
+    # Add motivating feedback
+    summary += f"🌟 **Coach's Reflection:**\n"
+    
+    # Analyze the tone and provide appropriate feedback
+    if any(word in raw_reflection.lower() for word in ['profit', 'gained', 'won', 'successful', 'happy']):
+        summary += f"• Great job on this trade! It's wonderful to see you learning and growing.\n"
+        summary += f"• Remember to analyze what went right so you can repeat it.\n"
+    elif any(word in raw_reflection.lower() for word in ['loss', 'lost', 'failed', 'mistake', 'wrong']):
+        summary += f"• Every trader faces losses - it's part of the learning process.\n"
+        summary += f"• The important thing is that you're reflecting and learning from this experience.\n"
+    else:
+        summary += f"• Thank you for sharing your trading experience with me.\n"
+        summary += f"• Reflection is one of the most powerful tools for improving as a trader.\n"
+    
+    summary += f"• Keep journaling your trades - it will help you identify patterns and improve.\n"
+    summary += f"• Consider what you learned and how you can apply it to future trades.\n"
+    
+    return summary
+
+def extract_journal_parameters(message: str) -> bool:
+    """Check if the message is a journal entry/reflection"""
+    try:
+        message_lower = message.lower()
+        
+        # Strong indicators of journaling (must contain these)
+        strong_journal_indicators = [
+            'i bought', 'i sold', 'i traded', 'i learned', 'i realized', 'i felt',
+            'my trade', 'today i', 'yesterday i', 'this week i', 'i was',
+            'journal', 'reflection', 'reflecting'
+        ]
+        
+        # Check for strong indicators first
+        if any(indicator in message_lower for indicator in strong_journal_indicators):
+            return True
+        
+        # Check for combination of keywords that suggest reflection
+        emotion_words = ['felt', 'feeling', 'excited', 'nervous', 'confident', 'worried', 'happy', 'sad', 'frustrated', 'proud', 'anxious', 'calm']
+        trade_words = ['bought', 'sold', 'traded', 'trade', 'bitcoin', 'btc', 'ethereum', 'eth']
+        learning_words = ['learned', 'lesson', 'realize', 'understand', 'know', 'discover', 'insight', 'takeaway']
+        
+        # Must have at least 2 categories and be a substantial message
+        categories_found = 0
+        if any(word in message_lower for word in emotion_words):
+            categories_found += 1
+        if any(word in message_lower for word in trade_words):
+            categories_found += 1
+        if any(word in message_lower for word in learning_words):
+            categories_found += 1
+        
+        # If we have 2+ categories and message is substantial, likely a journal entry
+        if categories_found >= 2 and len(message) > 80:
+            return True
+        
+        return False
+    except Exception as e:
+        logger.error(f"Error extracting journal parameters: {e}")
+        return False
+
+async def get_onboarding_status(user_id: int, db: Session) -> Dict[str, Any]:
+    """Get user's onboarding progress"""
+    try:
+        # Check if user has made any trades
+        trades_count = db.query(Trade).filter(Trade.user_id == user_id).count()
+        
+        # Check if user has any journal entries (we'll store this in a simple way)
+        # For now, we'll use a simple approach - in production, you'd have a proper journal table
+        
+        return {
+            "user_id": user_id,
+            "has_made_trades": trades_count > 0,
+            "trades_count": trades_count,
+            "onboarding_step": "welcome" if trades_count == 0 else "trading" if trades_count < 3 else "advanced",
+            "needs_journaling": trades_count > 0,
+            "is_new_user": trades_count == 0
+        }
+    except Exception as e:
+        logger.error(f"Error getting onboarding status: {e}")
+        return {
+            "user_id": user_id,
+            "has_made_trades": False,
+            "trades_count": 0,
+            "onboarding_step": "welcome",
+            "needs_journaling": False,
+            "is_new_user": True
+        }
+
+def format_onboarding_response(onboarding_status: Dict[str, Any], user_message: str) -> str:
+    """Format onboarding response based on user's progress"""
+    step = onboarding_status.get("onboarding_step", "welcome")
+    is_new_user = onboarding_status.get("is_new_user", True)
+    trades_count = onboarding_status.get("trades_count", 0)
+    
+    if step == "welcome" and is_new_user:
+        return f"""🎉 **Welcome to BitcoinPro.in!** I'm your personal trading mentor.
+
+I'm here to guide you through your crypto trading journey step by step. Let's start with the basics:
+
+📚 **Step 1: Understanding the Platform**
+• You're on a demo trading platform - no real money at risk
+• You can practice trading with virtual funds
+• Learn risk management before using real money
+
+🎯 **Step 2: Your First Trade**
+• Go to the Trading page
+• Choose a cryptocurrency (I recommend starting with Bitcoin)
+• Start with a small position size
+• Set a stop loss to limit your risk
+
+💡 **What would you like to do first?**
+• Say "help me make my first trade" for step-by-step guidance
+• Ask "what is risk management?" to learn the basics
+• Or just start exploring the platform!
+
+Remember: I'm here to help you learn safely. What questions do you have?"""
+
+    elif step == "trading" and trades_count > 0:
+        return f"""🚀 **Great job on your first trade!** You're making progress.
+
+📊 **You've made {trades_count} trade(s) so far. Here's what's next:**
+
+🎓 **Step 3: Learning from Your Trades**
+• Reflect on what happened in your trade
+• What did you learn? How did you feel?
+• Journaling helps you improve faster
+
+📝 **Try journaling your experience:**
+• Tell me about your trade: "I bought Bitcoin at $100k and sold at $105k. I felt excited but nervous. I learned that I need to be more patient."
+
+💡 **Next Steps:**
+• Continue practicing with small positions
+• Learn about position sizing and risk management
+• Start building your trading journal
+
+What would you like to work on next?"""
+
+    elif step == "advanced":
+        return f"""🌟 **You're becoming a more experienced trader!** 
+
+📈 **You've made {trades_count} trades - that's great practice!**
+
+🎯 **Advanced Topics:**
+• Position sizing and risk management
+• Market analysis and timing
+• Emotional control and discipline
+• Building a consistent strategy
+
+📝 **Keep Journaling:**
+• Continue reflecting on your trades
+• Look for patterns in your successes and failures
+• Use your journal to improve your strategy
+
+💡 **I'm here to help with:**
+• Trade simulations and analysis
+• Position sizing calculations
+• Risk management advice
+• Strategy development
+
+What aspect of trading would you like to focus on today?"""
+
+    else:
+        return f"""👋 **Hello! I'm your trading mentor.**
+
+I'm here to help you with:
+• Trade simulations and analysis
+• Position sizing calculations
+• Risk management advice
+• Journaling your trading experiences
+• Learning and improving your skills
+
+What would you like to work on today?"""
+
 async def call_openai_api(user_message: str, context: str):
     """Call OpenAI API with user message and context"""
     try:
@@ -551,7 +797,27 @@ async def chatbot_endpoint(
     try:
         user_message = message_data.message.strip()
         
-        # Check if user is asking for position sizing
+        # Get user's onboarding status
+        onboarding_status = await get_onboarding_status(user.id, db)
+        
+        # Check if user is writing a journal entry/reflection
+        if extract_journal_parameters(user_message):
+            # Create journal entry
+            journal_data = await create_journal_entry(user_message, user.id, db)
+            if journal_data:
+                # Format journal summary
+                reply = format_journal_summary(journal_data)
+                
+                # Add onboarding guidance if user is new
+                if onboarding_status.get("is_new_user", True):
+                    reply += f"\n\n🎓 **Mentor's Note:**\n"
+                    reply += f"Great job on your first journal entry! This is an excellent habit for improving your trading skills. "
+                    reply += f"Keep reflecting on your trades and you'll see your skills grow faster."
+                
+                logger.info(f"Journal entry created for user {user.id}: {user_message[:50]}...")
+                return ChatResponse(reply=reply)
+        
+        # Check if user is asking for position sizing (check this first)
         position_params = extract_position_sizing_parameters(user_message)
         if position_params:
             # Calculate safe position size
@@ -566,8 +832,43 @@ async def chatbot_endpoint(
                 # Format the result conversationally
                 reply = format_position_sizing_result(position_result)
                 
+                # Add onboarding context if user is new
+                if onboarding_status.get("is_new_user", True):
+                    reply += f"\n\n🎓 **Mentor's Note:**\n"
+                    reply += f"This is excellent risk management! You're learning to protect your capital. "
+                    reply += f"After you make your first trade, come back and journal about your experience."
+                
                 logger.info(f"Position sizing completed for user {user.id}: {user_message[:50]}...")
                 return ChatResponse(reply=reply)
+        
+        # Check if user is asking for onboarding help or is a new user
+        if (onboarding_status.get("is_new_user", True) or 
+            any(keyword in user_message.lower() for keyword in ['help', 'guide', 'mentor', 'onboarding', 'new', 'first', 'start', 'begin'])):
+            
+            # Provide onboarding guidance
+            reply = format_onboarding_response(onboarding_status, user_message)
+            
+            # Add specific guidance based on user's message
+            if 'first trade' in user_message.lower() or 'make trade' in user_message.lower():
+                reply += f"\n\n🎯 **Step-by-Step First Trade Guide:**\n"
+                reply += f"1. Go to the Trading page\n"
+                reply += f"2. Select Bitcoin (BTC) - it's the most stable for beginners\n"
+                reply += f"3. Choose a small amount (like $100-500)\n"
+                reply += f"4. Set a stop loss at 5-10% below entry price\n"
+                reply += f"5. Click 'Buy' and watch your trade\n"
+                reply += f"6. Come back and journal about your experience!\n\n"
+                reply += f"Need help with any of these steps? Just ask!"
+            
+            elif 'risk management' in user_message.lower():
+                reply += f"\n\n🛡️ **Risk Management Basics:**\n"
+                reply += f"• Never risk more than 1-2% of your account per trade\n"
+                reply += f"• Always set stop losses to limit losses\n"
+                reply += f"• Use position sizing to control risk\n"
+                reply += f"• Start small and learn before increasing size\n\n"
+                reply += f"Want me to calculate a safe position size for you? Just tell me your account balance and risk tolerance!"
+            
+            logger.info(f"Onboarding guidance provided for user {user.id}: {user_message[:50]}...")
+            return ChatResponse(reply=reply)
         
         # Check if user is asking for trade simulation
         trade_params = extract_trade_parameters(user_message)
@@ -599,6 +900,12 @@ async def chatbot_endpoint(
                             reply += f"A {abs(simulation_result['net_pnl_percent']):.1f}% loss would reduce your balance by ${abs(simulation_result['net_pnl']):,.2f}."
                     else:
                         reply += f"this ${position_value:,.2f} position exceeds your current balance. Consider position sizing!"
+                
+                # Add onboarding context if user is new
+                if onboarding_status.get("is_new_user", True):
+                    reply += f"\n\n🎓 **Mentor's Note:**\n"
+                    reply += f"Great job exploring trade scenarios! This is how you learn before risking real money. "
+                    reply += f"Try making your first actual trade, then come back and journal about your experience."
                 
                 logger.info(f"Trade simulation completed for user {user.id}: {user_message[:50]}...")
                 return ChatResponse(reply=reply)

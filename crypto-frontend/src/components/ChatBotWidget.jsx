@@ -51,10 +51,11 @@ const ChatBotWidget = () => {
 
     try {
       // Make API call to chatbot endpoint
-      const response = await fetch(`${API_BASE_URL}/api/chatbot`, {
+      const response = await fetch(`${API_BASE_URL}/chatbot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('bitcoinpro_token') || 'test-token-123'}`
         },
         body: JSON.stringify({ message: messageText })
       });
@@ -69,7 +70,7 @@ const ChatBotWidget = () => {
       const botMessage = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: data.response || data.message || 'Sorry, I couldn\'t process your request.'
+        text: data.reply || data.response || data.message || 'Sorry, I couldn\'t process your request.'
       };
       
       setMessages(prev => [...prev, botMessage]);

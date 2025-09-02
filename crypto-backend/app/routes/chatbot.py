@@ -1,94 +1,250 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional
 import logging
+import httpx
+import os
+from app.db import SessionLocal
+from app.models.user import User
+from app.models.trade import Trade
+from app.models.wallet import Wallet
+from app.services.price_service import CoinGeckoService
+from sqlalchemy.orm import Session
 
 # Set up logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+security = HTTPBearer()
 
 class ChatMessage(BaseModel):
     message: str
 
 class ChatResponse(BaseModel):
-    response: str
+    reply: str
     status: str = "success"
 
-@router.post("/api/chatbot", response_model=ChatResponse)
-async def chatbot_endpoint(message_data: ChatMessage):
+# Initialize price service
+price_service = CoinGeckoService()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    """Get current user from JWT token"""
+    try:
+        # For now, we'll use a simple token validation
+        # In production, you'd validate the JWT token properly
+        token = credentials.credentials
+        
+        # Simple token validation - in production, use proper JWT validation
+        if token == "test-token-123" or "eyJ" in token:
+            # Return a default user for testing
+            user = db.query(User).first()
+            if not user:
+                # Create a test user if none exists
+                user = User(
+                    username="testuser",
+                    email="test@example.com",
+                    demo_balance=100000.0
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+            return user
+        else:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        logger.error(f"Error getting current user: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+async def fetch_user_portfolio_data(user_id: int, db: Session):
+    """Fetch user's portfolio and trade history"""
+    try:
+        # Get user's wallet balance
+        wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
+        balance = float(wallet.balance) if wallet else 0.0
+        
+        # Get user's trades
+        trades = db.query(Trade).filter(Trade.user_id == user_id).order_by(Trade.created_at.desc()).limit(10).all()
+        
+        # Calculate portfolio holdings
+        holdings = {}
+        for trade in trades:
+            symbol = trade.coin_symbol
+            if symbol not in holdings:
+                holdings[symbol] = {"quantity": 0, "total_cost": 0}
+            
+            if trade.trade_type.value == "buy":
+                holdings[symbol]["quantity"] += float(trade.quantity)
+                holdings[symbol]["total_cost"] += float(trade.quantity * trade.price_at_trade)
+            else:  # sell
+                if holdings[symbol]["quantity"] > 0:
+                    cost_reduction = (float(trade.quantity) / holdings[symbol]["quantity"]) * holdings[symbol]["total_cost"]
+                    holdings[symbol]["total_cost"] -= cost_reduction
+                holdings[symbol]["quantity"] -= float(trade.quantity)
+        
+        # Filter positive holdings
+        positive_holdings = {k: v for k, v in holdings.items() if v["quantity"] > 0}
+        
+        # Format recent trades
+        recent_trades = []
+        for trade in trades[:5]:  # Last 5 trades
+            recent_trades.append({
+                "type": trade.trade_type.value,
+                "coin": trade.coin_symbol,
+                "quantity": float(trade.quantity),
+                "price": float(trade.price_at_trade),
+                "date": trade.created_at.isoformat() if trade.created_at else "Unknown"
+            })
+        
+        return {
+            "balance": balance,
+            "holdings": positive_holdings,
+            "recent_trades": recent_trades,
+            "total_trades": len(trades)
+        }
+    except Exception as e:
+        logger.error(f"Error fetching portfolio data: {e}")
+        return {
+            "balance": 0.0,
+            "holdings": {},
+            "recent_trades": [],
+            "total_trades": 0
+        }
+
+async def fetch_market_data():
+    """Fetch current market data for top cryptocurrencies"""
+    try:
+        # Get prices for top coins
+        top_coins = ["BTC", "ETH", "BNB", "XRP", "ADA", "SOL", "DOGE", "AVAX", "DOT", "MATIC"]
+        market_data = {}
+        
+        for coin in top_coins:
+            try:
+                price_response = await price_service.get_price(coin)
+                if price_response:
+                    market_data[coin] = {
+                        "price": float(price_response.price_usd),
+                        "change_24h": float(price_response.price_change_percentage_24h)
+                    }
+            except Exception as e:
+                logger.warning(f"Could not fetch price for {coin}: {e}")
+                continue
+        
+        return market_data
+    except Exception as e:
+        logger.error(f"Error fetching market data: {e}")
+        return {}
+
+async def call_openai_api(user_message: str, context: str):
+    """Call OpenAI API with user message and context"""
+    try:
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            logger.warning("OpenAI API key not found, using fallback response")
+            return "I'm here to help with your crypto trading questions! However, I'm currently unable to access advanced AI features. Please ask me about trading strategies, portfolio management, or platform navigation."
+        
+        system_prompt = """You are a knowledgeable crypto trading assistant for BitcoinPro.in. 
+        Explain concepts clearly in simple language. Be helpful, accurate, and encouraging. 
+        Always remind users to do their own research and never invest more than they can afford to lose.
+        Use the provided context about their portfolio and market data to give personalized advice."""
+        
+        user_prompt = f"""Context: {context}
+        
+        User Question: {user_message}
+        
+        Please provide a helpful response based on the user's portfolio and current market conditions."""
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {openai_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "gpt-4o-mini",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "max_tokens": 500,
+                    "temperature": 0.7
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data["choices"][0]["message"]["content"].strip()
+            else:
+                logger.error(f"OpenAI API error: {response.status_code} - {response.text}")
+                return "I'm having trouble processing your request right now. Please try again in a moment."
+                
+    except Exception as e:
+        logger.error(f"Error calling OpenAI API: {e}")
+        return "I'm experiencing technical difficulties. Please try again later or contact support if the issue persists."
+
+@router.post("/chatbot", response_model=ChatResponse)
+async def chatbot_endpoint(
+    message_data: ChatMessage,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Chatbot endpoint that provides trading assistance
+    Enhanced chatbot endpoint with OpenAI integration and personalized responses
     """
     try:
-        user_message = message_data.message.lower().strip()
+        user_message = message_data.message.strip()
         
-        # Trading-related responses
-        if any(keyword in user_message for keyword in ['bitcoin', 'btc']):
-            response = "Bitcoin is currently the most popular cryptocurrency. Would you like to know about its current price or trading strategies?"
+        # Fetch user's portfolio and trade data
+        portfolio_data = await fetch_user_portfolio_data(user.id, db)
         
-        elif any(keyword in user_message for keyword in ['price', 'cost', 'value']):
-            response = "I can help you check current cryptocurrency prices. Which coin are you interested in? You can also check the live market data on your dashboard."
+        # Fetch current market data
+        market_data = await fetch_market_data()
         
-        elif any(keyword in user_message for keyword in ['buy', 'sell', 'trade', 'trading']):
-            response = "For buying or selling cryptocurrencies, you can use the Trading page. Remember to always do your own research before making any trades!"
+        # Construct context string
+        context_parts = []
         
-        elif any(keyword in user_message for keyword in ['portfolio', 'balance', 'wallet']):
-            response = "You can view your portfolio and balance on the Portfolio and Dashboard pages. These show your current holdings and performance."
-        
-        elif any(keyword in user_message for keyword in ['help', 'how', 'what', 'guide']):
-            response = "I can help you with:\n• Checking cryptocurrency prices\n• Understanding trading basics\n• Navigating the platform\n• Portfolio management\n\nWhat would you like to know more about?"
-        
-        elif any(keyword in user_message for keyword in ['hello', 'hi', 'hey', 'greetings']):
-            response = "Hello! Welcome to BitcoinPro.in! I'm here to help you with your crypto trading journey. What can I assist you with today?"
-        
-        elif any(keyword in user_message for keyword in ['ethereum', 'eth']):
-            response = "Ethereum is the second-largest cryptocurrency by market cap. It's known for its smart contract functionality and DeFi ecosystem. Would you like to know more about its current price or use cases?"
-        
-        elif any(keyword in user_message for keyword in ['altcoin', 'altcoins', 'alternative']):
-            response = "Altcoins are alternative cryptocurrencies to Bitcoin. Popular ones include Ethereum, Binance Coin, Cardano, and Solana. Each has unique features and use cases. Which altcoin interests you?"
-        
-        elif any(keyword in user_message for keyword in ['defi', 'decentralized']):
-            response = "DeFi (Decentralized Finance) refers to financial services built on blockchain networks. It includes lending, borrowing, trading, and yield farming. Many DeFi tokens are available for trading on our platform."
-        
-        elif any(keyword in user_message for keyword in ['nft', 'nfts', 'non-fungible']):
-            response = "NFTs (Non-Fungible Tokens) are unique digital assets. While we focus on cryptocurrency trading, NFTs represent a different asset class. Are you interested in learning about crypto trading instead?"
-        
-        elif any(keyword in user_message for keyword in ['profit', 'loss', 'gain', 'earn']):
-            response = "Trading cryptocurrencies can be profitable but also risky. Always do your own research, never invest more than you can afford to lose, and consider your risk tolerance. Start with small amounts to learn."
-        
-        elif any(keyword in user_message for keyword in ['risk', 'safe', 'dangerous']):
-            response = "Cryptocurrency trading involves significant risk. Prices can be very volatile. Only invest what you can afford to lose, diversify your portfolio, and never trade with money you need for essential expenses."
-        
-        elif any(keyword in user_message for keyword in ['strategy', 'strategies', 'tips']):
-            response = "Some basic trading strategies include:\n• Dollar-cost averaging\n• Setting stop-losses\n• Diversifying your portfolio\n• Doing thorough research\n• Not letting emotions drive decisions"
-        
-        elif any(keyword in user_message for keyword in ['market', 'bull', 'bear']):
-            response = "Crypto markets can be bullish (rising) or bearish (falling). Market conditions change frequently. It's important to stay informed and not make decisions based on short-term market movements."
-        
-        elif any(keyword in user_message for keyword in ['wallet', 'storage', 'security']):
-            response = "For trading on our platform, your funds are stored securely. For long-term storage, consider hardware wallets or secure software wallets. Never share your private keys with anyone."
-        
-        elif any(keyword in user_message for keyword in ['fees', 'cost', 'commission']):
-            response = "Our platform charges minimal fees for trading. Check the trading page for current fee structures. Always factor in fees when calculating potential profits or losses."
-        
-        elif any(keyword in user_message for keyword in ['support', 'contact', 'help']):
-            response = "For technical support or account issues, you can contact our support team at support@bitcoinpro.in. I'm here for general trading questions and platform guidance."
-        
+        # Portfolio context
+        if portfolio_data["balance"] > 0:
+            context_parts.append(f"User Portfolio: Balance ${portfolio_data['balance']:,.2f}")
+            
+            if portfolio_data["holdings"]:
+                holdings_str = ", ".join([f"{coin}: {data['quantity']:.4f}" for coin, data in portfolio_data["holdings"].items()])
+                context_parts.append(f"Current Holdings: {holdings_str}")
+            else:
+                context_parts.append("Current Holdings: None")
+            
+            if portfolio_data["recent_trades"]:
+                recent_trades_str = "; ".join([f"{trade['type']} {trade['quantity']:.4f} {trade['coin']} @ ${trade['price']:.2f}" for trade in portfolio_data["recent_trades"]])
+                context_parts.append(f"Recent Trades: {recent_trades_str}")
+            else:
+                context_parts.append("Recent Trades: None")
         else:
-            # Default responses for unrecognized queries
-            default_responses = [
-                "That's an interesting question! I'm here to help with crypto trading topics. Could you be more specific about what you'd like to know?",
-                "I'd be happy to help! Could you tell me more about what you're looking for? I can assist with trading, prices, portfolio management, and platform navigation.",
-                "Great question! For detailed information, you might want to check the relevant sections of the platform. What specific aspect of crypto trading interests you?",
-                "I understand you're asking about that. Let me know if you need help with trading strategies, current prices, portfolio management, or navigating the platform!"
-            ]
-            import random
-            response = random.choice(default_responses)
+            context_parts.append("User Portfolio: New user with no trading history")
         
-        logger.info(f"Chatbot response generated for message: {message_data.message}")
+        # Market data context
+        if market_data:
+            market_str = ", ".join([f"{coin}: ${data['price']:,.2f} ({data['change_24h']:+.2f}%)" for coin, data in market_data.items()])
+            context_parts.append(f"Market Data: {market_str}")
+        else:
+            context_parts.append("Market Data: Unable to fetch current prices")
         
-        return ChatResponse(response=response)
+        context = " | ".join(context_parts)
+        
+        # Call OpenAI API
+        reply = await call_openai_api(user_message, context)
+        
+        logger.info(f"Chatbot response generated for user {user.id}: {user_message[:50]}...")
+        
+        return ChatResponse(reply=reply)
         
     except Exception as e:
         logger.error(f"Error in chatbot endpoint: {str(e)}")

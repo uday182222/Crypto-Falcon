@@ -848,18 +848,17 @@ async def chatbot_endpoint(
                     return ChatResponse(reply=f"❌ **Insufficient balance!**\n\nYou need ${amount_usd:.2f} but only have ${user_wallet.balance if user_wallet else 0:.2f}.\n\n💡 **Top up your wallet first!**")
                 
                 # Execute the actual buy order
-                from app.routes.trade import create_trade
-                from app.schemas.trade import TradeCreate
+                from app.routes.trade import execute_trade
                 
-                trade_data = TradeCreate(
+                # Create the trade using execute_trade function
+                new_trade = await execute_trade(
                     symbol=crypto_symbol,
                     side="buy",
                     amount=crypto_amount,
-                    price=float(crypto_price.price_usd)
+                    price=float(crypto_price.price_usd),
+                    user=user,
+                    db=db
                 )
-                
-                # Create the trade
-                new_trade = await create_trade(trade_data, user, db)
                 
                 if new_trade:
                     reply = f"✅ **{crypto_name} Purchase Executed!**\n\n"

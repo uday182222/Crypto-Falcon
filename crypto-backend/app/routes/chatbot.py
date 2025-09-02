@@ -775,7 +775,33 @@ async def call_openai_api(user_message: str, context: str):
             logger.warning("OpenAI API key not found, using fallback response")
             return "I'm here to help with your crypto trading questions! However, I'm currently unable to access advanced AI features. Please ask me about trading strategies, portfolio management, or platform navigation."
         
-        system_prompt = """You are a fast crypto trading assistant. Keep responses under 100 words. Be direct and helpful. Use bullet points for lists. Format crypto symbols as **BTC**, prices as **$50,000**, percentages as **+2.5%**."""
+        system_prompt = """You are an expert crypto trading assistant with access to the user's real portfolio data. You can execute actual trades when requested.
+
+**Your capabilities:**
+- Analyze user's portfolio and trading performance
+- Provide market insights and recommendations
+- Execute buy/sell orders when user requests
+- Give personalized trading advice based on their balance and holdings
+
+**Response style:**
+- Be conversational and helpful
+- Use **bold** for important numbers and crypto symbols
+- Keep responses concise but informative
+- Always consider the user's actual balance and holdings
+- If they have money, suggest specific trades
+- If they're new, guide them step by step
+
+**Format examples:**
+- Crypto symbols: **BTC**, **ETH**, **SOL**
+- Prices: **$50,000**, **$3,500**
+- Percentages: **+2.5%**, **-1.2%**
+- User balance: **$2,144,111** (use their actual balance)
+
+**Key rules:**
+- If user asks to buy crypto, you can execute the trade
+- Always check their balance before suggesting trades
+- Provide specific, actionable advice
+- Be encouraging but realistic about risks"""
         
         user_prompt = f"""User: {user_message}
         
@@ -887,9 +913,8 @@ async def chatbot_endpoint(
                     coin_symbol=crypto_symbol,
                     trade_type="buy",
                     quantity=Decimal(str(crypto_amount)),
-                    price=Decimal(str(crypto_price.price_usd)),
-                    total_value=Decimal(str(amount_usd)),
-                    timestamp=datetime.utcnow()
+                    price_at_trade=Decimal(str(crypto_price.price_usd)),
+                    total_cost=Decimal(str(amount_usd))
                 )
                 
                 # Add to database
@@ -960,15 +985,79 @@ async def chatbot_endpoint(
                 logger.info(f"Position sizing completed for user {user.id}: {user_message[:50]}...")
                 return ChatResponse(reply=reply)
         
+        # Get user's portfolio data for context
+        portfolio_data = await fetch_user_portfolio_data(user.id, db)
+        
         # Quick responses for common questions (faster than API calls)
         if any(keyword in user_message.lower() for keyword in ['hello', 'hi', 'hey']):
-            return ChatResponse(reply="👋 **Hello!** I'm your AI Trading Assistant. Ask me about:\n• **Market trends**\n• **Trading strategies**\n• **Risk management**\n• **Portfolio analysis**")
+            balance = portfolio_data.get("balance", 0)
+            if balance > 1000:
+                return ChatResponse(reply=f"👋 **Welcome back!** You have **${balance:,.0f}** ready to trade.\n\n**What can I help you with?**\n• **Portfolio analysis** - Review your holdings\n• **Market opportunities** - Find the best buys\n• **Risk management** - Protect your profits\n• **Trading strategies** - Optimize your approach")
+            else:
+                return ChatResponse(reply="👋 **Hello!** I'm your AI Trading Assistant.\n\n**Ready to start trading?**\n• **Top up wallet** - Add funds to begin\n• **Market analysis** - See current opportunities\n• **Learn trading** - Get expert guidance\n• **Portfolio tracking** - Monitor your progress")
         
         if any(keyword in user_message.lower() for keyword in ['what is bitcoin', 'what is btc', 'explain bitcoin']):
-            return ChatResponse(reply="**Bitcoin (BTC)** is the first and largest cryptocurrency.\n\n**Key facts:**\n• **Price:** Check live prices above\n• **Use case:** Digital store of value\n• **Volatility:** High risk/reward\n\n**Trading tip:** Start small and learn gradually!")
+            # Get current BTC price
+            try:
+                btc_price = await price_service.get_price("BTC")
+                if btc_price:
+                    return ChatResponse(reply=f"**Bitcoin (BTC)** - The king of crypto!\n\n**Current Price:** **${btc_price.price_usd:,.2f}** ({btc_price.change_24h_percent:+.2f}%)\n\n**Why Bitcoin?**\n• **Store of value** - Digital gold\n• **Limited supply** - Only 21M will ever exist\n• **Institutional adoption** - Major companies buying\n\n**Trading tip:** Perfect for long-term holds!")
+                else:
+                    return ChatResponse(reply="**Bitcoin (BTC)** - The original cryptocurrency!\n\n**Key facts:**\n• **Digital gold** - Store of value\n• **Limited supply** - Only 21M coins\n• **High volatility** - Big gains, big risks\n\n**Trading tip:** Start with small amounts to learn!")
+            except:
+                return ChatResponse(reply="**Bitcoin (BTC)** - The original cryptocurrency!\n\n**Key facts:**\n• **Digital gold** - Store of value\n• **Limited supply** - Only 21M coins\n• **High volatility** - Big gains, big risks\n\n**Trading tip:** Start with small amounts to learn!")
         
         if any(keyword in user_message.lower() for keyword in ['how to buy', 'how to trade', 'how to start trading']):
-            return ChatResponse(reply="**How to start trading:**\n\n1. **Top up wallet** - Add funds first\n2. **Choose crypto** - BTC, ETH, SOL available\n3. **Set amount** - Start with small amounts\n4. **Place order** - Use trading page\n\n**💡 Tip:** Start with $100-500 to learn!")
+            balance = portfolio_data.get("balance", 0)
+            if balance > 0:
+                return ChatResponse(reply=f"**Ready to trade with ${balance:,.2f}!**\n\n**Quick Start:**\n1. **Choose crypto** - BTC, ETH, SOL available\n2. **Set amount** - Start with $100-500\n3. **Place order** - I can execute it for you!\n\n**Just say:** \"Buy $200 of Bitcoin\" and I'll do it!")
+            else:
+                return ChatResponse(reply="**How to start trading:**\n\n1. **Top up wallet** - Add funds first\n2. **Choose crypto** - BTC, ETH, SOL available\n3. **Set amount** - Start with $100-500\n4. **Place order** - Use trading page\n\n**💡 Tip:** Start with $100-500 to learn!")
+        
+        # Market analysis and crypto recommendations
+        if any(keyword in user_message.lower() for keyword in ['best crypto', 'which crypto', 'what to buy', 'market analysis', 'crypto recommendation', 'best investment']):
+            try:
+                # Get current prices for top cryptos
+                btc_price = await price_service.get_price("BTC")
+                eth_price = await price_service.get_price("ETH")
+                sol_price = await price_service.get_price("SOL")
+                
+                recommendations = ["**🚀 Top Crypto Opportunities:**\n"]
+                
+                if btc_price:
+                    btc_trend = "📈" if btc_price.change_24h_percent > 0 else "📉"
+                    recommendations.append(f"• **Bitcoin (BTC):** ${btc_price.price_usd:,.0f} {btc_trend} {btc_price.change_24h_percent:+.2f}%")
+                    recommendations.append("  - **Best for:** Long-term holds, stability")
+                
+                if eth_price:
+                    eth_trend = "📈" if eth_price.change_24h_percent > 0 else "📉"
+                    recommendations.append(f"• **Ethereum (ETH):** ${eth_price.price_usd:,.0f} {eth_trend} {eth_price.change_24h_percent:+.2f}%")
+                    recommendations.append("  - **Best for:** DeFi, smart contracts, growth")
+                
+                if sol_price:
+                    sol_trend = "📈" if sol_price.change_24h_percent > 0 else "📉"
+                    recommendations.append(f"• **Solana (SOL):** ${sol_price.price_usd:,.0f} {sol_trend} {sol_price.change_24h_percent:+.2f}%")
+                    recommendations.append("  - **Best for:** Fast transactions, NFTs")
+                
+                recommendations.append(f"\n**💡 My Recommendation:**")
+                balance = portfolio_data.get("balance", 0)
+                if balance > 10000:
+                    recommendations.append("• **Diversify:** Split between BTC (40%), ETH (40%), SOL (20%)")
+                    recommendations.append("• **Amount:** Start with $1,000-2,000 per coin")
+                elif balance > 1000:
+                    recommendations.append("• **Focus:** Choose 1-2 coins to start")
+                    recommendations.append("• **Amount:** $500-1,000 per position")
+                else:
+                    recommendations.append("• **Start small:** Pick one coin you believe in")
+                    recommendations.append("• **Amount:** $100-500 to learn")
+                
+                recommendations.append(f"\n**Ready to buy?** Just say: \"Buy $500 of Bitcoin\"")
+                
+                return ChatResponse(reply="\n".join(recommendations))
+                
+            except Exception as e:
+                logger.error(f"Error getting market analysis: {e}")
+                return ChatResponse(reply="**Market Analysis:**\n\n**Top Picks:**\n• **Bitcoin (BTC)** - Digital gold, store of value\n• **Ethereum (ETH)** - Smart contracts, DeFi leader\n• **Solana (SOL)** - Fast, cheap transactions\n\n**💡 Tip:** Start with Bitcoin for stability!")
         
         # Portfolio analysis requests
         if any(keyword in user_message.lower() for keyword in ['analyze my portfolio', 'portfolio analysis', 'analyze portfolio', 'portfolio review', 'my portfolio', 'portfolio performance']):
@@ -1113,22 +1202,51 @@ async def chatbot_endpoint(
         # Fetch current market data
         market_data = await fetch_market_data()
         
-        # Construct minimal context for faster responses
+        # Build comprehensive context for intelligent responses
         context_parts = []
         
-        # Portfolio context (simplified)
-        if portfolio_data["balance"] > 0:
-            context_parts.append(f"Balance: ${portfolio_data['balance']:,.0f}")
-            if portfolio_data["holdings"]:
-                holdings_count = len(portfolio_data["holdings"])
-                context_parts.append(f"Holdings: {holdings_count} coins")
-        else:
-            context_parts.append("New user")
+        # User portfolio context
+        balance = portfolio_data.get("balance", 0)
+        holdings = portfolio_data.get("holdings", {})
+        recent_trades = portfolio_data.get("recent_trades", [])
         
-        # Market data context (minimal - only BTC)
-        if market_data and 'BTC' in market_data:
-            btc_data = market_data['BTC']
-            context_parts.append(f"BTC: ${btc_data['price']:,.0f} ({btc_data['change_24h']:+.1f}%)")
+        if balance > 0:
+            context_parts.append(f"User has ${balance:,.0f} available balance")
+            if holdings:
+                holdings_list = []
+                total_value = 0
+                for coin, data in holdings.items():
+                    quantity = data.get("quantity", 0)
+                    current_price = data.get("current_price", 0)
+                    value = quantity * current_price
+                    total_value += value
+                    holdings_list.append(f"{coin}: {quantity:.4f} coins (${value:,.0f})")
+                
+                context_parts.append(f"Portfolio: {len(holdings)} coins, total value ${total_value:,.0f}")
+                context_parts.append(f"Holdings: {', '.join(holdings_list)}")
+            else:
+                context_parts.append("No current holdings - ready to start trading")
+        else:
+            context_parts.append("New user with no balance - needs to top up wallet")
+        
+        # Recent trading activity
+        if recent_trades:
+            context_parts.append(f"Recent activity: {len(recent_trades)} trades")
+            profitable_trades = sum(1 for trade in recent_trades if trade.get('profit_loss', 0) > 0)
+            if len(recent_trades) > 0:
+                win_rate = (profitable_trades / len(recent_trades)) * 100
+                context_parts.append(f"Trading performance: {win_rate:.1f}% win rate")
+        
+        # Market context
+        try:
+            btc_price = await price_service.get_price("BTC")
+            eth_price = await price_service.get_price("ETH")
+            if btc_price:
+                context_parts.append(f"BTC: ${btc_price.price_usd:,.0f} ({btc_price.change_24h_percent:+.1f}%)")
+            if eth_price:
+                context_parts.append(f"ETH: ${eth_price.price_usd:,.0f} ({eth_price.change_24h_percent:+.1f}%)")
+        except:
+            pass
         
         context = " | ".join(context_parts)
         

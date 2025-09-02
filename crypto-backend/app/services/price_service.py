@@ -40,29 +40,8 @@ class CoinGeckoService:
         "ICP": "internet-computer"
     }
     
-    # Fallback prices for when API is unavailable (Updated to current market values)
-    FALLBACK_PRICES = {
-        "BTC": Decimal("110000.00"),      # Updated from 45234.56
-        "ETH": Decimal("6500.00"),        # Updated from 3123.45
-        "BNB": Decimal("650.00"),         # Updated from 234.56
-        "ADA": Decimal("0.65"),           # Updated from 0.45
-        "SOL": Decimal("150.00"),         # Updated from 89.12
-        "DOT": Decimal("8.50"),           # Updated from 12.34
-        "AVAX": Decimal("35.00"),         # Updated from 23.45
-        "MATIC": Decimal("0.95"),         # Updated from 0.89
-        "LINK": Decimal("18.00"),         # Updated from 15.67
-        "UNI": Decimal("8.50"),           # Updated from 6.78
-        "ATOM": Decimal("12.00"),         # Updated from 9.87
-        "LTC": Decimal("85.00"),          # Updated from 78.90
-        "XRP": Decimal("0.65"),           # Updated from 0.54
-        "DOGE": Decimal("0.12"),          # Updated from 0.08
-        "SHIB": Decimal("0.000025"),      # Updated from 0.000012
-        "TRX": Decimal("0.12"),           # Updated from 0.067
-        "ALGO": Decimal("0.18"),          # Updated from 0.23
-        "VET": Decimal("0.045"),          # Updated from 0.034
-        "FIL": Decimal("6.50"),           # Updated from 4.56
-        "ICP": Decimal("12.50")           # Updated from 5.67
-    }
+    # No hardcoded fallback prices - always try to get live prices from API
+    # This ensures users always get current market prices
     
     def __init__(self):
         # Use a more robust HTTP client with better timeout and retry settings
@@ -74,11 +53,11 @@ class CoinGeckoService:
         self.cache = {}
         self.cache_duration = timedelta(seconds=30)  # Cache prices for only 30 seconds for better accuracy
         self.last_request_time = 0
-        self.min_request_interval = 2.0  # Minimum 2 seconds between requests
+        self.min_request_interval = 1.0  # Reduced to 1 second between requests for better responsiveness
         self.request_count = 0
         self.rate_limit_reset = time.time()
         self.consecutive_failures = 0
-        self.max_consecutive_failures = 3
+        self.max_consecutive_failures = 5  # Increased tolerance for temporary API issues
     
     async def _rate_limit(self):
         """Implement rate limiting to avoid 429 errors"""
@@ -134,26 +113,18 @@ class CoinGeckoService:
         # Clear cache for this coin to force fresh price
         self.clear_cache(coin_symbol.upper())
         
-        # Get fresh price
+        # Get fresh price from API
         price_response = await self.get_price(coin_symbol)
         if not price_response:
+            logger.error(f"Failed to get fresh price for {coin_symbol} - API must be working for trading")
             return None
-        
-        # Validate that the price is reasonable (not using old fallback)
-        fallback_price = self.FALLBACK_PRICES.get(coin_symbol.upper(), Decimal("0"))
-        if price_response.price_usd == fallback_price:
-            logger.warning(f"Price service returned fallback price for {coin_symbol}, this may indicate API issues")
         
         return price_response
     
-    def _get_fallback_price(self, coin_symbol: str) -> PriceResponse:
-        """Get fallback price when API is unavailable"""
-        fallback_price = self.FALLBACK_PRICES.get(coin_symbol, Decimal("0"))
-        return PriceResponse(
-            coin_symbol=coin_symbol,
-            price_usd=fallback_price,
-            timestamp=datetime.utcnow()
-        )
+    def _get_fallback_price(self, coin_symbol: str) -> Optional[PriceResponse]:
+        """No fallback prices - always return None to force API usage"""
+        logger.warning(f"No fallback price available for {coin_symbol} - API must be working for trading")
+        return None
     
     async def _make_api_request(self, url: str, retries: int = 3) -> Optional[dict]:
         """Make API request with retry logic and better error handling"""
@@ -232,16 +203,12 @@ class CoinGeckoService:
                 logger.info(f"Successfully fetched price for {coin_symbol}: ${price_usd}")
                 return price_response
             else:
-                logger.warning(f"Failed to fetch price for {coin_symbol}, using fallback")
-                fallback_price = self._get_fallback_price(coin_symbol)
-                self._cache_price(coin_symbol, fallback_price)
-                return fallback_price
+                logger.warning(f"Failed to fetch price for {coin_symbol} from API")
+                return None
                 
         except Exception as e:
             logger.error(f"Error fetching price for {coin_symbol}: {e}")
-            fallback_price = self._get_fallback_price(coin_symbol)
-            self._cache_price(coin_symbol, fallback_price)
-            return fallback_price
+            return None
     
     async def get_multiple_prices(self, coin_symbols: List[str]) -> Dict[str, PriceResponse]:
         """Get current prices for multiple cryptocurrencies with intelligent batching"""
@@ -311,43 +278,33 @@ class CoinGeckoService:
                 
                 except httpx.HTTPStatusError as e:
                     if e.response.status_code == 429:
-                        logger.warning("Rate limited by API, using fallback data for remaining symbols")
+                        logger.warning("Rate limited by API - no fallback prices available")
                     else:
                         logger.error(f"HTTP error fetching multiple prices: {e}")
                     
-                    # Use fallback for failed symbols
+                    # No fallback prices - log failed symbols
                     for symbol in symbols_to_fetch:
                         if symbol.upper() not in results:
-                            fallback_price = self._get_fallback_price(symbol)
-                            results[symbol.upper()] = fallback_price
-                            self._cache_price(symbol, fallback_price)
+                            logger.warning(f"Failed to fetch price for {symbol} - no fallback available")
                 
                 except Exception as e:
                     logger.error(f"Error fetching multiple prices: {e}")
-                    # Use fallback for failed symbols
+                    # No fallback prices - log failed symbols
                     for symbol in symbols_to_fetch:
                         if symbol.upper() not in results:
-                            fallback_price = self._get_fallback_price(symbol)
-                            results[symbol.upper()] = fallback_price
-                            self._cache_price(symbol, fallback_price)
+                            logger.warning(f"Failed to fetch price for {symbol} - no fallback available")
             else:
-                # No valid coin IDs found, use fallback for all
-                for symbol in symbols_to_fetch:
-                    fallback_price = self._get_fallback_price(symbol)
-                    results[symbol.upper()] = fallback_price
-                    self._cache_price(symbol, fallback_price)
+                # No valid coin IDs found - log error
+                logger.error("No valid coin IDs found for symbols")
             
             logger.info(f"Successfully fetched prices for {len(results)} symbols")
             return results
             
         except Exception as e:
             logger.error(f"Error in get_multiple_prices: {e}")
-            # Return fallback prices for all requested symbols
-            fallback_results = {}
-            for symbol in coin_symbols:
-                fallback_price = self._get_fallback_price(symbol)
-                fallback_results[symbol.upper()] = fallback_price
-            return fallback_results
+            # No fallback prices available - return empty results
+            logger.warning("Returning empty results due to API failure - no fallback prices")
+            return {}
     
     async def get_supported_coins(self) -> List[str]:
         """Get list of supported cryptocurrency symbols"""

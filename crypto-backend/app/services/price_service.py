@@ -17,84 +17,284 @@ class CoinGeckoService:
     # Primary API (CoinGecko)
     COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
     
-    # Backup APIs (free tiers)
+    # Backup APIs (free tiers) with comprehensive symbol mappings
     BACKUP_APIS = {
         "binance": {
             "base_url": "https://api.binance.com/api/v3",
             "endpoint": "/ticker/price",
             "symbol_mapping": {
-                "BTC": "BTCUSDT",
-                "ETH": "ETHUSDT",
-                "BNB": "BNBUSDT",
-                "ADA": "ADAUSDT",
-                "SOL": "SOLUSDT",
-                "DOT": "DOTUSDT",
-                "AVAX": "AVAXUSDT",
-                "MATIC": "MATICUSDT",
-                "LINK": "LINKUSDT",
-                "UNI": "UNIUSDT",
-                "ATOM": "ATOMUSDT",
-                "LTC": "LTCUSDT",
-                "XRP": "XRPUSDT",
-                "DOGE": "DOGEUSDT",
-                "SHIB": "SHIBUSDT",
-                "TRX": "TRXUSDT",
-                "ALGO": "ALGOUSDT",
-                "VET": "VETUSDT",
-                "FIL": "FILUSDT",
-                "ICP": "ICPUSDT"
+                # Major cryptocurrencies
+                "BTC": "BTCUSDT", "ETH": "ETHUSDT", "BNB": "BNBUSDT", "XRP": "XRPUSDT",
+                "ADA": "ADAUSDT", "SOL": "SOLUSDT", "DOGE": "DOGEUSDT", "TRX": "TRXUSDT",
+                "AVAX": "AVAXUSDT", "DOT": "DOTUSDT", "MATIC": "MATICUSDT", "LINK": "LINKUSDT",
+                "UNI": "UNIUSDT", "ATOM": "ATOMUSDT", "LTC": "LTCUSDT", "BCH": "BCHUSDT",
+                "ETC": "ETCUSDT", "XLM": "XLMUSDT", "XMR": "XMRUSDT", "DASH": "DASHUSDT",
+                "ZEC": "ZECUSDT", "EOS": "EOSUSDT", "XTZ": "XTZUSDT", "AAVE": "AAVEUSDT",
+                
+                # DeFi tokens
+                "COMP": "COMPUSDT", "MKR": "MKRUSDT", "SNX": "SNXUSDT", "YFI": "YFIUSDT",
+                "SUSHI": "SUSHIUSDT", "CRV": "CRVUSDT", "1INCH": "1INCHUSDT", "BAL": "BALUSDT",
+                "LRC": "LRCUSDT", "ZRX": "ZRXUSDT", "NEAR": "NEARUSDT", "FTM": "FTMUSDT",
+                "ALGO": "ALGOUSDT", "VET": "VETUSDT", "ICP": "ICPUSDT", "FIL": "FILUSDT",
+                
+                # Gaming & NFT
+                "AXS": "AXSUSDT", "SAND": "SANDUSDT", "MANA": "MANAUSDT", "ENJ": "ENJUSDT",
+                "GALA": "GALAUSDT", "ILV": "ILVUSDT", "CHZ": "CHZUSDT", "FLOW": "FLOWUSDT",
+                "IMX": "IMXUSDT", "APE": "APEUSDT",
+                
+                # Meme coins
+                "SHIB": "SHIBUSDT", "PEPE": "PEPEUSDT", "FLOKI": "FLOKIUSDT", "BONK": "BONKUSDT",
+                "WIF": "WIFUSDT", "BABYDOGE": "BABYDOGEUSDT",
+                
+                # AI & Big Data
+                "FET": "FETUSDT", "AGIX": "AGIXUSDT", "OCEAN": "OCEANUSDT", "GRT": "GRTUSDT",
+                "RLC": "RLCUSDT", "NUM": "NUMUSDT",
+                
+                # Storage & Infrastructure
+                "AR": "ARUSDT", "SC": "SCUSDT", "STORJ": "STORJUSDT", "BTT": "BTTUSDT", "HOT": "HOTUSDT",
+                
+                # Privacy coins
+                "DCR": "DCRUSDT", "ZEN": "ZENUSDT",
+                
+                # Stablecoins
+                "USDT": "USDTUSDT", "USDC": "USDCUSDT", "BUSD": "BUSDUSDT", "DAI": "DAIUSDT",
+                "TUSD": "TUSDUSDT", "USDP": "USDPUSDT", "FRAX": "FRAXUSDT", "LUSD": "LUSDUSDT",
+                
+                # Exchange tokens
+                "FTT": "FTTUSDT", "LEO": "LEOUSDT", "CRO": "CROUSDT", "KCS": "KCSUSDT",
+                "HT": "HTUSDT", "OKB": "OKBUSDT", "GT": "GTUSDT",
+                
+                # Oracle & Data
+                "BAND": "BANDUSDT", "TRB": "TRBUSDT", "API3": "API3USDT", "UMA": "UMAUSDT", "REP": "REPUSDT",
+                
+                # Cross-Chain & Bridges
+                "RUNE": "RUNEUSDT", "KAVA": "KAVAUSDT", "INJ": "INJUSDT", "OSMO": "OSMOUSDT", "JUNO": "JUNOUSDT",
+                
+                # Layer 2 Solutions
+                "OP": "OPUSDT", "ARB": "ARBUSDT",
+                
+                # Emerging & Trending
+                "SUI": "SUIUSDT", "APT": "APTUSDT", "SEI": "SEIUSDT", "TIA": "TIAUSDT",
+                "JTO": "JTOUSDT", "PYTH": "PYTHUSDT", "WLD": "WLDUSDT", "BLUR": "BLURUSDT"
             }
         },
         "coinbase": {
             "base_url": "https://api.coinbase.com/v2",
             "endpoint": "/prices",
             "symbol_mapping": {
-                "BTC": "BTC-USD",
-                "ETH": "ETH-USD",
-                "BNB": "BNB-USD",
-                "ADA": "ADA-USD",
-                "SOL": "SOL-USD",
-                "DOT": "DOT-USD",
-                "AVAX": "AVAX-USD",
-                "MATIC": "MATIC-USD",
-                "LINK": "LINK-USD",
-                "UNI": "UNI-USD",
-                "ATOM": "ATOM-USD",
-                "LTC": "LTC-USD",
-                "XRP": "XRP-USD",
-                "DOGE": "DOGE-USD",
-                "SHIB": "SHIB-USD",
-                "TRX": "TRXUSDT",
-                "ALGO": "ALGO-USD",
-                "VET": "VET-USD",
-                "FIL": "FIL-USD",
-                "ICP": "ICP-USD"
+                # Major cryptocurrencies
+                "BTC": "BTC-USD", "ETH": "ETH-USD", "BNB": "BNB-USD", "XRP": "XRP-USD",
+                "ADA": "ADA-USD", "SOL": "SOL-USD", "DOGE": "DOGE-USD", "TRX": "TRX-USD",
+                "AVAX": "AVAX-USD", "DOT": "DOT-USD", "MATIC": "MATIC-USD", "LINK": "LINK-USD",
+                "UNI": "UNI-USD", "ATOM": "ATOM-USD", "LTC": "LTC-USD", "BCH": "BCH-USD",
+                "ETC": "ETC-USD", "XLM": "XLM-USD", "XMR": "XMR-USD", "DASH": "DASH-USD",
+                "ZEC": "ZEC-USD", "EOS": "EOS-USD", "XTZ": "XTZ-USD", "AAVE": "AAVE-USD",
+                
+                # DeFi tokens
+                "COMP": "COMP-USD", "MKR": "MKR-USD", "SNX": "SNX-USD", "YFI": "YFI-USD",
+                "SUSHI": "SUSHI-USD", "CRV": "CRV-USD", "1INCH": "1INCH-USD", "BAL": "BAL-USD",
+                "LRC": "LRC-USD", "ZRX": "ZRX-USD", "NEAR": "NEAR-USD", "FTM": "FTM-USD",
+                "ALGO": "ALGO-USD", "VET": "VET-USD", "ICP": "ICP-USD", "FIL": "FIL-USD",
+                
+                # Gaming & NFT
+                "AXS": "AXS-USD", "SAND": "SAND-USD", "MANA": "MANA-USD", "ENJ": "ENJ-USD",
+                "GALA": "GALA-USD", "ILV": "ILV-USD", "CHZ": "CHZ-USD", "FLOW": "FLOW-USD",
+                "IMX": "IMX-USD", "APE": "APE-USD",
+                
+                # Meme coins
+                "SHIB": "SHIB-USD", "PEPE": "PEPE-USD", "FLOKI": "FLOKI-USD", "BONK": "BONK-USD",
+                "WIF": "WIF-USD", "BABYDOGE": "BABYDOGE-USD",
+                
+                # AI & Big Data
+                "FET": "FET-USD", "AGIX": "AGIX-USD", "OCEAN": "OCEAN-USD", "GRT": "GRT-USD",
+                "RLC": "RLC-USD", "NUM": "NUM-USD",
+                
+                # Storage & Infrastructure
+                "AR": "AR-USD", "SC": "SC-USD", "STORJ": "STORJ-USD", "BTT": "BTT-USD", "HOT": "HOT-USD",
+                
+                # Privacy coins
+                "DCR": "DCR-USD", "ZEN": "ZEN-USD",
+                
+                # Stablecoins
+                "USDT": "USDT-USD", "USDC": "USDC-USD", "BUSD": "BUSD-USD", "DAI": "DAI-USD",
+                "TUSD": "TUSD-USD", "USDP": "USDP-USD", "FRAX": "FRAX-USD", "LUSD": "LUSD-USD",
+                
+                # Exchange tokens
+                "FTT": "FTT-USD", "LEO": "LEO-USD", "CRO": "CRO-USD", "KCS": "KCS-USD",
+                "HT": "HT-USD", "OKB": "OKB-USD", "GT": "GT-USD",
+                
+                # Oracle & Data
+                "BAND": "BAND-USD", "TRB": "TRB-USD", "API3": "API3-USD", "UMA": "UMA-USD", "REP": "REP-USD",
+                
+                # Cross-Chain & Bridges
+                "RUNE": "RUNE-USD", "KAVA": "KAVA-USD", "INJ": "INJ-USD", "OSMO": "OSMO-USD", "JUNO": "JUNO-USD",
+                
+                # Layer 2 Solutions
+                "OP": "OP-USD", "ARB": "ARB-USD",
+                
+                # Emerging & Trending
+                "SUI": "SUI-USD", "APT": "APT-USD", "SEI": "SEI-USD", "TIA": "TIA-USD",
+                "JTO": "JTO-USD", "PYTH": "PYTH-USD", "WLD": "WLD-USD", "BLUR": "BLUR-USD"
             }
         }
     }
     
-    # Mapping of common symbols to CoinGecko IDs
+    # Comprehensive mapping of cryptocurrency symbols to CoinGecko IDs
     COIN_ID_MAP = {
+        # Top Tier - Major Cryptocurrencies
         "BTC": "bitcoin",
         "ETH": "ethereum", 
         "BNB": "binancecoin",
+        "XRP": "ripple",
         "ADA": "cardano",
         "SOL": "solana",
-        "DOT": "polkadot",
+        "DOGE": "dogecoin",
+        "TRX": "tron",
         "AVAX": "avalanche-2",
+        "DOT": "polkadot",
+        
+        # DeFi & Smart Contract Platforms
         "MATIC": "matic-network",
         "LINK": "chainlink",
         "UNI": "uniswap",
         "ATOM": "cosmos",
-        "LTC": "litecoin",
-        "XRP": "ripple",
-        "DOGE": "dogecoin",
-        "SHIB": "shiba-inu",
-        "TRX": "tron",
+        "NEAR": "near",
+        "FTM": "fantom",
         "ALGO": "algorand",
         "VET": "vechain",
+        "ICP": "internet-computer",
         "FIL": "filecoin",
-        "ICP": "internet-computer"
+        
+        # Layer 1 Blockchains
+        "LTC": "litecoin",
+        "BCH": "bitcoin-cash",
+        "ETC": "ethereum-classic",
+        "XLM": "stellar",
+        "XMR": "monero",
+        "DASH": "dash",
+        "ZEC": "zcash",
+        "EOS": "eos",
+        "XTZ": "tezos",
+        "AAVE": "aave",
+        
+        # DeFi Tokens
+        "COMP": "compound-governance-token",
+        "MKR": "maker",
+        "SNX": "havven",
+        "YFI": "yearn-finance",
+        "SUSHI": "sushi",
+        "CRV": "curve-dao-token",
+        "1INCH": "1inch",
+        "BAL": "balancer",
+        "LRC": "loopring",
+        "ZRX": "0x",
+        
+        # Gaming & NFT
+        "AXS": "axie-infinity",
+        "SAND": "the-sandbox",
+        "MANA": "decentraland",
+        "ENJ": "enjincoin",
+        "GALA": "gala",
+        "ILV": "illuvium",
+        "CHZ": "chiliz",
+        "FLOW": "flow",
+        "IMX": "immutable-x",
+        "APE": "apecoin",
+        
+        # Meme Coins
+        "SHIB": "shiba-inu",
+        "PEPE": "pepe",
+        "FLOKI": "floki",
+        "BONK": "bonk",
+        "WIF": "dogwifcoin",
+        "BABYDOGE": "baby-doge-coin",
+        "DOGE": "dogecoin",
+        
+        # AI & Big Data
+        "FET": "fetch-ai",
+        "AGIX": "singularitynet",
+        "OCEAN": "ocean-protocol",
+        "GRT": "the-graph",
+        "RLC": "iexec-rlc",
+        "NUM": "numbers-protocol",
+        
+        # Storage & Infrastructure
+        "AR": "arweave",
+        "SC": "siacoin",
+        "STORJ": "storj",
+        "BTT": "bittorrent",
+        "HOT": "holo",
+        
+        # Privacy Coins
+        "XMR": "monero",
+        "ZEC": "zcash",
+        "DASH": "dash",
+        "DCR": "decred",
+        "ZEN": "horizen",
+        
+        # Stablecoins
+        "USDT": "tether",
+        "USDC": "usd-coin",
+        "BUSD": "binance-usd",
+        "DAI": "dai",
+        "TUSD": "true-usd",
+        "USDP": "paxos-standard",
+        "FRAX": "frax",
+        "LUSD": "liquity-usd",
+        
+        # Exchange Tokens
+        "FTT": "ftx-token",
+        "LEO": "leo-token",
+        "CRO": "crypto-com-chain",
+        "KCS": "kucoin-shares",
+        "HT": "huobi-token",
+        "OKB": "okb",
+        "GT": "gatechain-token",
+        
+        # Oracle & Data
+        "BAND": "band-protocol",
+        "TRB": "tellor",
+        "API3": "api3",
+        "UMA": "uma",
+        "REP": "augur",
+        
+        # Cross-Chain & Bridges
+        "RUNE": "thorchain",
+        "KAVA": "kava",
+        "INJ": "injective-protocol",
+        "OSMO": "osmosis",
+        "JUNO": "juno-network",
+        
+        # Metaverse & Virtual Worlds
+        "SAND": "the-sandbox",
+        "MANA": "decentraland",
+        "AXS": "axie-infinity",
+        "ENJ": "enjincoin",
+        "GALA": "gala",
+        "ILV": "illuvium",
+        "CHZ": "chiliz",
+        "FLOW": "flow",
+        "IMX": "immutable-x",
+        "APE": "apecoin",
+        
+        # Layer 2 Solutions
+        "OP": "optimism",
+        "ARB": "arbitrum",
+        "MATIC": "matic-network",
+        "LRC": "loopring",
+        "IMX": "immutable-x",
+        
+        # Emerging & Trending
+        "SUI": "sui",
+        "APT": "aptos",
+        "SEI": "sei-network",
+        "TIA": "celestia",
+        "INJ": "injective-protocol",
+        "JTO": "jito-governance-token",
+        "PYTH": "pyth-network",
+        "WLD": "worldcoin-wld",
+        "BLUR": "blur",
+        "ARB": "arbitrum"
     }
     
     # No hardcoded fallback prices - always try to get live prices from API

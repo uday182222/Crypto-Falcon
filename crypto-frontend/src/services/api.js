@@ -372,10 +372,52 @@ export const dashboardAPI = {
       console.log('🔄 Falling back to direct Binance API...');
       try {
         const symbols = [
-          'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 
-          'DOTUSDT', 'AVAXUSDT', 'MATICUSDT', 'LINKUSDT', 'UNIUSDT',
-          'LTCUSDT', 'XRPUSDT', 'BCHUSDT', 'ATOMUSDT', 'NEARUSDT',
-          'FTMUSDT', 'ALGOUSDT', 'VETUSDT', 'ICPUSDT', 'FILUSDT'
+          // Major cryptocurrencies
+          'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'SOLUSDT', 
+          'DOGEUSDT', 'TRXUSDT', 'AVAXUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT',
+          'UNIUSDT', 'ATOMUSDT', 'LTCUSDT', 'BCHUSDT', 'ETCUSDT', 'XLMUSDT',
+          'XMRUSDT', 'DASHUSDT', 'ZECUSDT', 'EOSUSDT', 'XTZUSDT', 'AAVEUSDT',
+          
+          // DeFi tokens
+          'COMPUSDT', 'MKRUSDT', 'SNXUSDT', 'YFIUSDT', 'SUSHIUSDT', 'CRVUSDT',
+          '1INCHUSDT', 'BALUSDT', 'LRCUSDT', 'ZRXUSDT', 'NEARUSDT', 'FTMUSDT',
+          'ALGOUSDT', 'VETUSDT', 'ICPUSDT', 'FILUSDT',
+          
+          // Gaming & NFT
+          'AXSUSDT', 'SANDUSDT', 'MANAUSDT', 'ENJUSDT', 'GALAUSDT', 'ILVUSDT',
+          'CHZUSDT', 'FLOWUSDT', 'IMXUSDT', 'APEUSDT',
+          
+          // Meme coins
+          'SHIBUSDT', 'PEPEUSDT', 'FLOKIUSDT', 'BONKUSDT', 'WIFUSDT', 'BABYDOGEUSDT',
+          
+          // AI & Big Data
+          'FETUSDT', 'AGIXUSDT', 'OCEANUSDT', 'GRTUSDT', 'RLCUSDT', 'NUMUSDT',
+          
+          // Storage & Infrastructure
+          'ARUSDT', 'SCUSDT', 'STORJUSDT', 'BTTUSDT', 'HOTUSDT',
+          
+          // Privacy coins
+          'DCRUSDT', 'ZENUSDT',
+          
+          // Stablecoins
+          'USDTUSDT', 'USDCUSDT', 'BUSDUSDT', 'DAIUSDT', 'TUSDUSDT', 'USDPUSDT',
+          'FRAXUSDT', 'LUSDUSDT',
+          
+          // Exchange tokens
+          'FTTUSDT', 'LEOUSDT', 'CROUSDT', 'KCSUSDT', 'HTUSDT', 'OKBUSDT', 'GTUSDT',
+          
+          // Oracle & Data
+          'BANDUSDT', 'TRBUSDT', 'API3USDT', 'UMAUSDT', 'REPUSDT',
+          
+          // Cross-Chain & Bridges
+          'RUNEUSDT', 'KAVAUSDT', 'INJUSDT', 'OSMOUSDT', 'JUNOUSDT',
+          
+          // Layer 2 Solutions
+          'OPUSDT', 'ARBUSDT',
+          
+          // Emerging & Trending
+          'SUIUSDT', 'APTUSDT', 'SEIUSDT', 'TIAUSDT', 'JTOUSDT', 'PYTHUSDT',
+          'WLDUSDT', 'BLURUSDT'
         ];
         
         const pricePromises = symbols.map(async (symbol) => {
@@ -463,26 +505,59 @@ export const dashboardAPI = {
 // Helper function to get coin names
 function getCoinName(symbol) {
   const coinNames = {
-    'BTC': 'Bitcoin',
-    'ETH': 'Ethereum',
-    'BNB': 'Binance Coin',
-    'ADA': 'Cardano',
-    'SOL': 'Solana',
-    'DOT': 'Polkadot',
-    'AVAX': 'Avalanche',
-    'MATIC': 'Polygon',
-    'LINK': 'Chainlink',
-    'UNI': 'Uniswap',
-    'LTC': 'Litecoin',
-    'XRP': 'Ripple',
-    'BCH': 'Bitcoin Cash',
-    'ATOM': 'Cosmos',
-    'NEAR': 'Near Protocol',
-    'FTM': 'Fantom',
-    'ALGO': 'Algorand',
-    'VET': 'VeChain',
-    'ICP': 'Internet Computer',
-    'FIL': 'Filecoin'
+    // Major cryptocurrencies
+    'BTC': 'Bitcoin', 'ETH': 'Ethereum', 'BNB': 'Binance Coin', 'XRP': 'Ripple',
+    'ADA': 'Cardano', 'SOL': 'Solana', 'DOGE': 'Dogecoin', 'TRX': 'TRON',
+    'AVAX': 'Avalanche', 'DOT': 'Polkadot', 'MATIC': 'Polygon', 'LINK': 'Chainlink',
+    'UNI': 'Uniswap', 'ATOM': 'Cosmos', 'LTC': 'Litecoin', 'BCH': 'Bitcoin Cash',
+    'ETC': 'Ethereum Classic', 'XLM': 'Stellar', 'XMR': 'Monero', 'DASH': 'Dash',
+    'ZEC': 'Zcash', 'EOS': 'EOS', 'XTZ': 'Tezos', 'AAVE': 'Aave',
+    
+    // DeFi tokens
+    'COMP': 'Compound', 'MKR': 'Maker', 'SNX': 'Synthetix', 'YFI': 'Yearn Finance',
+    'SUSHI': 'SushiSwap', 'CRV': 'Curve', '1INCH': '1inch', 'BAL': 'Balancer',
+    'LRC': 'Loopring', 'ZRX': '0x Protocol', 'NEAR': 'NEAR Protocol', 'FTM': 'Fantom',
+    'ALGO': 'Algorand', 'VET': 'VeChain', 'ICP': 'Internet Computer', 'FIL': 'Filecoin',
+    
+    // Gaming & NFT
+    'AXS': 'Axie Infinity', 'SAND': 'The Sandbox', 'MANA': 'Decentraland', 'ENJ': 'Enjin Coin',
+    'GALA': 'Gala', 'ILV': 'Illuvium', 'CHZ': 'Chiliz', 'FLOW': 'Flow',
+    'IMX': 'Immutable X', 'APE': 'ApeCoin',
+    
+    // Meme coins
+    'SHIB': 'Shiba Inu', 'PEPE': 'Pepe', 'FLOKI': 'Floki', 'BONK': 'Bonk',
+    'WIF': 'Dogwifcoin', 'BABYDOGE': 'Baby Doge Coin',
+    
+    // AI & Big Data
+    'FET': 'Fetch.ai', 'AGIX': 'SingularityNET', 'OCEAN': 'Ocean Protocol', 'GRT': 'The Graph',
+    'RLC': 'iExec RLC', 'NUM': 'Numbers Protocol',
+    
+    // Storage & Infrastructure
+    'AR': 'Arweave', 'SC': 'Siacoin', 'STORJ': 'Storj', 'BTT': 'BitTorrent', 'HOT': 'Holo',
+    
+    // Privacy coins
+    'DCR': 'Decred', 'ZEN': 'Horizen',
+    
+    // Stablecoins
+    'USDT': 'Tether', 'USDC': 'USD Coin', 'BUSD': 'Binance USD', 'DAI': 'Dai',
+    'TUSD': 'TrueUSD', 'USDP': 'Pax Dollar', 'FRAX': 'Frax', 'LUSD': 'Liquity USD',
+    
+    // Exchange tokens
+    'FTT': 'FTX Token', 'LEO': 'LEO Token', 'CRO': 'Cronos', 'KCS': 'KuCoin Token',
+    'HT': 'Huobi Token', 'OKB': 'OKB', 'GT': 'GateToken',
+    
+    // Oracle & Data
+    'BAND': 'Band Protocol', 'TRB': 'Tellor', 'API3': 'API3', 'UMA': 'UMA', 'REP': 'Augur',
+    
+    // Cross-Chain & Bridges
+    'RUNE': 'THORChain', 'KAVA': 'Kava', 'INJ': 'Injective', 'OSMO': 'Osmosis', 'JUNO': 'Juno Network',
+    
+    // Layer 2 Solutions
+    'OP': 'Optimism', 'ARB': 'Arbitrum',
+    
+    // Emerging & Trending
+    'SUI': 'Sui', 'APT': 'Aptos', 'SEI': 'Sei Network', 'TIA': 'Celestia',
+    'JTO': 'Jito', 'PYTH': 'Pyth Network', 'WLD': 'Worldcoin', 'BLUR': 'Blur'
   };
   return coinNames[symbol] || symbol;
 }

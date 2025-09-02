@@ -745,15 +745,13 @@ async def call_openai_api(user_message: str, context: str):
             logger.warning("OpenAI API key not found, using fallback response")
             return "I'm here to help with your crypto trading questions! However, I'm currently unable to access advanced AI features. Please ask me about trading strategies, portfolio management, or platform navigation."
         
-        system_prompt = """You are a concise crypto trading assistant for BitcoinPro.in. 
-        Keep responses short and actionable. When users want to buy crypto, guide them to the platform's trading features.
-        Be direct and helpful. Use portfolio context for personalized advice."""
+        system_prompt = """You are a fast crypto trading assistant. Keep responses under 100 words. Be direct and helpful. Use bullet points for lists. Format crypto symbols as **BTC**, prices as **$50,000**, percentages as **+2.5%**."""
         
-        user_prompt = f"""Context: {context}
+        user_prompt = f"""User: {user_message}
         
-        User Question: {user_message}
+        Context: {context}
         
-        Please provide a helpful response based on the user's portfolio and current market conditions."""
+        Respond quickly and concisely.provide a helpful response based on the user's portfolio and current market."""
         
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -763,15 +761,16 @@ async def call_openai_api(user_message: str, context: str):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "gpt-4o-mini",
+                    "model": "gpt-3.5-turbo",
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
-                    "max_tokens": 500,
-                    "temperature": 0.7
+                    "max_tokens": 150,
+                    "temperature": 0.3,
+                    "stream": False
                 },
-                timeout=30.0
+                timeout=10.0
             )
             
             if response.status_code == 200:
@@ -931,6 +930,16 @@ async def chatbot_endpoint(
                 logger.info(f"Position sizing completed for user {user.id}: {user_message[:50]}...")
                 return ChatResponse(reply=reply)
         
+        # Quick responses for common questions (faster than API calls)
+        if any(keyword in user_message.lower() for keyword in ['hello', 'hi', 'hey']):
+            return ChatResponse(reply="👋 **Hello!** I'm your AI Trading Assistant. Ask me about:\n• **Market trends**\n• **Trading strategies**\n• **Risk management**\n• **Portfolio analysis**")
+        
+        if any(keyword in user_message.lower() for keyword in ['what is bitcoin', 'what is btc', 'explain bitcoin']):
+            return ChatResponse(reply="**Bitcoin (BTC)** is the first and largest cryptocurrency.\n\n**Key facts:**\n• **Price:** Check live prices above\n• **Use case:** Digital store of value\n• **Volatility:** High risk/reward\n\n**Trading tip:** Start small and learn gradually!")
+        
+        if any(keyword in user_message.lower() for keyword in ['how to buy', 'how to trade', 'how to start trading']):
+            return ChatResponse(reply="**How to start trading:**\n\n1. **Top up wallet** - Add funds first\n2. **Choose crypto** - BTC, ETH, SOL available\n3. **Set amount** - Start with small amounts\n4. **Place order** - Use trading page\n\n**💡 Tip:** Start with $100-500 to learn!")
+        
         # Check if user is asking for onboarding help (only for specific onboarding messages)
         if any(keyword in user_message.lower() for keyword in ['help me', 'guide me', 'mentor', 'onboarding', 'new to trading', 'first trade', 'start trading', 'begin trading', 'how to start', 'i am new', 'beginner', 'getting started']):
             
@@ -1006,33 +1015,22 @@ async def chatbot_endpoint(
         # Fetch current market data
         market_data = await fetch_market_data()
         
-        # Construct context string
+        # Construct minimal context for faster responses
         context_parts = []
         
-        # Portfolio context
+        # Portfolio context (simplified)
         if portfolio_data["balance"] > 0:
-            context_parts.append(f"User Portfolio: Balance ${portfolio_data['balance']:,.2f}")
-            
+            context_parts.append(f"Balance: ${portfolio_data['balance']:,.0f}")
             if portfolio_data["holdings"]:
-                holdings_str = ", ".join([f"{coin}: {data['quantity']:.4f}" for coin, data in portfolio_data["holdings"].items()])
-                context_parts.append(f"Current Holdings: {holdings_str}")
-            else:
-                context_parts.append("Current Holdings: None")
-            
-            if portfolio_data["recent_trades"]:
-                recent_trades_str = "; ".join([f"{trade['type']} {trade['quantity']:.4f} {trade['coin']} @ ${trade['price']:.2f}" for trade in portfolio_data["recent_trades"]])
-                context_parts.append(f"Recent Trades: {recent_trades_str}")
-            else:
-                context_parts.append("Recent Trades: None")
+                holdings_count = len(portfolio_data["holdings"])
+                context_parts.append(f"Holdings: {holdings_count} coins")
         else:
-            context_parts.append("User Portfolio: New user with no trading history")
+            context_parts.append("New user")
         
-        # Market data context
-        if market_data:
-            market_str = ", ".join([f"{coin}: ${data['price']:,.2f} ({data['change_24h']:+.2f}%)" for coin, data in market_data.items()])
-            context_parts.append(f"Market Data: {market_str}")
-        else:
-            context_parts.append("Market Data: Unable to fetch current prices")
+        # Market data context (minimal - only BTC)
+        if market_data and 'BTC' in market_data:
+            btc_data = market_data['BTC']
+            context_parts.append(f"BTC: ${btc_data['price']:,.0f} ({btc_data['change_24h']:+.1f}%)")
         
         context = " | ".join(context_parts)
         

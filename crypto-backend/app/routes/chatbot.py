@@ -642,13 +642,14 @@ async def get_onboarding_status(user_id: int, db: Session) -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"Error getting onboarding status: {e}")
+        # If database error, assume user is not new to avoid aggressive onboarding
         return {
             "user_id": user_id,
-            "has_made_trades": False,
-            "trades_count": 0,
-            "onboarding_step": "welcome",
-            "needs_journaling": False,
-            "is_new_user": True
+            "has_made_trades": True,  # Assume they have trades to avoid onboarding
+            "trades_count": 5,  # Assume some experience
+            "onboarding_step": "advanced",
+            "needs_journaling": True,
+            "is_new_user": False  # Don't treat as new user if DB error
         }
 
 def format_onboarding_response(onboarding_status: Dict[str, Any], user_message: str) -> str:
@@ -843,7 +844,7 @@ async def chatbot_endpoint(
         
         # Check if user is asking for onboarding help or is a new user
         if (onboarding_status.get("is_new_user", True) or 
-            any(keyword in user_message.lower() for keyword in ['help', 'guide', 'mentor', 'onboarding', 'new', 'first', 'start', 'begin'])):
+            any(keyword in user_message.lower() for keyword in ['help me', 'guide me', 'mentor', 'onboarding', 'new to trading', 'first trade', 'start trading', 'begin trading', 'how to start'])):
             
             # Provide onboarding guidance
             reply = format_onboarding_response(onboarding_status, user_message)

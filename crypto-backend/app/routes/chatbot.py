@@ -318,6 +318,178 @@ def format_trade_simulation_result(result: Dict[str, Any]) -> str:
     
     return explanation
 
+async def calculate_position_size(account_balance: float, risk_percentage: float, entry_price: float, stop_loss_price: float) -> Dict[str, Any]:
+    """Calculate safe position size based on risk management principles"""
+    try:
+        # Calculate risk per unit (price difference between entry and stop loss)
+        risk_per_unit = abs(entry_price - stop_loss_price)
+        
+        # Calculate maximum amount to risk (percentage of account balance)
+        max_risk_amount = account_balance * (risk_percentage / 100)
+        
+        # Calculate maximum position size (risk amount divided by risk per unit)
+        max_position_size = max_risk_amount / risk_per_unit if risk_per_unit > 0 else 0
+        
+        # Calculate position value
+        position_value = max_position_size * entry_price
+        
+        # Calculate risk-to-reward ratio (assuming 2:1 reward target)
+        reward_target = entry_price + (2 * risk_per_unit) if entry_price > stop_loss_price else entry_price - (2 * risk_per_unit)
+        potential_reward = abs(reward_target - entry_price) * max_position_size
+        risk_reward_ratio = potential_reward / max_risk_amount if max_risk_amount > 0 else 0
+        
+        # Calculate percentage of account used
+        account_percentage_used = (position_value / account_balance) * 100 if account_balance > 0 else 0
+        
+        # Risk assessment
+        risk_level = "Low" if risk_percentage <= 1 else "Medium" if risk_percentage <= 3 else "High"
+        
+        return {
+            "account_balance": account_balance,
+            "risk_percentage": risk_percentage,
+            "entry_price": entry_price,
+            "stop_loss_price": stop_loss_price,
+            "risk_per_unit": risk_per_unit,
+            "max_risk_amount": max_risk_amount,
+            "max_position_size": max_position_size,
+            "position_value": position_value,
+            "account_percentage_used": account_percentage_used,
+            "risk_reward_ratio": risk_reward_ratio,
+            "reward_target": reward_target,
+            "potential_reward": potential_reward,
+            "risk_level": risk_level,
+            "is_safe": account_percentage_used <= 20  # Safe if using less than 20% of account
+        }
+    except Exception as e:
+        logger.error(f"Error calculating position size: {e}")
+        return {}
+
+def extract_position_sizing_parameters(message: str) -> Optional[Dict[str, float]]:
+    """Extract position sizing parameters from user message"""
+    try:
+        patterns = {
+            'account_balance': [
+                r'balance[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'account[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'portfolio[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'capital[:\s]*\$?([0-9,]+\.?[0-9]*)'
+            ],
+            'risk_percentage': [
+                r'risk[:\s]*([0-9]+\.?[0-9]*)\s*%?',
+                r'([0-9]+\.?[0-9]*)\s*%\s*risk',
+                r'risk[:\s]*percentage[:\s]*([0-9]+\.?[0-9]*)',
+                r'([0-9]+\.?[0-9]*)\s*percent[:\s]*risk'
+            ],
+            'entry_price': [
+                r'entry[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'buy[:\s]*at[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'enter[:\s]*at[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'entry[:\s]*price[:\s]*\$?([0-9,]+\.?[0-9]*)'
+            ],
+            'stop_loss_price': [
+                r'stop[:\s]*loss[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'stop[:\s]*at[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'sl[:\s]*\$?([0-9,]+\.?[0-9]*)',
+                r'stop[:\s]*loss[:\s]*price[:\s]*\$?([0-9,]+\.?[0-9]*)'
+            ]
+        }
+        
+        extracted = {}
+        message_lower = message.lower()
+        
+        for param, pattern_list in patterns.items():
+            for pattern in pattern_list:
+                match = re.search(pattern, message_lower)
+                if match:
+                    value_str = match.group(1).replace(',', '')
+                    try:
+                        extracted[param] = float(value_str)
+                        break
+                    except ValueError:
+                        continue
+        
+        # Check if we have all required parameters
+        required_params = ['account_balance', 'risk_percentage', 'entry_price', 'stop_loss_price']
+        if all(param in extracted for param in required_params):
+            return extracted
+        
+        return None
+    except Exception as e:
+        logger.error(f"Error extracting position sizing parameters: {e}")
+        return None
+
+def format_position_sizing_result(result: Dict[str, Any]) -> str:
+    """Format position sizing result into beginner-friendly explanation"""
+    if not result:
+        return "I couldn't calculate the position size. Please provide your account balance, risk percentage, entry price, and stop loss price."
+    
+    account_balance = result['account_balance']
+    risk_percentage = result['risk_percentage']
+    entry_price = result['entry_price']
+    stop_loss_price = result['stop_loss_price']
+    max_position_size = result['max_position_size']
+    position_value = result['position_value']
+    max_risk_amount = result['max_risk_amount']
+    account_percentage_used = result['account_percentage_used']
+    risk_reward_ratio = result['risk_reward_ratio']
+    risk_level = result['risk_level']
+    is_safe = result['is_safe']
+    
+    # Determine trade direction
+    direction = "long" if entry_price > stop_loss_price else "short"
+    
+    explanation = f"Let me calculate the safest position size for your {direction} trade:\n\n"
+    
+    explanation += f"📊 **Your Trade Setup:**\n"
+    explanation += f"• Account Balance: ${account_balance:,.2f}\n"
+    explanation += f"• Risk Tolerance: {risk_percentage:.1f}% of account\n"
+    explanation += f"• Entry Price: ${entry_price:,.2f}\n"
+    explanation += f"• Stop Loss: ${stop_loss_price:,.2f}\n"
+    
+    explanation += f"\n🛡️ **Safe Position Size Calculation:**\n"
+    explanation += f"• Maximum Risk Amount: ${max_risk_amount:,.2f}\n"
+    explanation += f"• Risk Per Unit: ${result['risk_per_unit']:,.2f}\n"
+    explanation += f"• **Recommended Position Size: {max_position_size:,.4f} units**\n"
+    explanation += f"• Position Value: ${position_value:,.2f}\n"
+    explanation += f"• Account Usage: {account_percentage_used:.1f}%\n"
+    
+    explanation += f"\n📈 **Risk Analysis:**\n"
+    explanation += f"• Risk Level: {risk_level}\n"
+    explanation += f"• Risk-to-Reward Ratio: 1:{risk_reward_ratio:.1f}\n"
+    explanation += f"• Potential Reward: ${result['potential_reward']:,.2f}\n"
+    
+    # Safety assessment
+    if is_safe:
+        explanation += f"\n✅ **Safety Assessment:**\n"
+        explanation += f"• This position size is SAFE for your account\n"
+        explanation += f"• You're only using {account_percentage_used:.1f}% of your balance\n"
+        explanation += f"• Even if you lose, you'll only lose {risk_percentage:.1f}% of your account\n"
+    else:
+        explanation += f"\n⚠️ **Safety Warning:**\n"
+        explanation += f"• This position uses {account_percentage_used:.1f}% of your account\n"
+        explanation += f"• Consider reducing position size for better risk management\n"
+        explanation += f"• Recommended: Use no more than 20% of account per trade\n"
+    
+    # Beginner-friendly explanation
+    explanation += f"\n🎓 **Why This Size is Safe (Beginner's Guide):**\n"
+    explanation += f"• **Risk Management**: You're only risking {risk_percentage:.1f}% of your account\n"
+    explanation += f"• **Position Sizing**: The math ensures you can't lose more than you're comfortable with\n"
+    explanation += f"• **Stop Loss Protection**: If price hits ${stop_loss_price:,.2f}, you'll exit and lose only ${max_risk_amount:,.2f}\n"
+    explanation += f"• **Account Preservation**: Even if this trade fails, you'll still have ${account_balance - max_risk_amount:,.2f} left\n"
+    
+    if risk_reward_ratio >= 2:
+        explanation += f"• **Good Risk-Reward**: You're risking ${max_risk_amount:,.2f} to potentially make ${result['potential_reward']:,.2f}\n"
+    else:
+        explanation += f"• **Risk-Reward Note**: Consider if the potential reward justifies the risk\n"
+    
+    explanation += f"\n💡 **Pro Tips:**\n"
+    explanation += f"• Never risk more than 1-2% per trade as a beginner\n"
+    explanation += f"• Always set your stop loss before entering the trade\n"
+    explanation += f"• This calculation assumes you'll stick to your stop loss\n"
+    explanation += f"• Consider market volatility when setting stop loss levels\n"
+    
+    return explanation
+
 async def call_openai_api(user_message: str, context: str):
     """Call OpenAI API with user message and context"""
     try:
@@ -378,6 +550,24 @@ async def chatbot_endpoint(
     """
     try:
         user_message = message_data.message.strip()
+        
+        # Check if user is asking for position sizing
+        position_params = extract_position_sizing_parameters(user_message)
+        if position_params:
+            # Calculate safe position size
+            position_result = await calculate_position_size(
+                position_params['account_balance'],
+                position_params['risk_percentage'],
+                position_params['entry_price'],
+                position_params['stop_loss_price']
+            )
+            
+            if position_result:
+                # Format the result conversationally
+                reply = format_position_sizing_result(position_result)
+                
+                logger.info(f"Position sizing completed for user {user.id}: {user_message[:50]}...")
+                return ChatResponse(reply=reply)
         
         # Check if user is asking for trade simulation
         trade_params = extract_trade_parameters(user_message)

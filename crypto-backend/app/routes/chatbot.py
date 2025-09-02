@@ -842,9 +842,8 @@ async def chatbot_endpoint(
                 logger.info(f"Position sizing completed for user {user.id}: {user_message[:50]}...")
                 return ChatResponse(reply=reply)
         
-        # Check if user is asking for onboarding help or is a new user
-        if (onboarding_status.get("is_new_user", True) or 
-            any(keyword in user_message.lower() for keyword in ['help me', 'guide me', 'mentor', 'onboarding', 'new to trading', 'first trade', 'start trading', 'begin trading', 'how to start'])):
+        # Check if user is asking for onboarding help (only for specific onboarding messages)
+        if any(keyword in user_message.lower() for keyword in ['help me', 'guide me', 'mentor', 'onboarding', 'new to trading', 'first trade', 'start trading', 'begin trading', 'how to start', 'i am new', 'beginner', 'getting started']):
             
             # Provide onboarding guidance
             reply = format_onboarding_response(onboarding_status, user_message)

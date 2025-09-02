@@ -37,51 +37,7 @@ const Wallet = () => {
     
     console.log('User authenticated, proceeding with wallet data fetch');
     fetchWalletData();
-    // Handle PhonePe redirect return
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const txnId = params.get('transactionId') || sessionStorage.getItem('mf_phonepe_txn');
-      const amountParam = params.get('amount') || sessionStorage.getItem('mf_phonepe_amount');
-      const pkgId = sessionStorage.getItem('mf_phonepe_pkg') || 'custom';
-      if (code && txnId) {
-        const token = localStorage.getItem('bitcoinpro_token');
-        if (token) {
-          fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment-phonepe`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              merchant_transaction_id: txnId,
-              amount: amountParam ? parseFloat(amountParam) : 0,
-              package_id: pkgId
-            })
-          }).then(async (res) => {
-            if (res.ok) {
-              const result = await res.json();
-              const gameUsdAmount = result.amount_added || 0;
-              setBalance(prev => prev + gameUsdAmount);
-              addNotification('success', 'Payment Successful', `Added $${gameUsdAmount.toLocaleString()} USD to your wallet`);
-              fetchWalletData(true);
-            } else {
-              const txt = await res.text();
-              addNotification('error', 'Verification Failed', txt);
-            }
-          }).finally(() => {
-            sessionStorage.removeItem('mf_phonepe_txn');
-            sessionStorage.removeItem('mf_phonepe_pkg');
-            sessionStorage.removeItem('mf_phonepe_amount');
-            const url = new URL(window.location.href);
-            url.search = '';
-            window.history.replaceState({}, '', url);
-          });
-        }
-      }
-    } catch (e) {
-      console.log('PhonePe return parse error', e);
-    }
+    loadRazorpay();
   }, [navigate]);
 
   // Add CSS for spinner animation
@@ -120,7 +76,19 @@ const Wallet = () => {
     };
   }, []);
 
-  const loadRazorpay = () => {};
+  const loadRazorpay = () => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => {
+      setRazorpayLoaded(true);
+      console.log('Razorpay loaded successfully');
+    };
+    script.onerror = () => {
+      console.error('Failed to load Razorpay');
+      setRazorpayLoaded(false);
+    };
+    document.body.appendChild(script);
+  };
 
   const fetchWalletData = async (isRefresh = false) => {
     if (isRefresh) {
@@ -262,7 +230,8 @@ const Wallet = () => {
     
     setProcessingTopUp(true);
     try {
-      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order-phonepe`, {
+      // Create Razorpay order
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,24 +245,70 @@ const Wallet = () => {
         throw new Error(`Failed to create order: ${errorText}`);
       }
 
-      const data = await orderResponse.json();
-      if (!data.redirect_url || !data.merchant_transaction_id) {
-        throw new Error('Invalid PhonePe response');
+      const orderData = await orderResponse.json();
+      if (!orderData.order_id) {
+        throw new Error('Invalid Razorpay order response');
       }
 
-      // Persist context for verification after redirect
-      sessionStorage.setItem('mf_phonepe_txn', data.merchant_transaction_id);
-      sessionStorage.setItem('mf_phonepe_pkg', 'custom');
-      sessionStorage.setItem('mf_phonepe_amount', String(amount));
-      window.location.href = data.redirect_url;
+      // Initialize Razorpay payment
+      if (!window.Razorpay) {
+        throw new Error('Razorpay not loaded. Please refresh the page and try again.');
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B',
+        amount: orderData.amount * 100, // Convert to paise
+        currency: 'INR',
+        name: 'MotionFalcon',
+        description: `Wallet Top-up - $${amount} USD`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          try {
+            // Verify payment with backend
+            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                amount: amount,
+                package_id: 'custom'
+              })
+            });
+
+            if (verifyResponse.ok) {
+              const result = await verifyResponse.json();
+              const gameUsdAmount = result.amount_added || 0;
+              setBalance(prev => prev + gameUsdAmount);
+              addNotification('success', 'Payment Successful', `Added $${gameUsdAmount.toLocaleString()} USD to your wallet`);
+              fetchWalletData(true);
+            } else {
+              const errorText = await verifyResponse.text();
+              addNotification('error', 'Verification Failed', errorText);
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            addNotification('error', 'Verification Failed', 'Failed to verify payment. Please contact support.');
+          }
+        },
+        prefill: {
+          name: 'User',
+          email: 'user@example.com'
+        },
+        theme: {
+          color: '#14b8a6'
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+      
     } catch (error) {
       console.error('Top-up error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        razorpayLoaded: false,
-        windowRazorpay: false
-      });
       addNotification('error', 'Payment Failed', `Failed to initiate payment: ${error.message}. Please try again.`);
     } finally {
       setProcessingTopUp(false);
@@ -644,7 +659,8 @@ const Wallet = () => {
 
     setProcessingTopUp(true);
     try {
-      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order-phonepe`, {
+      // Create Razorpay order
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/create-topup-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -661,16 +677,68 @@ const Wallet = () => {
         throw new Error(`Failed to create order: ${errorText}`);
       }
 
-      const data = await orderResponse.json();
-      if (!data.redirect_url || !data.merchant_transaction_id) {
-        throw new Error('Invalid PhonePe response');
+      const orderData = await orderResponse.json();
+      if (!orderData.order_id) {
+        throw new Error('Invalid Razorpay order response');
       }
 
-      // Persist context for verification after redirect
-      sessionStorage.setItem('mf_phonepe_txn', data.merchant_transaction_id);
-      sessionStorage.setItem('mf_phonepe_pkg', packageData.id);
-      sessionStorage.setItem('mf_phonepe_amount', String(packageData.checkoutPrice));
-      window.location.href = data.redirect_url;
+      // Initialize Razorpay payment
+      if (!window.Razorpay) {
+        throw new Error('Razorpay not loaded. Please refresh the page and try again.');
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B',
+        amount: orderData.amount * 100, // Convert to paise
+        currency: 'INR',
+        name: 'MotionFalcon',
+        description: `${packageData.name} Package - $${packageData.usdAmount.toLocaleString()} USD`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          try {
+            // Verify payment with backend
+            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/wallet/verify-topup-payment`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                amount: packageData.checkoutPrice,
+                package_id: packageData.id
+              })
+            });
+
+            if (verifyResponse.ok) {
+              const result = await verifyResponse.json();
+              const gameUsdAmount = result.amount_added || 0;
+              setBalance(prev => prev + gameUsdAmount);
+              addNotification('success', 'Payment Successful', `Added $${gameUsdAmount.toLocaleString()} USD to your wallet`);
+              fetchWalletData(true);
+            } else {
+              const errorText = await verifyResponse.text();
+              addNotification('error', 'Verification Failed', errorText);
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            addNotification('error', 'Verification Failed', 'Failed to verify payment. Please contact support.');
+          }
+        },
+        prefill: {
+          name: 'User',
+          email: 'user@example.com'
+        },
+        theme: {
+          color: '#14b8a6'
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+      
     } catch (error) {
       console.error('Package top-up error:', error);
       addNotification('error', 'Payment Failed', 'Failed to initiate payment. Please try again.');
@@ -1958,7 +2026,7 @@ const Wallet = () => {
                   border: 'none'
                 }}
               >
-                {processingTopUp ? 'Processing...' : 'Pay with PhonePe'}
+                {processingTopUp ? 'Processing...' : 'Pay with Razorpay'}
               </Button>
             </div>
             
@@ -2208,7 +2276,7 @@ const Wallet = () => {
                           Processing...
                         </div>
                       ) : (
-                        pkg.inrPrice === 0 ? 'Free Registration' : `Pay with PhonePe - ₹${pkg.checkoutPrice}`
+                        pkg.inrPrice === 0 ? 'Free Registration' : `Pay with Razorpay - ₹${pkg.checkoutPrice}`
                       )}
                     </Button>
                   </div>

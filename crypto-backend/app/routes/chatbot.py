@@ -745,10 +745,9 @@ async def call_openai_api(user_message: str, context: str):
             logger.warning("OpenAI API key not found, using fallback response")
             return "I'm here to help with your crypto trading questions! However, I'm currently unable to access advanced AI features. Please ask me about trading strategies, portfolio management, or platform navigation."
         
-        system_prompt = """You are a knowledgeable crypto trading assistant for BitcoinPro.in. 
-        Explain concepts clearly in simple language. Be helpful, accurate, and encouraging. 
-        Always remind users to do their own research and never invest more than they can afford to lose.
-        Use the provided context about their portfolio and market data to give personalized advice."""
+        system_prompt = """You are a concise crypto trading assistant for BitcoinPro.in. 
+        Keep responses short and actionable. When users want to buy crypto, guide them to the platform's trading features.
+        Be direct and helpful. Use portfolio context for personalized advice."""
         
         user_prompt = f"""Context: {context}
         
@@ -801,6 +800,71 @@ async def chatbot_endpoint(
         # Get user's onboarding status
         onboarding_status = await get_onboarding_status(user.id, db)
         
+        # Check if user wants to buy crypto - ACT AS TRADING AGENT
+        if any(keyword in user_message.lower() for keyword in ['buy', 'purchase', 'get bitcoin', 'get btc', 'buy bitcoin', 'buy btc', 'buy ethereum', 'buy eth', 'buy solana', 'buy sol']):
+            try:
+                # Extract amount from message (default to $100 if not specified)
+                amount_match = re.search(r'\$?(\d+(?:\.\d+)?)', user_message)
+                amount_usd = float(amount_match.group(1)) if amount_match else 100.0
+                
+                # Detect which cryptocurrency to buy
+                crypto_symbol = "BTC"  # Default to Bitcoin
+                crypto_name = "Bitcoin"
+                
+                if any(coin in user_message.lower() for coin in ['ethereum', 'eth']):
+                    crypto_symbol = "ETH"
+                    crypto_name = "Ethereum"
+                elif any(coin in user_message.lower() for coin in ['solana', 'sol']):
+                    crypto_symbol = "SOL"
+                    crypto_name = "Solana"
+                elif any(coin in user_message.lower() for coin in ['bitcoin', 'btc']):
+                    crypto_symbol = "BTC"
+                    crypto_name = "Bitcoin"
+                
+                # Get current crypto price
+                crypto_price = await price_service.get_price(crypto_symbol)
+                if not crypto_price:
+                    return ChatResponse(reply=f"❌ **Unable to get {crypto_name} price right now. Please try again later.**")
+                
+                # Calculate how much crypto user can buy
+                crypto_amount = amount_usd / float(crypto_price.price_usd)
+                
+                # Check user's wallet balance
+                user_wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
+                if not user_wallet or user_wallet.balance < amount_usd:
+                    return ChatResponse(reply=f"❌ **Insufficient balance!**\n\nYou need ${amount_usd:.2f} but only have ${user_wallet.balance if user_wallet else 0:.2f}.\n\n💡 **Top up your wallet first!**")
+                
+                # Execute the actual buy order
+                from app.routes.trade import create_trade
+                from app.schemas.trade import TradeCreate
+                
+                trade_data = TradeCreate(
+                    symbol=crypto_symbol,
+                    side="buy",
+                    amount=crypto_amount,
+                    price=float(crypto_price.price_usd)
+                )
+                
+                # Create the trade
+                new_trade = await create_trade(trade_data, user, db)
+                
+                if new_trade:
+                    reply = f"✅ **{crypto_name} Purchase Executed!**\n\n"
+                    reply += f"**Amount:** ${amount_usd:.2f}\n"
+                    reply += f"**{crypto_name} Received:** {crypto_amount:.8f} {crypto_symbol}\n"
+                    reply += f"**Price:** ${crypto_price.price_usd:,.2f}\n"
+                    reply += f"**24h Change:** {crypto_price.change_24h_percent:+.2f}%\n\n"
+                    reply += f"🎉 **Your {crypto_name} is now in your portfolio!**"
+                else:
+                    reply = f"❌ **Purchase failed!** Please try again or contact support."
+                
+                logger.info(f"{crypto_name} purchase executed for user {user.id}: ${amount_usd} -> {crypto_amount:.8f} {crypto_symbol}")
+                return ChatResponse(reply=reply)
+                
+            except Exception as e:
+                logger.error(f"Error executing crypto purchase: {e}")
+                return ChatResponse(reply=f"❌ **Purchase failed!** Error: {str(e)}")
+
         # Check if user is writing a journal entry/reflection
         if extract_journal_parameters(user_message):
             # Create journal entry

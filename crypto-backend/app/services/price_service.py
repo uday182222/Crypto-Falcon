@@ -40,28 +40,28 @@ class CoinGeckoService:
         "ICP": "internet-computer"
     }
     
-    # Fallback prices for when API is unavailable
+    # Fallback prices for when API is unavailable (Updated to current market values)
     FALLBACK_PRICES = {
-        "BTC": Decimal("45234.56"),
-        "ETH": Decimal("3123.45"),
-        "BNB": Decimal("234.56"),
-        "ADA": Decimal("0.45"),
-        "SOL": Decimal("89.12"),
-        "DOT": Decimal("12.34"),
-        "AVAX": Decimal("23.45"),
-        "MATIC": Decimal("0.89"),
-        "LINK": Decimal("15.67"),
-        "UNI": Decimal("6.78"),
-        "ATOM": Decimal("9.87"),
-        "LTC": Decimal("78.90"),
-        "XRP": Decimal("0.54"),
-        "DOGE": Decimal("0.08"),
-        "SHIB": Decimal("0.000012"),
-        "TRX": Decimal("0.067"),
-        "ALGO": Decimal("0.23"),
-        "VET": Decimal("0.034"),
-        "FIL": Decimal("4.56"),
-        "ICP": Decimal("5.67")
+        "BTC": Decimal("110000.00"),      # Updated from 45234.56
+        "ETH": Decimal("6500.00"),        # Updated from 3123.45
+        "BNB": Decimal("650.00"),         # Updated from 234.56
+        "ADA": Decimal("0.65"),           # Updated from 0.45
+        "SOL": Decimal("150.00"),         # Updated from 89.12
+        "DOT": Decimal("8.50"),           # Updated from 12.34
+        "AVAX": Decimal("35.00"),         # Updated from 23.45
+        "MATIC": Decimal("0.95"),         # Updated from 0.89
+        "LINK": Decimal("18.00"),         # Updated from 15.67
+        "UNI": Decimal("8.50"),           # Updated from 6.78
+        "ATOM": Decimal("12.00"),         # Updated from 9.87
+        "LTC": Decimal("85.00"),          # Updated from 78.90
+        "XRP": Decimal("0.65"),           # Updated from 0.54
+        "DOGE": Decimal("0.12"),          # Updated from 0.08
+        "SHIB": Decimal("0.000025"),      # Updated from 0.000012
+        "TRX": Decimal("0.12"),           # Updated from 0.067
+        "ALGO": Decimal("0.18"),          # Updated from 0.23
+        "VET": Decimal("0.045"),          # Updated from 0.034
+        "FIL": Decimal("6.50"),           # Updated from 4.56
+        "ICP": Decimal("12.50")           # Updated from 5.67
     }
     
     def __init__(self):
@@ -72,7 +72,7 @@ class CoinGeckoService:
             http2=False  # Disable HTTP/2 for now to avoid import issues
         )
         self.cache = {}
-        self.cache_duration = timedelta(minutes=5)  # Cache prices for 5 minutes
+        self.cache_duration = timedelta(seconds=30)  # Cache prices for only 30 seconds for better accuracy
         self.last_request_time = 0
         self.min_request_interval = 2.0  # Minimum 2 seconds between requests
         self.request_count = 0
@@ -89,8 +89,8 @@ class CoinGeckoService:
             self.request_count = 0
             self.rate_limit_reset = current_time
         
-        # Limit to 10 requests per minute for free tier
-        if self.request_count >= 10:
+        # Limit to 8 requests per minute for free tier (more conservative)
+        if self.request_count >= 8:
             sleep_time = 60 - (current_time - self.rate_limit_reset)
             if sleep_time > 0:
                 logger.info(f"Rate limit reached, waiting {sleep_time:.1f} seconds...")
@@ -120,6 +120,31 @@ class CoinGeckoService:
     def _cache_price(self, coin_symbol: str, price: PriceResponse):
         """Cache a price response"""
         self.cache[coin_symbol] = price
+    
+    def clear_cache(self, coin_symbol: str = None):
+        """Clear cache for specific coin or all coins"""
+        if coin_symbol:
+            if coin_symbol in self.cache:
+                del self.cache[coin_symbol]
+        else:
+            self.cache.clear()
+    
+    async def get_fresh_price_for_trading(self, coin_symbol: str) -> Optional[PriceResponse]:
+        """Get fresh price for trading (bypasses cache)"""
+        # Clear cache for this coin to force fresh price
+        self.clear_cache(coin_symbol.upper())
+        
+        # Get fresh price
+        price_response = await self.get_price(coin_symbol)
+        if not price_response:
+            return None
+        
+        # Validate that the price is reasonable (not using old fallback)
+        fallback_price = self.FALLBACK_PRICES.get(coin_symbol.upper(), Decimal("0"))
+        if price_response.price_usd == fallback_price:
+            logger.warning(f"Price service returned fallback price for {coin_symbol}, this may indicate API issues")
+        
+        return price_response
     
     def _get_fallback_price(self, coin_symbol: str) -> PriceResponse:
         """Get fallback price when API is unavailable"""

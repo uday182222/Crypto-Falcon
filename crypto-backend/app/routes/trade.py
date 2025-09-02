@@ -476,12 +476,24 @@ async def execute_trade(
             detail=f"Unsupported coin symbol: {coin_symbol}"
         )
     
-    # Get current price from CoinGecko
-    current_price = await get_crypto_price(coin_symbol)
-    if not current_price:
+    # Get FRESH current price from CoinGecko for trading (bypass cache)
+    from app.services.price_service import price_service
+    current_price_response = await price_service.get_fresh_price_for_trading(coin_symbol)
+    if not current_price_response:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Unable to fetch current price for {coin_symbol}"
+        )
+    
+    current_price = current_price_response.price_usd
+    price_timestamp = current_price_response.timestamp
+    
+    # Price slippage protection - check if price is too old
+    price_age_seconds = (datetime.utcnow() - price_timestamp).total_seconds()
+    if price_age_seconds > 60:  # Price older than 1 minute
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Price data is too old ({price_age_seconds:.0f} seconds). Please refresh and try again."
         )
     
     # Initialize services

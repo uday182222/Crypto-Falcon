@@ -200,7 +200,7 @@ const Achievements = () => {
       const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0QGV4YW1wbGUuY29tIiwidXNlcl9pZCI6MSwiZXhwIjoxNzM1NzQ0MDAwfQ.test-signature';
       
       // Set the test token in localStorage for API calls
-      localStorage.setItem('motionfalcon_token', testToken);
+              localStorage.setItem('bitcoinpro_token', testToken);
       
       // Fetch both available achievements and user progress
       const [achievementsResponse, statsResponse, userAchievementsResponse] = await Promise.all([

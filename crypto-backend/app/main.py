@@ -68,7 +68,7 @@ app.include_router(invoice.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to MotionFalcon Crypto Trading API", "status": "running", "timestamp": "2024-01-01T00:00:00Z"}
+    return {"message": "Welcome to BitcoinPro.in Crypto Trading API", "status": "running", "timestamp": "2024-01-01T00:00:00Z"}
 
 @app.get("/ping")
 def ping():

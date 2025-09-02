@@ -259,7 +259,7 @@ const Wallet = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B',
         amount: orderData.amount * 100, // Convert to paise
         currency: 'INR',
-        name: 'MotionFalcon',
+        name: 'BitcoinPro.in',
         description: `Wallet Top-up - $${amount} USD`,
         order_id: orderData.order_id,
         handler: async function (response) {
@@ -691,7 +691,7 @@ const Wallet = () => {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_rjWYPFN2F7k22B',
         amount: orderData.amount * 100, // Convert to paise
         currency: 'INR',
-        name: 'MotionFalcon',
+        name: 'BitcoinPro.in',
         description: `${packageData.name} Package - $${packageData.usdAmount.toLocaleString()} USD`,
         order_id: orderData.order_id,
         handler: async function (response) {

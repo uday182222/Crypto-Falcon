@@ -260,10 +260,10 @@ class InvoiceService:
         elements = []
         
         elements.append(Spacer(1, 20))
-        elements.append(Paragraph("Thank you for choosing MotionFalcon!", self.styles['NormalText']))
+        elements.append(Paragraph("Thank you for choosing BitcoinPro.in!", self.styles['NormalText']))
         elements.append(Spacer(1, 10))
         elements.append(Paragraph("This is a computer generated invoice.", self.styles['FooterText']))
-        elements.append(Paragraph("For any queries, contact us at support@motionfalcon.com", self.styles['FooterText']))
+        elements.append(Paragraph("For any queries, contact us at support@bitcoinpro.in", self.styles['FooterText']))
         
         return elements
     

@@ -42,13 +42,13 @@ def send_reset_email(email: str, reset_token: str):
         msg = MIMEMultipart()
         msg['From'] = smtp_username
         msg['To'] = email
-        msg['Subject'] = "MotionFalcon - Password Reset"
+        msg['Subject'] = "BitcoinPro.in - Password Reset"
         
         # Email body
         body = f"""
         Hello,
         
-        You have requested to reset your password for your MotionFalcon account.
+        You have requested to reset your password for your BitcoinPro.in account.
         
         Your password reset token is: {reset_token}
         
@@ -57,7 +57,7 @@ def send_reset_email(email: str, reset_token: str):
         If you didn't request this password reset, please ignore this email.
         
         Best regards,
-        MotionFalcon Team
+        BitcoinPro.in Team
         """
         
         msg.attach(MIMEText(body, 'plain'))

@@ -88,7 +88,7 @@ class PhonePeClient:
 
         # Optional metadata
         if package_id:
-            payload["deviceContext"] = {"provider": "MOTIONFALCON", "packageId": package_id}
+            payload["deviceContext"] = {"provider": "BITCOINPRO", "packageId": package_id}
 
         payload_str = json.dumps(payload, separators=(",", ":"))
         payload_b64 = base64.b64encode(payload_str.encode()).decode()

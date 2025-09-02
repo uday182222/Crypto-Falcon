@@ -22,7 +22,7 @@ def test_invoice_generation():
         "amount_paid": 1500.00,
         "payment_id": "pay_test123",
         "order_id": "order_test123",
-        "business_name": "MotionFalcon Pvt. Ltd.",
+        "business_name": "BitcoinPro.in",
         "business_address": "123 Tech Park, Hinjewadi, Pune, Maharashtra 411057, India",
         "gst_number": "27ABCDE1234F1Z5",
         "package_name": "Ramen Bubble Package",

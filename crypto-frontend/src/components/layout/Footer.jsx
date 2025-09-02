@@ -123,7 +123,7 @@ const Footer = () => {
           fontSize: '0.875rem',
           margin: 0
         }}>
-          © 2025 BitcoinPro is owned by MotionFalcon. All rights reserved. Trade smart, trade safe.
+          © 2025 BitcoinPro.in. All rights reserved. Trade smart, trade safe.
         </p>
         
         {/* Ownership */}

@@ -381,7 +381,7 @@ const PrivacyPolicy = () => {
                 contact us using the information provided above.
               </p>
               <p className="text-gray-300 text-lg font-semibold">
-                ©️ 2025 BitcoinPro is owned by MotionFalcon. All rights reserved. Trade smart, Trade safe.
+                ©️ 2025 BitcoinPro.in. All rights reserved. Trade smart, Trade safe.
               </p>
             </div>
           </div>

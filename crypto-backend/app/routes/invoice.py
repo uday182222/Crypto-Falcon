@@ -208,8 +208,8 @@ async def generate_invoice(
             "amount_paid": float(purchase.amount),
             "payment_id": payment_id,
             "order_id": order_id,
-            "business_name": "MotionFalcon Pvt. Ltd.",
-            "business_email": "support@motionfalcon.com",
+            "business_name": "BitcoinPro.in",
+            "business_email": "support@bitcoinpro.in",
             "gst_number": "27ABCDE1234F1Z5"
         }
         

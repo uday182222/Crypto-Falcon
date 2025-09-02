@@ -847,20 +847,31 @@ async def chatbot_endpoint(
                 if not user_wallet or user_wallet.balance < amount_usd:
                     return ChatResponse(reply=f"❌ **Insufficient balance!**\n\nYou need ${amount_usd:.2f} but only have ${user_wallet.balance if user_wallet else 0:.2f}.\n\n💡 **Top up your wallet first!**")
                 
-                # Execute the actual buy order
-                from app.routes.trade import execute_trade
-                from app.schemas.trade import TradeRequest, TradeType
+                # Execute the actual buy order by creating trade directly
+                from app.models.trade import Trade
                 from decimal import Decimal
+                from datetime import datetime
                 
-                # Create the trade request
-                trade_request = TradeRequest(
+                # Create the trade record directly
+                new_trade = Trade(
+                    user_id=user.id,
                     coin_symbol=crypto_symbol,
-                    trade_type=TradeType.buy,
-                    quantity=Decimal(str(crypto_amount))
+                    trade_type="buy",
+                    quantity=Decimal(str(crypto_amount)),
+                    price=Decimal(str(crypto_price.price_usd)),
+                    total_value=Decimal(str(amount_usd)),
+                    timestamp=datetime.utcnow()
                 )
                 
-                # Execute the trade
-                new_trade = await execute_trade(trade_request, user, db)
+                # Add to database
+                db.add(new_trade)
+                db.commit()
+                db.refresh(new_trade)
+                
+                # Update user's wallet balance
+                if user_wallet:
+                    user_wallet.balance -= Decimal(str(amount_usd))
+                    db.commit()
                 
                 if new_trade:
                     reply = f"✅ **{crypto_name} Purchase Executed!**\n\n"

@@ -332,13 +332,15 @@ export const dashboardAPI = {
     }
   },
 
-  // Get real-time crypto prices from backend (with backup API support)
+  // Get real-time crypto prices with smart fallback system
   getCryptoPrices: async () => {
+    // First try backend price service (with backup API support)
     try {
-      // Use backend price service which has backup API support
+      console.log('Attempting to fetch prices from backend...');
       const response = await api.get('/trade/prices');
       
       if (response && response.prices) {
+        console.log('✅ Backend prices fetched successfully');
         // Format the response to match frontend expectations
         const formattedPrices = response.prices.map(coin => ({
           symbol: coin.symbol,
@@ -364,10 +366,10 @@ export const dashboardAPI = {
         throw new Error('Invalid response format from backend');
       }
     } catch (error) {
-      console.error('Error fetching prices from backend:', error);
+      console.warn('⚠️ Backend price service failed:', error.message);
       
-      // Fallback to direct Binance API if backend fails
-      console.log('Falling back to direct Binance API...');
+      // Fallback to direct Binance API
+      console.log('🔄 Falling back to direct Binance API...');
       try {
         const symbols = [
           'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'SOLUSDT', 
@@ -401,6 +403,7 @@ export const dashboardAPI = {
         const results = await Promise.all(pricePromises);
         const validResults = results.filter(result => result !== null);
 
+        console.log(`✅ Binance fallback successful: ${validResults.length} prices fetched`);
         return { 
           success: true, 
           data: { 
@@ -410,7 +413,7 @@ export const dashboardAPI = {
           } 
         };
       } catch (fallbackError) {
-        console.error('Fallback API also failed:', fallbackError);
+        console.error('❌ All price sources failed:', fallbackError);
         return { success: false, error: 'All price sources failed' };
       }
     }

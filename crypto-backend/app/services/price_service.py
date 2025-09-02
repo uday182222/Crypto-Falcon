@@ -12,9 +12,66 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class CoinGeckoService:
-    """Service for fetching real-time crypto prices from CoinGecko API with rate limiting and caching"""
+    """Service for fetching real-time crypto prices from multiple sources with intelligent fallback"""
     
-    BASE_URL = "https://api.coingecko.com/api/v3"
+    # Primary API (CoinGecko)
+    COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
+    
+    # Backup APIs (free tiers)
+    BACKUP_APIS = {
+        "binance": {
+            "base_url": "https://api.binance.com/api/v3",
+            "endpoint": "/ticker/price",
+            "symbol_mapping": {
+                "BTC": "BTCUSDT",
+                "ETH": "ETHUSDT",
+                "BNB": "BNBUSDT",
+                "ADA": "ADAUSDT",
+                "SOL": "SOLUSDT",
+                "DOT": "DOTUSDT",
+                "AVAX": "AVAXUSDT",
+                "MATIC": "MATICUSDT",
+                "LINK": "LINKUSDT",
+                "UNI": "UNIUSDT",
+                "ATOM": "ATOMUSDT",
+                "LTC": "LTCUSDT",
+                "XRP": "XRPUSDT",
+                "DOGE": "DOGEUSDT",
+                "SHIB": "SHIBUSDT",
+                "TRX": "TRXUSDT",
+                "ALGO": "ALGOUSDT",
+                "VET": "VETUSDT",
+                "FIL": "FILUSDT",
+                "ICP": "ICPUSDT"
+            }
+        },
+        "coinbase": {
+            "base_url": "https://api.coinbase.com/v2",
+            "endpoint": "/prices",
+            "symbol_mapping": {
+                "BTC": "BTC-USD",
+                "ETH": "ETH-USD",
+                "BNB": "BNB-USD",
+                "ADA": "ADA-USD",
+                "SOL": "SOL-USD",
+                "DOT": "DOT-USD",
+                "AVAX": "AVAX-USD",
+                "MATIC": "MATIC-USD",
+                "LINK": "LINK-USD",
+                "UNI": "UNI-USD",
+                "ATOM": "ATOM-USD",
+                "LTC": "LTC-USD",
+                "XRP": "XRP-USD",
+                "DOGE": "DOGE-USD",
+                "SHIB": "SHIB-USD",
+                "TRX": "TRXUSDT",
+                "ALGO": "ALGO-USD",
+                "VET": "VET-USD",
+                "FIL": "FIL-USD",
+                "ICP": "ICP-USD"
+            }
+        }
+    }
     
     # Mapping of common symbols to CoinGecko IDs
     COIN_ID_MAP = {
@@ -109,15 +166,21 @@ class CoinGeckoService:
             self.cache.clear()
     
     async def get_fresh_price_for_trading(self, coin_symbol: str) -> Optional[PriceResponse]:
-        """Get fresh price for trading (bypasses cache)"""
+        """Get fresh price for trading (bypasses cache) with backup API support"""
         # Clear cache for this coin to force fresh price
         self.clear_cache(coin_symbol.upper())
         
-        # Get fresh price from API
+        # Get fresh price from primary API (CoinGecko) with backup fallback
         price_response = await self.get_price(coin_symbol)
         if not price_response:
-            logger.error(f"Failed to get fresh price for {coin_symbol} - API must be working for trading")
+            logger.error(f"Failed to get fresh price for {coin_symbol} from all APIs - trading not possible")
             return None
+        
+        # Log which API was used
+        if hasattr(price_response, 'source_api'):
+            logger.info(f"Trading price for {coin_symbol} from {price_response.source_api}")
+        else:
+            logger.info(f"Trading price for {coin_symbol} from primary API")
         
         return price_response
     
@@ -139,7 +202,7 @@ class CoinGeckoService:
                     self.consecutive_failures = 0  # Reset failure counter on success
                     return response.json()
                 elif response.status_code == 429:
-                    logger.warning("Rate limited by API, using fallback data")
+                    logger.warning("Rate limited by API, will try backup APIs")
                     return None
                 else:
                     logger.warning(f"API returned status {response.status_code}")
@@ -159,6 +222,62 @@ class CoinGeckoService:
                 wait_time = 2 ** attempt
                 logger.info(f"Waiting {wait_time} seconds before retry...")
                 await asyncio.sleep(wait_time)
+        
+        return None
+    
+    async def _try_backup_api(self, coin_symbol: str, api_name: str) -> Optional[PriceResponse]:
+        """Try to get price from backup API"""
+        try:
+            api_config = self.BACKUP_APIS.get(api_name)
+            if not api_config:
+                return None
+            
+            symbol_mapping = api_config.get("symbol_mapping", {})
+            mapped_symbol = symbol_mapping.get(coin_symbol.upper())
+            if not mapped_symbol:
+                return None
+            
+            url = f"{api_config['base_url']}{api_config['endpoint']}"
+            
+            if api_name == "binance":
+                # Binance API format
+                params = {"symbol": mapped_symbol}
+            elif api_name == "coinbase":
+                # Coinbase API format
+                params = {"base": mapped_symbol.split('-')[0], "currency": "USD"}
+            else:
+                return None
+            
+            logger.info(f"Trying backup API {api_name} for {coin_symbol}")
+            response = await self.client.get(url, params=params)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract price based on API response format
+                if api_name == "binance":
+                    price_usd = Decimal(str(data.get("price", 0)))
+                elif api_name == "coinbase":
+                    price_data = data.get("data", {})
+                    price_usd = Decimal(str(price_data.get("amount", 0)))
+                else:
+                    return None
+                
+                if price_usd > 0:
+                    logger.info(f"Successfully got price from {api_name}: {coin_symbol} = ${price_usd}")
+                    price_response = PriceResponse(
+                        coin_symbol=coin_symbol.upper(),
+                        price_usd=price_usd,
+                        price_change_24h=Decimal("0"),  # Backup APIs may not provide 24h change
+                        price_change_percentage_24h=Decimal("0"),
+                        timestamp=datetime.utcnow()
+                    )
+                    # Add source tracking
+                    price_response.source_api = api_name
+                    return price_response
+            
+        except Exception as e:
+            logger.error(f"Error with backup API {api_name}: {e}")
         
         return None
     
@@ -203,7 +322,18 @@ class CoinGeckoService:
                 logger.info(f"Successfully fetched price for {coin_symbol}: ${price_usd}")
                 return price_response
             else:
-                logger.warning(f"Failed to fetch price for {coin_symbol} from API")
+                logger.warning(f"CoinGecko API failed for {coin_symbol}, trying backup APIs...")
+                
+                # Try backup APIs in order of preference
+                backup_apis = ["binance", "coinbase"]
+                for backup_api in backup_apis:
+                    backup_price = await self._try_backup_api(coin_symbol, backup_api)
+                    if backup_price:
+                        self._cache_price(coin_symbol, backup_price)
+                        logger.info(f"Successfully got price from backup API {backup_api}: {coin_symbol} = ${backup_price.price_usd}")
+                        return backup_price
+                
+                logger.error(f"All APIs failed for {coin_symbol}")
                 return None
                 
         except Exception as e:
@@ -313,6 +443,26 @@ class CoinGeckoService:
     async def close(self):
         """Close the HTTP client"""
         await self.client.aclose()
+    
+    async def get_api_status(self) -> dict:
+        """Get status of all API providers"""
+        status = {
+            "primary_api": "CoinGecko",
+            "backup_apis": list(self.BACKUP_APIS.keys()),
+            "cache_duration_seconds": self.cache_duration.total_seconds(),
+            "rate_limit_requests_per_minute": 8,
+            "consecutive_failures": self.consecutive_failures,
+            "cache_size": len(self.cache)
+        }
+        
+        # Test primary API
+        try:
+            test_price = await self.get_price("BTC")
+            status["primary_api_status"] = "working" if test_price else "failed"
+        except Exception as e:
+            status["primary_api_status"] = f"error: {str(e)}"
+        
+        return status
 
 # Global price service instance
 price_service = CoinGeckoService()

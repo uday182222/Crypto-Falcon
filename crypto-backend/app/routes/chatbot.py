@@ -835,7 +835,7 @@ async def chatbot_endpoint(
                         'price_usd': fallback_price,
                         'change_24h_percent': 0.0
                     })()
-                    logger.warning(f"Using fallback price for {crypto_symbol}: ${fallback_price}")
+                    logger.warning(f"Using fallback price for {crypto_symbol}: ${fallback_price} (API failed)")
                 
                 # Calculate how much crypto user can buy
                 crypto_amount = amount_usd / float(crypto_price.price_usd)

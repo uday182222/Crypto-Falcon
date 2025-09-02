@@ -4,7 +4,7 @@ import subprocess
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.routes import auth, trade, leaderboard, achievement, purchase, currency, wallet, invoice
+from app.routes import auth, trade, leaderboard, achievement, purchase, currency, wallet, invoice, chatbot
 
 # Suppress deprecation warnings for production
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pkg_resources")
@@ -56,6 +56,11 @@ async def achievements_options():
     """Handle preflight CORS request for achievements"""
     return {"message": "Achievements CORS preflight OK"}
 
+@app.options("/api/chatbot")
+async def chatbot_options():
+    """Handle preflight CORS request for chatbot"""
+    return {"message": "Chatbot CORS preflight OK"}
+
 # Include routers
 app.include_router(auth.router)
 app.include_router(trade.router)
@@ -65,6 +70,7 @@ app.include_router(purchase.router)
 app.include_router(currency.router)
 app.include_router(wallet.router)
 app.include_router(invoice.router)
+app.include_router(chatbot.router)
 
 @app.get("/")
 def read_root():

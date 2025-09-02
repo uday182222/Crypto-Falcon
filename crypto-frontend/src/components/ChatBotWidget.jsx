@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 
+// Get API base URL from environment
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://motionfalcon-backend.onrender.com';
+
 const ChatBotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -40,61 +43,53 @@ const ChatBotWidget = () => {
       text: inputText.trim()
     };
 
+    // Add user message immediately
     setMessages(prev => [...prev, userMessage]);
+    const messageText = inputText.trim();
     setInputText('');
     setIsTyping(true);
 
-    // Simulate bot response (you can replace this with actual API call)
-    setTimeout(() => {
-      const botResponse = generateBotResponse(inputText.trim());
+    try {
+      // Make API call to chatbot endpoint
+      const response = await fetch(`${API_BASE_URL}/api/chatbot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: messageText })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Add bot response
       const botMessage = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: botResponse
+        text: data.response || data.message || 'Sorry, I couldn\'t process your request.'
       };
+      
       setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Chatbot API error:', error);
+      
+      // Add error message
+      const errorMessage = {
+        id: Date.now() + 1,
+        sender: 'bot',
+        text: 'Connection issue, try again. I\'m having trouble connecting to the server right now.'
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000); // Random delay between 1-2 seconds
+    }
   };
 
-  const generateBotResponse = (userInput) => {
-    const input = userInput.toLowerCase();
-    
-    // Trading-related responses
-    if (input.includes('bitcoin') || input.includes('btc')) {
-      return 'Bitcoin is currently the most popular cryptocurrency. Would you like to know about its current price or trading strategies?';
-    }
-    
-    if (input.includes('price') || input.includes('cost')) {
-      return 'I can help you check current cryptocurrency prices. Which coin are you interested in? You can also check the live market data on your dashboard.';
-    }
-    
-    if (input.includes('buy') || input.includes('sell')) {
-      return 'For buying or selling cryptocurrencies, you can use the Trading page. Remember to always do your own research before making any trades!';
-    }
-    
-    if (input.includes('portfolio') || input.includes('balance')) {
-      return 'You can view your portfolio and balance on the Portfolio and Dashboard pages. These show your current holdings and performance.';
-    }
-    
-    if (input.includes('help') || input.includes('how')) {
-      return 'I can help you with:\n• Checking cryptocurrency prices\n• Understanding trading basics\n• Navigating the platform\n• Portfolio management\n\nWhat would you like to know more about?';
-    }
-    
-    if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
-      return 'Hello! Welcome to BitcoinPro.in! I\'m here to help you with your crypto trading journey. What can I assist you with today?';
-    }
-    
-    // Default responses
-    const defaultResponses = [
-      'That\'s an interesting question! I\'m here to help with crypto trading topics. Could you be more specific?',
-      'I\'d be happy to help! Could you tell me more about what you\'re looking for?',
-      'Great question! For detailed information, you might want to check the relevant sections of the platform.',
-      'I understand you\'re asking about that. Let me know if you need help with trading, prices, or portfolio management!'
-    ];
-    
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-  };
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {

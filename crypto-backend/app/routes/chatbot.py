@@ -73,7 +73,7 @@ async def fetch_user_portfolio_data(user_id: int, db: Session):
         balance = float(wallet.balance) if wallet else 0.0
         
         # Get user's trades
-        trades = db.query(Trade).filter(Trade.user_id == user_id).order_by(Trade.created_at.desc()).limit(10).all()
+        trades = db.query(Trade).filter(Trade.user_id == user_id).order_by(Trade.timestamp.desc()).limit(10).all()
         
         # Calculate portfolio holdings
         holdings = {}
@@ -91,19 +91,49 @@ async def fetch_user_portfolio_data(user_id: int, db: Session):
                     holdings[symbol]["total_cost"] -= cost_reduction
                 holdings[symbol]["quantity"] -= float(trade.quantity)
         
-        # Filter positive holdings
-        positive_holdings = {k: v for k, v in holdings.items() if v["quantity"] > 0}
+        # Filter positive holdings and add current prices
+        positive_holdings = {}
+        for symbol, data in holdings.items():
+            if data["quantity"] > 0:
+                # Try to get current price for this symbol
+                try:
+                    from app.services.price_service import CoinGeckoService
+                    price_service = CoinGeckoService()
+                    current_price_data = await price_service.get_price(symbol)
+                    if current_price_data:
+                        data["current_price"] = float(current_price_data.price_usd)
+                        data["price_change_24h"] = float(current_price_data.change_24h_percent)
+                    else:
+                        data["current_price"] = 0.0
+                        data["price_change_24h"] = 0.0
+                except Exception as e:
+                    logger.error(f"Error fetching current price for {symbol}: {e}")
+                    data["current_price"] = 0.0
+                    data["price_change_24h"] = 0.0
+                
+                positive_holdings[symbol] = data
         
-        # Format recent trades
+        # Format recent trades with profit/loss calculation
         recent_trades = []
         for trade in trades[:5]:  # Last 5 trades
-            recent_trades.append({
+            trade_data = {
                 "type": trade.trade_type.value,
                 "coin": trade.coin_symbol,
                 "quantity": float(trade.quantity),
                 "price": float(trade.price_at_trade),
-                "date": trade.created_at.isoformat() if trade.created_at else "Unknown"
-            })
+                "date": trade.timestamp.isoformat() if trade.timestamp else "Unknown"
+            }
+            
+            # Calculate profit/loss if we have current price
+            if trade.coin_symbol in positive_holdings:
+                current_price = positive_holdings[trade.coin_symbol].get("current_price", 0)
+                if current_price > 0:
+                    if trade.trade_type.value == "buy":
+                        trade_data["profit_loss"] = (current_price - float(trade.price_at_trade)) * float(trade.quantity)
+                    else:  # sell
+                        trade_data["profit_loss"] = (float(trade.price_at_trade) - current_price) * float(trade.quantity)
+            
+            recent_trades.append(trade_data)
         
         return {
             "balance": balance,

@@ -15,6 +15,7 @@ const ChatBotWidget = () => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -48,10 +49,11 @@ const ChatBotWidget = () => {
     const messageText = inputText.trim();
     setInputText('');
     setIsTyping(true);
+    setIsLoading(true);
 
     try {
       // Make API call to chatbot endpoint
-      const response = await fetch(`${API_BASE_URL}/chatbot`, {
+      const response = await fetch(`${API_BASE_URL}/api/chatbot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,6 +89,7 @@ const ChatBotWidget = () => {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
+      setIsLoading(false);
     }
   };
 
@@ -228,14 +231,18 @@ const ChatBotWidget = () => {
               />
               <button
                 onClick={handleSendMessage}
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || isLoading}
                 className="w-10 h-10 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: 'linear-gradient(135deg, #9568FF 0%, #7135ff 100%)',
                   boxShadow: '0 2px 8px rgba(149, 104, 255, 0.3)'
                 }}
               >
-                <Send size={16} />
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Send size={16} />
+                )}
               </button>
             </div>
           </div>

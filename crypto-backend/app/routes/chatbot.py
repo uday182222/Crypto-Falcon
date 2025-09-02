@@ -191,7 +191,7 @@ async def call_openai_api(user_message: str, context: str):
         logger.error(f"Error calling OpenAI API: {e}")
         return "I'm experiencing technical difficulties. Please try again later or contact support if the issue persists."
 
-@router.post("/chatbot", response_model=ChatResponse)
+@router.post("/api/chatbot", response_model=ChatResponse)
 async def chatbot_endpoint(
     message_data: ChatMessage,
     user: User = Depends(get_current_user),

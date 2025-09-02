@@ -56,7 +56,7 @@ async def achievements_options():
     """Handle preflight CORS request for achievements"""
     return {"message": "Achievements CORS preflight OK"}
 
-@app.options("/chatbot")
+@app.options("/api/chatbot")
 async def chatbot_options():
     """Handle preflight CORS request for chatbot"""
     return {"message": "Chatbot CORS preflight OK"}

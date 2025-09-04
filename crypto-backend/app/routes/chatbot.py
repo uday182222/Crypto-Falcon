@@ -900,12 +900,60 @@ def format_coaching_analysis(analysis: Dict[str, Any]) -> str:
                 coaching_content.append(f"• **Risk Level:** High - Most of your funds are invested")
                 coaching_content.append(f"• **Learning opportunity:** Understand the importance of cash reserves")
         
-        # Personalized Learning Recommendations
-        learning_opportunities = holdings_analysis.get("learning_opportunities", [])
-        if learning_opportunities:
-            coaching_content.append(f"\n🎯 **Personalized Learning Path:**")
-            for i, opportunity in enumerate(learning_opportunities[:5], 1):  # Limit to top 5
-                coaching_content.append(f"{i}. **{opportunity}**")
+        # Personalized Profit-Focused Learning Path
+        coaching_content.append(f"\n🎯 **Profit-Boosting Learning Path:**")
+        
+        # Generate profit-focused recommendations based on user's situation
+        profit_recommendations = []
+        
+        if balance > 0 and holdings:
+            # User has both balance and holdings - focus on optimization
+            profit_recommendations.extend([
+                "**Diversification Strategy** - Spread risk across 3-5 quality assets",
+                "**Position Sizing** - Never risk more than 2-5% per trade",
+                "**Take Profit Levels** - Set 2:1 or 3:1 risk-reward ratios",
+                "**Portfolio Rebalancing** - Trim winners, add to losers monthly",
+                "**Market Timing** - Learn to identify high-probability entry points"
+            ])
+        elif balance > 0 and not holdings:
+            # User has balance but no holdings - focus on first profitable moves
+            profit_recommendations.extend([
+                "**Dollar-Cost Averaging** - Invest fixed amounts weekly/monthly",
+                "**Blue-Chip Strategy** - Start with BTC/ETH for stability",
+                "**Risk Management** - Never invest more than you can afford to lose",
+                "**Market Research** - Learn fundamental analysis for better picks",
+                "**Entry Timing** - Buy dips, not peaks - patience pays"
+            ])
+        else:
+            # User has no balance - focus on learning before investing
+            profit_recommendations.extend([
+                "**Paper Trading** - Practice with virtual money first",
+                "**Market Education** - Learn crypto fundamentals and trends",
+                "**Risk Psychology** - Understand your risk tolerance",
+                "**Strategy Development** - Create your personal trading plan",
+                "**Capital Building** - Start with small, consistent amounts"
+            ])
+        
+        # Add specific recommendations based on trading level
+        if coaching_level == "beginner":
+            profit_recommendations.extend([
+                "**Start Small** - Begin with $100-500 positions",
+                "**Learn Stop Losses** - Protect capital with 5-10% stops"
+            ])
+        elif coaching_level == "intermediate":
+            profit_recommendations.extend([
+                "**Advanced Analysis** - Learn technical indicators (RSI, MACD)",
+                "**Portfolio Optimization** - Rebalance monthly for better returns"
+            ])
+        else:
+            profit_recommendations.extend([
+                "**Options & Derivatives** - Explore advanced profit strategies",
+                "**Algorithmic Trading** - Automate profitable patterns"
+            ])
+        
+        # Display top 5 most relevant recommendations
+        for i, recommendation in enumerate(profit_recommendations[:5], 1):
+            coaching_content.append(f"{i}. {recommendation}")
         
         # Coaching Level Specific Advice
         coaching_content.append(f"\n🌟 **Your Coaching Level: {coaching_level.title()}**")
@@ -923,21 +971,30 @@ def format_coaching_analysis(analysis: Dict[str, Any]) -> str:
             coaching_content.append(f"• **Next steps:** Explore new opportunities and fine-tune your system")
             coaching_content.append(f"• **Key concept:** Continuous learning and adaptation")
         
-        # Action Items
-        coaching_content.append(f"\n📝 **Your Action Items:**")
+        # Profit-Focused Action Items
+        coaching_content.append(f"\n📝 **Your Profit Action Plan:**")
         
-        if balance > 0 and not holdings:
-            coaching_content.append(f"1. **Research** different cryptocurrencies")
-            coaching_content.append(f"2. **Start small** with your first investment")
-            coaching_content.append(f"3. **Learn** about risk management")
-        elif holdings:
-            coaching_content.append(f"1. **Monitor** your current holdings")
-            coaching_content.append(f"2. **Learn** about portfolio optimization")
-            coaching_content.append(f"3. **Consider** diversification if needed")
+        if balance > 0 and holdings:
+            # User has both balance and holdings - focus on optimization
+            coaching_content.append(f"1. **Set Take Profit Targets** - Lock in gains at 20-50% profits")
+            coaching_content.append(f"2. **Diversify Holdings** - Add 2-3 more quality assets to reduce risk")
+            coaching_content.append(f"3. **Implement Stop Losses** - Protect capital with 5-10% stops")
+            coaching_content.append(f"4. **Rebalance Monthly** - Trim winners, add to underperformers")
+            coaching_content.append(f"5. **Track Performance** - Monitor which strategies work best")
+        elif balance > 0 and not holdings:
+            # User has balance but no holdings - focus on first profitable moves
+            coaching_content.append(f"1. **Start with Blue Chips** - Buy BTC/ETH for stability and growth")
+            coaching_content.append(f"2. **Use Dollar-Cost Averaging** - Invest $500-1000 monthly")
+            coaching_content.append(f"3. **Set Entry Rules** - Only buy on 5-10% dips from recent highs")
+            coaching_content.append(f"4. **Learn Technical Analysis** - Identify better entry/exit points")
+            coaching_content.append(f"5. **Start Small** - Begin with $200-500 positions to learn")
         else:
-            coaching_content.append(f"1. **Top up** your wallet to start trading")
-            coaching_content.append(f"2. **Learn** about different cryptocurrencies")
-            coaching_content.append(f"3. **Understand** basic trading concepts")
+            # User has no balance - focus on learning before investing
+            coaching_content.append(f"1. **Paper Trade First** - Practice with virtual money for 1 month")
+            coaching_content.append(f"2. **Study Market Cycles** - Learn when to buy/sell for maximum profit")
+            coaching_content.append(f"3. **Build Capital** - Start with $100-200 monthly deposits")
+            coaching_content.append(f"4. **Learn Risk Management** - Never risk more than 2% per trade")
+            coaching_content.append(f"5. **Create Trading Plan** - Define your profit targets and risk limits")
         
         coaching_content.append(f"\n💡 **Remember:** Trading is a learning journey. Every trade teaches you something new!")
         

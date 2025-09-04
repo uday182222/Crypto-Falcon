@@ -1092,13 +1092,13 @@ async def call_openai_api(user_message: str, context: str):
                     "Content-Type": "application/json"
                 },
                 json={
-                    "model": "gpt-3.5-turbo",
+                    "model": "gpt-4",
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
-                    "max_tokens": 150,
-                    "temperature": 0.3,
+                    "max_tokens": 500,
+                    "temperature": 0.7,
                     "stream": False
                 },
                 timeout=10.0

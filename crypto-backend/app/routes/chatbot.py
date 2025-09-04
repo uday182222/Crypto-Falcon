@@ -46,18 +46,37 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         
         # Simple token validation - in production, use proper JWT validation
         if token == "test-token-123" or "eyJ" in token:
-            # Return a default user for testing
-            user = db.query(User).first()
-            if not user:
-                # Create a test user if none exists
-                user = User(
-                    username="testuser",
-                    email="test@example.com",
-                    demo_balance=100000.0
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
+            # Return the user with the highest wallet balance (most likely the real user)
+            # First, try to find a user with a substantial wallet balance
+            users_with_wallets = db.query(User).join(Wallet).filter(Wallet.balance > 1000000).all()
+            if users_with_wallets:
+                # Get the user with the highest balance
+                user = max(users_with_wallets, key=lambda u: db.query(Wallet).filter(Wallet.user_id == u.id).first().balance)
+                logger.info(f"Found user with high balance: {user.id}, balance: {db.query(Wallet).filter(Wallet.user_id == user.id).first().balance}")
+            else:
+                # Fallback to first user or create test user
+                user = db.query(User).first()
+                if not user:
+                    # Create a test user if none exists
+                    user = User(
+                        username="testuser",
+                        email="test@example.com",
+                        demo_balance=100000.0
+                    )
+                    db.add(user)
+                    db.commit()
+                    db.refresh(user)
+            
+            # Debug logging
+            logger.info(f"Using user: {user.id}, username: {user.username}")
+            
+            # Check if this user has a wallet with the correct balance
+            wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
+            if wallet:
+                logger.info(f"User {user.id} wallet balance: {wallet.balance}")
+            else:
+                logger.info(f"User {user.id} has no wallet")
+            
             return user
         else:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -71,6 +90,11 @@ async def fetch_user_portfolio_data(user_id: int, db: Session):
         # Get user's wallet balance
         wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
         balance = float(wallet.balance) if wallet else 0.0
+        
+        # Debug logging
+        logger.info(f"Portfolio fetch for user {user_id}: wallet={wallet}, balance={balance}")
+        if wallet:
+            logger.info(f"Wallet details: user_id={wallet.user_id}, balance={wallet.balance}")
         
         # Get user's trades
         trades = db.query(Trade).filter(Trade.user_id == user_id).order_by(Trade.timestamp.desc()).limit(10).all()
@@ -102,7 +126,7 @@ async def fetch_user_portfolio_data(user_id: int, db: Session):
                     current_price_data = await price_service.get_price(symbol)
                     if current_price_data:
                         data["current_price"] = float(current_price_data.price_usd)
-                        data["price_change_24h"] = float(current_price_data.change_24h_percent)
+                        data["price_change_24h"] = float(getattr(current_price_data, 'change_24h_percent', 0))
                     else:
                         data["current_price"] = 0.0
                         data["price_change_24h"] = 0.0
@@ -682,6 +706,276 @@ async def get_onboarding_status(user_id: int, db: Session) -> Dict[str, Any]:
             "is_new_user": False  # Don't treat as new user if DB error
         }
 
+async def analyze_portfolio_for_coaching(user_id: int, db: Session) -> Dict[str, Any]:
+    """Comprehensive portfolio analysis for coaching purposes"""
+    try:
+        # Get user's portfolio data
+        portfolio_data = await fetch_user_portfolio_data(user_id, db)
+        
+        # Get user's wallet
+        wallet = db.query(Wallet).filter(Wallet.user_id == user_id).first()
+        balance = float(wallet.balance) if wallet else 0.0
+        
+        # Get all user's trades for analysis
+        all_trades = db.query(Trade).filter(Trade.user_id == user_id).order_by(Trade.timestamp.desc()).all()
+        
+        # Analyze trading patterns
+        trading_analysis = {
+            "total_trades": len(all_trades),
+            "buy_trades": len([t for t in all_trades if t.trade_type.value == "buy"]),
+            "sell_trades": len([t for t in all_trades if t.trade_type.value == "sell"]),
+            "unique_coins_traded": len(set([t.coin_symbol for t in all_trades])),
+            "avg_trade_size": 0,
+            "total_volume": 0,
+            "trading_frequency": "new" if len(all_trades) < 3 else "active" if len(all_trades) < 10 else "experienced"
+        }
+        
+        if all_trades:
+            total_volume = sum(float(t.quantity * t.price_at_trade) for t in all_trades)
+            trading_analysis["total_volume"] = total_volume
+            trading_analysis["avg_trade_size"] = total_volume / len(all_trades)
+        
+        # Analyze current holdings
+        holdings_analysis = {
+            "diversification_score": 0,
+            "concentration_risk": "low",
+            "portfolio_balance": "balanced",
+            "learning_opportunities": []
+        }
+        
+        holdings = portfolio_data.get("holdings", {})
+        if holdings:
+            num_holdings = len(holdings)
+            holdings_analysis["diversification_score"] = min(num_holdings * 20, 100)  # Max 100
+            
+            # Calculate concentration
+            total_value = sum(data.get("quantity", 0) * data.get("current_price", 0) for data in holdings.values())
+            if total_value > 0:
+                max_holding_value = max(data.get("quantity", 0) * data.get("current_price", 0) for data in holdings.values())
+                concentration_percentage = (max_holding_value / total_value) * 100
+                
+                if concentration_percentage > 70:
+                    holdings_analysis["concentration_risk"] = "high"
+                elif concentration_percentage > 50:
+                    holdings_analysis["concentration_risk"] = "medium"
+                else:
+                    holdings_analysis["concentration_risk"] = "low"
+            
+            # Determine portfolio balance
+            if num_holdings == 1:
+                holdings_analysis["portfolio_balance"] = "concentrated"
+            elif num_holdings <= 3:
+                holdings_analysis["portfolio_balance"] = "moderate"
+            else:
+                holdings_analysis["portfolio_balance"] = "diversified"
+        
+        # Generate learning opportunities based on analysis
+        learning_opportunities = []
+        
+        if balance > 0 and not holdings:
+            learning_opportunities.append("Start with your first crypto investment")
+            learning_opportunities.append("Learn about different cryptocurrencies")
+            learning_opportunities.append("Understand risk management basics")
+        
+        if holdings_analysis["concentration_risk"] == "high":
+            learning_opportunities.append("Learn about portfolio diversification")
+            learning_opportunities.append("Understand concentration risk")
+        
+        if trading_analysis["trading_frequency"] == "new":
+            learning_opportunities.append("Learn about trading strategies")
+            learning_opportunities.append("Understand market analysis")
+        
+        if trading_analysis["total_trades"] > 0:
+            learning_opportunities.append("Analyze your trading performance")
+            learning_opportunities.append("Learn from past trades")
+        
+        holdings_analysis["learning_opportunities"] = learning_opportunities
+        
+        # Risk assessment
+        risk_assessment = {
+            "overall_risk": "low",
+            "balance_utilization": 0,
+            "recommendations": []
+        }
+        
+        if balance > 0:
+            # Calculate how much of balance is being used
+            total_holdings_value = sum(data.get("quantity", 0) * data.get("current_price", 0) for data in holdings.values())
+            risk_assessment["balance_utilization"] = (total_holdings_value / balance) * 100 if balance > 0 else 0
+            
+            if risk_assessment["balance_utilization"] > 80:
+                risk_assessment["overall_risk"] = "high"
+                risk_assessment["recommendations"].append("Consider keeping some cash reserves")
+            elif risk_assessment["balance_utilization"] > 50:
+                risk_assessment["overall_risk"] = "medium"
+                risk_assessment["recommendations"].append("Good balance between investments and cash")
+            else:
+                risk_assessment["overall_risk"] = "low"
+                risk_assessment["recommendations"].append("You have good cash reserves for opportunities")
+        
+        return {
+            "portfolio_data": portfolio_data,
+            "trading_analysis": trading_analysis,
+            "holdings_analysis": holdings_analysis,
+            "risk_assessment": risk_assessment,
+            "coaching_level": "beginner" if trading_analysis["total_trades"] < 3 else "intermediate" if trading_analysis["total_trades"] < 10 else "advanced"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error analyzing portfolio for coaching: {e}")
+        return {
+            "portfolio_data": {"balance": 0, "holdings": {}, "recent_trades": []},
+            "trading_analysis": {"total_trades": 0, "trading_frequency": "new"},
+            "holdings_analysis": {"diversification_score": 0, "concentration_risk": "low"},
+            "risk_assessment": {"overall_risk": "low", "balance_utilization": 0},
+            "coaching_level": "beginner"
+        }
+
+def format_coaching_analysis(analysis: Dict[str, Any]) -> str:
+    """Format portfolio analysis into educational coaching content"""
+    try:
+        portfolio_data = analysis.get("portfolio_data", {})
+        trading_analysis = analysis.get("trading_analysis", {})
+        holdings_analysis = analysis.get("holdings_analysis", {})
+        risk_assessment = analysis.get("risk_assessment", {})
+        coaching_level = analysis.get("coaching_level", "beginner")
+        
+        balance = portfolio_data.get("balance", 0)
+        holdings = portfolio_data.get("holdings", {})
+        
+        # Start with personalized greeting based on their situation
+        if balance > 0 and holdings:
+            greeting = f"🎯 **Portfolio Coaching Analysis**\n\nI've analyzed your portfolio with **${balance:,.2f}** balance and **{len(holdings)}** holdings. Let me share some insights to help you learn and improve!"
+        elif balance > 0:
+            greeting = f"💰 **Ready to Start Your Trading Journey!**\n\nYou have **${balance:,.2f}** ready to invest. Let me guide you through your first steps as a trader."
+        else:
+            greeting = f"🚀 **Welcome to Crypto Trading!**\n\nYou're starting fresh - perfect for learning the fundamentals. Let me help you understand the basics before you begin."
+        
+        coaching_content = [greeting]
+        
+        # Portfolio Analysis Section
+        if holdings:
+            coaching_content.append(f"\n📊 **Your Current Portfolio:**")
+            
+            total_value = 0
+            for coin, data in holdings.items():
+                quantity = data.get("quantity", 0)
+                current_price = data.get("current_price", 0)
+                value = quantity * current_price
+                total_value += value
+                
+                price_change = data.get("price_change_24h", 0)
+                change_emoji = "🟢" if price_change >= 0 else "🔴"
+                
+                coaching_content.append(f"• **{coin}:** {quantity:.4f} coins (${value:,.2f}) {change_emoji} {price_change:+.2f}%")
+            
+            coaching_content.append(f"\n**Total Portfolio Value:** ${total_value:,.2f}")
+            
+            # Educational insights about their holdings
+            coaching_content.append(f"\n🎓 **What This Tells Us:**")
+            
+            if len(holdings) == 1:
+                coaching_content.append(f"• You're **concentrated** in one asset - this can be risky but also rewarding")
+                coaching_content.append(f"• **Learning opportunity:** Research portfolio diversification")
+            elif len(holdings) <= 3:
+                coaching_content.append(f"• You have a **moderate** level of diversification")
+                coaching_content.append(f"• **Learning opportunity:** Consider adding more assets for better risk distribution")
+            else:
+                coaching_content.append(f"• You have **good diversification** across multiple assets")
+                coaching_content.append(f"• **Learning opportunity:** Focus on optimizing your allocation strategy")
+        
+        # Trading Analysis Section
+        total_trades = trading_analysis.get("total_trades", 0)
+        if total_trades > 0:
+            coaching_content.append(f"\n📈 **Your Trading Activity:**")
+            coaching_content.append(f"• **Total Trades:** {total_trades}")
+            coaching_content.append(f"• **Buy Orders:** {trading_analysis.get('buy_trades', 0)}")
+            coaching_content.append(f"• **Sell Orders:** {trading_analysis.get('sell_trades', 0)}")
+            coaching_content.append(f"• **Coins Traded:** {trading_analysis.get('unique_coins_traded', 0)}")
+            
+            if trading_analysis.get("avg_trade_size", 0) > 0:
+                coaching_content.append(f"• **Average Trade Size:** ${trading_analysis['avg_trade_size']:,.2f}")
+            
+            # Educational insights about trading patterns
+            coaching_content.append(f"\n🎓 **Trading Pattern Analysis:**")
+            
+            trading_frequency = trading_analysis.get("trading_frequency", "new")
+            if trading_frequency == "new":
+                coaching_content.append(f"• You're **new to trading** - focus on learning the basics")
+                coaching_content.append(f"• **Learning opportunity:** Study market analysis and trading strategies")
+            elif trading_frequency == "active":
+                coaching_content.append(f"• You're an **active trader** - great for learning through experience")
+                coaching_content.append(f"• **Learning opportunity:** Analyze your trading performance and refine your strategy")
+            else:
+                coaching_content.append(f"• You're an **experienced trader** - focus on advanced strategies")
+                coaching_content.append(f"• **Learning opportunity:** Optimize your approach and explore new opportunities")
+        
+        # Risk Assessment Section
+        coaching_content.append(f"\n🛡️ **Risk Assessment:**")
+        
+        overall_risk = risk_assessment.get("overall_risk", "low")
+        balance_utilization = risk_assessment.get("balance_utilization", 0)
+        
+        if balance > 0:
+            coaching_content.append(f"• **Balance Utilization:** {balance_utilization:.1f}% of your funds are invested")
+            
+            if overall_risk == "low":
+                coaching_content.append(f"• **Risk Level:** Low - You have good cash reserves")
+                coaching_content.append(f"• **Learning opportunity:** Consider increasing your investment allocation gradually")
+            elif overall_risk == "medium":
+                coaching_content.append(f"• **Risk Level:** Medium - Good balance between investments and cash")
+                coaching_content.append(f"• **Learning opportunity:** Learn about rebalancing strategies")
+            else:
+                coaching_content.append(f"• **Risk Level:** High - Most of your funds are invested")
+                coaching_content.append(f"• **Learning opportunity:** Understand the importance of cash reserves")
+        
+        # Personalized Learning Recommendations
+        learning_opportunities = holdings_analysis.get("learning_opportunities", [])
+        if learning_opportunities:
+            coaching_content.append(f"\n🎯 **Personalized Learning Path:**")
+            for i, opportunity in enumerate(learning_opportunities[:5], 1):  # Limit to top 5
+                coaching_content.append(f"{i}. **{opportunity}**")
+        
+        # Coaching Level Specific Advice
+        coaching_content.append(f"\n🌟 **Your Coaching Level: {coaching_level.title()}**")
+        
+        if coaching_level == "beginner":
+            coaching_content.append(f"• **Focus on:** Learning the basics of crypto and trading")
+            coaching_content.append(f"• **Next steps:** Start with small amounts and learn from each trade")
+            coaching_content.append(f"• **Key concept:** Risk management is more important than profits")
+        elif coaching_level == "intermediate":
+            coaching_content.append(f"• **Focus on:** Refining your strategy and improving performance")
+            coaching_content.append(f"• **Next steps:** Analyze your trading patterns and optimize your approach")
+            coaching_content.append(f"• **Key concept:** Consistency beats perfection")
+        else:
+            coaching_content.append(f"• **Focus on:** Advanced strategies and portfolio optimization")
+            coaching_content.append(f"• **Next steps:** Explore new opportunities and fine-tune your system")
+            coaching_content.append(f"• **Key concept:** Continuous learning and adaptation")
+        
+        # Action Items
+        coaching_content.append(f"\n📝 **Your Action Items:**")
+        
+        if balance > 0 and not holdings:
+            coaching_content.append(f"1. **Research** different cryptocurrencies")
+            coaching_content.append(f"2. **Start small** with your first investment")
+            coaching_content.append(f"3. **Learn** about risk management")
+        elif holdings:
+            coaching_content.append(f"1. **Monitor** your current holdings")
+            coaching_content.append(f"2. **Learn** about portfolio optimization")
+            coaching_content.append(f"3. **Consider** diversification if needed")
+        else:
+            coaching_content.append(f"1. **Top up** your wallet to start trading")
+            coaching_content.append(f"2. **Learn** about different cryptocurrencies")
+            coaching_content.append(f"3. **Understand** basic trading concepts")
+        
+        coaching_content.append(f"\n💡 **Remember:** Trading is a learning journey. Every trade teaches you something new!")
+        
+        return "\n".join(coaching_content)
+        
+    except Exception as e:
+        logger.error(f"Error formatting coaching analysis: {e}")
+        return "I'm having trouble analyzing your portfolio right now. Please try again later."
+
 def format_onboarding_response(onboarding_status: Dict[str, Any], user_message: str) -> str:
     """Format onboarding response based on user's progress"""
     step = onboarding_status.get("onboarding_step", "welcome")
@@ -775,21 +1069,29 @@ async def call_openai_api(user_message: str, context: str):
             logger.warning("OpenAI API key not found, using fallback response")
             return "I'm here to help with your crypto trading questions! However, I'm currently unable to access advanced AI features. Please ask me about trading strategies, portfolio management, or platform navigation."
         
-        system_prompt = """You are an expert crypto trading assistant with access to the user's real portfolio data. You can execute actual trades when requested.
+        system_prompt = """You are an expert crypto trading COACH and mentor with access to the user's real portfolio data. Your primary role is to EDUCATE and GUIDE users to become better traders.
 
-**Your capabilities:**
-- Analyze user's portfolio and trading performance
-- Provide market insights and recommendations
-- Execute buy/sell orders when user requests
-- Give personalized trading advice based on their balance and holdings
+**Your core mission:**
+- Analyze user's balance and portfolio holdings to provide personalized coaching
+- Teach trading concepts through their actual portfolio data
+- Provide educational tips and learning recommendations
+- Help users understand risk management and portfolio optimization
+- Guide users to make informed decisions based on their current situation
+
+**Your coaching approach:**
+- Always analyze their current balance and holdings first
+- Explain WHY certain strategies work based on their portfolio
+- Provide educational insights about their trading patterns
+- Suggest learning opportunities based on their current holdings
+- Help them understand market dynamics through their portfolio
 
 **Response style:**
-- Be conversational and helpful
+- Be educational and mentoring-focused
 - Use **bold** for important numbers and crypto symbols
-- Keep responses concise but informative
-- Always consider the user's actual balance and holdings
-- If they have money, suggest specific trades
-- If they're new, guide them step by step
+- Explain concepts clearly for learning
+- Always reference their actual balance and holdings
+- Provide actionable learning steps
+- Be encouraging and supportive
 
 **Format examples:**
 - Crypto symbols: **BTC**, **ETH**, **SOL**
@@ -797,11 +1099,13 @@ async def call_openai_api(user_message: str, context: str):
 - Percentages: **+2.5%**, **-1.2%**
 - User balance: **$2,144,111** (use their actual balance)
 
-**Key rules:**
-- If user asks to buy crypto, you can execute the trade
-- Always check their balance before suggesting trades
-- Provide specific, actionable advice
-- Be encouraging but realistic about risks"""
+**Key coaching rules:**
+- Always start by analyzing their current portfolio situation
+- Explain trading concepts using their actual data
+- Provide educational insights about their holdings
+- Suggest learning opportunities based on their portfolio
+- Help them understand risk management with their balance
+- Guide them to make informed decisions, don't just execute trades"""
         
         user_prompt = f"""User: {user_message}
         
@@ -991,10 +1295,14 @@ async def chatbot_endpoint(
         # Quick responses for common questions (faster than API calls)
         if any(keyword in user_message.lower() for keyword in ['hello', 'hi', 'hey']):
             balance = portfolio_data.get("balance", 0)
-            if balance > 1000:
-                return ChatResponse(reply=f"👋 **Welcome back!** You have **${balance:,.0f}** ready to trade.\n\n**What can I help you with?**\n• **Portfolio analysis** - Review your holdings\n• **Market opportunities** - Find the best buys\n• **Risk management** - Protect your profits\n• **Trading strategies** - Optimize your approach")
+            holdings = portfolio_data.get("holdings", {})
+            
+            if balance > 1000 and holdings:
+                return ChatResponse(reply=f"👋 **Welcome back, Trader!**\n\nI see you have **${balance:,.0f}** balance and **{len(holdings)}** holdings. Let me help you learn and improve!\n\n**🎯 What would you like to work on?**\n• **Portfolio coaching** - Analyze your holdings and learn\n• **Trading education** - Understand your patterns\n• **Risk management** - Protect and optimize your portfolio\n• **Learning path** - Personalized guidance for your level")
+            elif balance > 1000:
+                return ChatResponse(reply=f"💰 **Ready to start your trading journey!**\n\nYou have **${balance:,.0f}** ready to invest. Let me coach you through your first steps!\n\n**🎓 What would you like to learn?**\n• **Portfolio analysis** - Understand your current situation\n• **First investment** - Learn how to start trading\n• **Risk management** - Protect your capital\n• **Market education** - Understand crypto fundamentals")
             else:
-                return ChatResponse(reply="👋 **Hello!** I'm your AI Trading Assistant.\n\n**Ready to start trading?**\n• **Top up wallet** - Add funds to begin\n• **Market analysis** - See current opportunities\n• **Learn trading** - Get expert guidance\n• **Portfolio tracking** - Monitor your progress")
+                return ChatResponse(reply="🚀 **Welcome to Crypto Trading Education!**\n\nI'm your personal trading coach. Let me help you learn the fundamentals before you start trading!\n\n**📚 What would you like to learn?**\n• **Crypto basics** - Understand different cryptocurrencies\n• **Trading fundamentals** - Learn how markets work\n• **Risk management** - Protect your capital\n• **Portfolio strategy** - Build a solid foundation")
         
         if any(keyword in user_message.lower() for keyword in ['what is bitcoin', 'what is btc', 'explain bitcoin']):
             # Get current BTC price
@@ -1014,118 +1322,90 @@ async def chatbot_endpoint(
             else:
                 return ChatResponse(reply="**How to start trading:**\n\n1. **Top up wallet** - Add funds first\n2. **Choose crypto** - BTC, ETH, SOL available\n3. **Set amount** - Start with $100-500\n4. **Place order** - Use trading page\n\n**💡 Tip:** Start with $100-500 to learn!")
         
-        # Market analysis and crypto recommendations
-        if any(keyword in user_message.lower() for keyword in ['best crypto', 'which crypto', 'what to buy', 'market analysis', 'crypto recommendation', 'best investment']):
+        # Market analysis and crypto education
+        if any(keyword in user_message.lower() for keyword in ['best crypto', 'which crypto', 'what to buy', 'market analysis', 'crypto recommendation', 'best investment', 'learn about crypto', 'crypto education']):
             try:
                 # Get current prices for top cryptos
                 btc_price = await price_service.get_price("BTC")
                 eth_price = await price_service.get_price("ETH")
                 sol_price = await price_service.get_price("SOL")
                 
-                recommendations = ["**🚀 Top Crypto Opportunities:**\n"]
+                balance = portfolio_data.get("balance", 0)
+                holdings = portfolio_data.get("holdings", {})
+                
+                # Start with educational approach
+                recommendations = ["**🎓 Crypto Education & Market Analysis:**\n"]
                 
                 if btc_price:
                     btc_trend = "📈" if btc_price.change_24h_percent > 0 else "📉"
-                    recommendations.append(f"• **Bitcoin (BTC):** ${btc_price.price_usd:,.0f} {btc_trend} {btc_price.change_24h_percent:+.2f}%")
-                    recommendations.append("  - **Best for:** Long-term holds, stability")
+                    recommendations.append(f"**Bitcoin (BTC):** ${btc_price.price_usd:,.0f} {btc_trend} {btc_price.change_24h_percent:+.2f}%")
+                    recommendations.append("• **What it is:** Digital gold, store of value")
+                    recommendations.append("• **Why it matters:** Limited supply (21M), institutional adoption")
+                    recommendations.append("• **Learning opportunity:** Study long-term value investing")
+                    recommendations.append("• **Risk level:** Lower volatility, good for beginners")
                 
                 if eth_price:
                     eth_trend = "📈" if eth_price.change_24h_percent > 0 else "📉"
-                    recommendations.append(f"• **Ethereum (ETH):** ${eth_price.price_usd:,.0f} {eth_trend} {eth_price.change_24h_percent:+.2f}%")
-                    recommendations.append("  - **Best for:** DeFi, smart contracts, growth")
+                    recommendations.append(f"\n**Ethereum (ETH):** ${eth_price.price_usd:,.0f} {eth_trend} {eth_price.change_24h_percent:+.2f}%")
+                    recommendations.append("• **What it is:** Smart contract platform, DeFi leader")
+                    recommendations.append("• **Why it matters:** Powers decentralized applications")
+                    recommendations.append("• **Learning opportunity:** Understand DeFi and Web3")
+                    recommendations.append("• **Risk level:** Higher volatility, more complex")
                 
                 if sol_price:
                     sol_trend = "📈" if sol_price.change_24h_percent > 0 else "📉"
-                    recommendations.append(f"• **Solana (SOL):** ${sol_price.price_usd:,.0f} {sol_trend} {sol_price.change_24h_percent:+.2f}%")
-                    recommendations.append("  - **Best for:** Fast transactions, NFTs")
+                    recommendations.append(f"\n**Solana (SOL):** ${sol_price.price_usd:,.0f} {sol_trend} {sol_price.change_24h_percent:+.2f}%")
+                    recommendations.append("• **What it is:** Fast blockchain for DeFi and NFTs")
+                    recommendations.append("• **Why it matters:** Low fees, high speed")
+                    recommendations.append("• **Learning opportunity:** Explore NFT and DeFi ecosystems")
+                    recommendations.append("• **Risk level:** Higher volatility, newer technology")
                 
-                recommendations.append(f"\n**💡 My Recommendation:**")
-                balance = portfolio_data.get("balance", 0)
-                if balance > 10000:
-                    recommendations.append("• **Diversify:** Split between BTC (40%), ETH (40%), SOL (20%)")
-                    recommendations.append("• **Amount:** Start with $1,000-2,000 per coin")
-                elif balance > 1000:
-                    recommendations.append("• **Focus:** Choose 1-2 coins to start")
-                    recommendations.append("• **Amount:** $500-1,000 per position")
+                # Personalized learning recommendations based on their situation
+                recommendations.append(f"\n**🎯 Personalized Learning Path:**")
+                
+                if balance > 0 and not holdings:
+                    recommendations.append("• **You're ready to start!** Begin with small amounts")
+                    recommendations.append("• **Learning focus:** Understand each crypto's purpose")
+                    recommendations.append("• **Start with:** $100-500 in one coin to learn")
+                elif holdings:
+                    recommendations.append("• **You're already investing!** Focus on understanding your holdings")
+                    recommendations.append("• **Learning focus:** Portfolio optimization and risk management")
+                    recommendations.append("• **Next step:** Analyze your current positions")
                 else:
-                    recommendations.append("• **Start small:** Pick one coin you believe in")
-                    recommendations.append("• **Amount:** $100-500 to learn")
+                    recommendations.append("• **Start with education** before investing")
+                    recommendations.append("• **Learning focus:** Crypto fundamentals and market dynamics")
+                    recommendations.append("• **Next step:** Top up your wallet when ready")
                 
-                recommendations.append(f"\n**Ready to buy?** Just say: \"Buy $500 of Bitcoin\"")
+                # Educational approach to recommendations
+                recommendations.append(f"\n**📚 Educational Approach:**")
+                recommendations.append("• **Don't just buy** - understand what you're investing in")
+                recommendations.append("• **Start small** - learn with amounts you can afford to lose")
+                recommendations.append("• **Diversify gradually** - don't put everything in one coin")
+                recommendations.append("• **Learn continuously** - crypto markets evolve rapidly")
+                
+                recommendations.append(f"\n**💡 Ready to learn more?** Ask me to analyze your portfolio or explain specific concepts!")
                 
                 return ChatResponse(reply="\n".join(recommendations))
                 
             except Exception as e:
                 logger.error(f"Error getting market analysis: {e}")
-                return ChatResponse(reply="**Market Analysis:**\n\n**Top Picks:**\n• **Bitcoin (BTC)** - Digital gold, store of value\n• **Ethereum (ETH)** - Smart contracts, DeFi leader\n• **Solana (SOL)** - Fast, cheap transactions\n\n**💡 Tip:** Start with Bitcoin for stability!")
+                return ChatResponse(reply="**🎓 Crypto Education:**\n\n**Top Learning Opportunities:**\n• **Bitcoin (BTC)** - Digital gold, store of value\n• **Ethereum (ETH)** - Smart contracts, DeFi leader\n• **Solana (SOL)** - Fast, cheap transactions\n\n**💡 Learning tip:** Start by understanding what each crypto does, not just their prices!")
         
-        # Portfolio analysis requests
-        if any(keyword in user_message.lower() for keyword in ['analyze my portfolio', 'portfolio analysis', 'analyze portfolio', 'portfolio review', 'my portfolio', 'portfolio performance']):
+        # Portfolio analysis requests - Now with comprehensive coaching
+        if any(keyword in user_message.lower() for keyword in ['analyze my portfolio', 'portfolio analysis', 'analyze portfolio', 'portfolio review', 'my portfolio', 'portfolio performance', 'coach me', 'help me learn', 'trading coach', 'mentor me']):
             try:
-                # Get user's actual portfolio data
-                portfolio_data = await fetch_user_portfolio_data(user.id, db)
+                # Get comprehensive coaching analysis
+                coaching_analysis = await analyze_portfolio_for_coaching(user.id, db)
                 
-                if portfolio_data["balance"] <= 0 and not portfolio_data["holdings"]:
-                    return ChatResponse(reply="**Portfolio Analysis:**\n\n📊 **Current Status:** Empty portfolio\n\n**Recommendations:**\n• **Start with $100-500** for learning\n• **Consider BTC** for stability\n• **Diversify gradually** with ETH, SOL\n\n**💡 Tip:** Begin with small amounts to learn the market!")
+                # Format the coaching analysis
+                reply = format_coaching_analysis(coaching_analysis)
                 
-                # Build portfolio analysis
-                analysis_parts = ["**📊 Portfolio Analysis:**\n"]
-                
-                # Balance analysis
-                if portfolio_data["balance"] > 0:
-                    analysis_parts.append(f"**💰 Available Balance:** ${portfolio_data['balance']:,.2f}")
-                
-                # Holdings analysis
-                if portfolio_data["holdings"]:
-                    analysis_parts.append(f"\n**📈 Current Holdings:** {len(portfolio_data['holdings'])} coins")
-                    
-                    total_value = 0
-                    for coin, data in portfolio_data["holdings"].items():
-                        quantity = data['quantity']
-                        current_price = data.get('current_price', 0)
-                        value = quantity * current_price
-                        total_value += value
-                        
-                        # Get price change if available
-                        price_change = data.get('price_change_24h', 0)
-                        change_color = "🟢" if price_change >= 0 else "🔴"
-                        
-                        analysis_parts.append(f"• **{coin}:** {quantity:.4f} coins (${value:,.2f}) {change_color} {price_change:+.2f}%")
-                    
-                    analysis_parts.append(f"\n**💎 Total Portfolio Value:** ${total_value:,.2f}")
-                    
-                    # Performance analysis
-                    if portfolio_data["recent_trades"]:
-                        profitable_trades = sum(1 for trade in portfolio_data["recent_trades"] if trade.get('profit_loss', 0) > 0)
-                        total_trades = len(portfolio_data["recent_trades"])
-                        win_rate = (profitable_trades / total_trades * 100) if total_trades > 0 else 0
-                        
-                        analysis_parts.append(f"\n**📊 Trading Performance:**")
-                        analysis_parts.append(f"• **Win Rate:** {win_rate:.1f}% ({profitable_trades}/{total_trades} trades)")
-                        analysis_parts.append(f"• **Total Trades:** {total_trades}")
-                    
-                    # Recommendations
-                    analysis_parts.append(f"\n**💡 Recommendations:**")
-                    if total_value < 1000:
-                        analysis_parts.append("• **Consider increasing position sizes** gradually")
-                    if len(portfolio_data["holdings"]) < 3:
-                        analysis_parts.append("• **Diversify** with more cryptocurrencies")
-                    analysis_parts.append("• **Monitor market trends** regularly")
-                    analysis_parts.append("• **Set stop-losses** for risk management")
-                else:
-                    analysis_parts.append(f"\n**📈 Holdings:** None")
-                    analysis_parts.append(f"\n**💡 Recommendations:**")
-                    analysis_parts.append("• **Start trading** with available balance")
-                    analysis_parts.append("• **Begin with BTC** for stability")
-                    analysis_parts.append("• **Learn gradually** with small amounts")
-                
-                reply = "\n".join(analysis_parts)
-                logger.info(f"Portfolio analysis completed for user {user.id}")
+                logger.info(f"Portfolio coaching analysis completed for user {user.id}")
                 return ChatResponse(reply=reply)
                 
             except Exception as e:
-                logger.error(f"Error analyzing portfolio: {e}")
-                return ChatResponse(reply="❌ **Unable to analyze portfolio right now.** Please try again later.")
+                logger.error(f"Error analyzing portfolio for coaching: {e}")
+                return ChatResponse(reply="❌ **Unable to analyze your portfolio right now.** Please try again later.")
         
         # Check if user is asking for onboarding help (only for specific onboarding messages)
         if any(keyword in user_message.lower() for keyword in ['help me', 'guide me', 'mentor', 'onboarding', 'new to trading', 'first trade', 'start trading', 'begin trading', 'how to start', 'i am new', 'beginner', 'getting started']):
@@ -1202,13 +1482,24 @@ async def chatbot_endpoint(
         # Fetch current market data
         market_data = await fetch_market_data()
         
-        # Build comprehensive context for intelligent responses
+        # Build comprehensive coaching context for intelligent responses
         context_parts = []
         
-        # User portfolio context
+        # User portfolio context for coaching
         balance = portfolio_data.get("balance", 0)
         holdings = portfolio_data.get("holdings", {})
         recent_trades = portfolio_data.get("recent_trades", [])
+        
+        # Determine user's coaching level
+        total_trades = len(recent_trades)
+        if total_trades < 3:
+            coaching_level = "beginner"
+        elif total_trades < 10:
+            coaching_level = "intermediate"
+        else:
+            coaching_level = "advanced"
+        
+        context_parts.append(f"COACHING LEVEL: {coaching_level}")
         
         if balance > 0:
             context_parts.append(f"User has ${balance:,.0f} available balance")
@@ -1224,20 +1515,38 @@ async def chatbot_endpoint(
                 
                 context_parts.append(f"Portfolio: {len(holdings)} coins, total value ${total_value:,.0f}")
                 context_parts.append(f"Holdings: {', '.join(holdings_list)}")
+                
+                # Add coaching insights about their portfolio
+                if len(holdings) == 1:
+                    context_parts.append("PORTFOLIO INSIGHT: User is concentrated in one asset - teach about diversification")
+                elif len(holdings) <= 3:
+                    context_parts.append("PORTFOLIO INSIGHT: User has moderate diversification - suggest optimization")
+                else:
+                    context_parts.append("PORTFOLIO INSIGHT: User has good diversification - focus on advanced strategies")
             else:
                 context_parts.append("No current holdings - ready to start trading")
+                context_parts.append("COACHING FOCUS: Teach basics and help with first investment")
         else:
             context_parts.append("New user with no balance - needs to top up wallet")
+            context_parts.append("COACHING FOCUS: Education first, trading later")
         
-        # Recent trading activity
+        # Recent trading activity for coaching insights
         if recent_trades:
             context_parts.append(f"Recent activity: {len(recent_trades)} trades")
             profitable_trades = sum(1 for trade in recent_trades if trade.get('profit_loss', 0) > 0)
             if len(recent_trades) > 0:
                 win_rate = (profitable_trades / len(recent_trades)) * 100
                 context_parts.append(f"Trading performance: {win_rate:.1f}% win rate")
+                
+                # Add coaching insights about trading performance
+                if win_rate > 70:
+                    context_parts.append("TRADING INSIGHT: User has good performance - focus on scaling and optimization")
+                elif win_rate > 50:
+                    context_parts.append("TRADING INSIGHT: User has decent performance - focus on consistency and risk management")
+                else:
+                    context_parts.append("TRADING INSIGHT: User needs to improve performance - focus on education and strategy")
         
-        # Market context
+        # Market context for educational opportunities
         try:
             btc_price = await price_service.get_price("BTC")
             eth_price = await price_service.get_price("ETH")
@@ -1247,6 +1556,9 @@ async def chatbot_endpoint(
                 context_parts.append(f"ETH: ${eth_price.price_usd:,.0f} ({eth_price.change_24h_percent:+.1f}%)")
         except:
             pass
+        
+        # Add coaching mission
+        context_parts.append("MISSION: Provide educational coaching, not just trading advice. Help user learn and improve their trading skills.")
         
         context = " | ".join(context_parts)
         

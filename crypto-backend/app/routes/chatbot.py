@@ -1350,6 +1350,33 @@ async def chatbot_endpoint(
             else:
                 return ChatResponse(reply="**How to start trading:**\n\n1. **Top up wallet** - Add funds first\n2. **Choose crypto** - BTC, ETH, SOL available\n3. **Set amount** - Start with $100-500\n4. **Place order** - Use trading page\n\n**💡 Tip:** Start with $100-500 to learn!")
         
+        # Add more specific question handling
+        if any(keyword in user_message.lower() for keyword in ['what should i buy', 'what crypto to buy', 'recommendations']):
+            balance = portfolio_data.get("balance", 0)
+            holdings = portfolio_data.get("holdings", {})
+            
+            if balance > 0:
+                if not holdings:
+                    return ChatResponse(reply=f"**With ${balance:,.2f}, here's my recommendation:**\n\n**🥇 Start with Bitcoin (BTC)**\n• **Why:** Most stable, institutional backing\n• **Amount:** Use 50% of your balance\n• **Strategy:** Dollar-cost average over time\n\n**🥈 Add Ethereum (ETH)**\n• **Why:** Smart contracts, DeFi ecosystem\n• **Amount:** 30% of your balance\n• **Strategy:** Buy on dips below $3,500\n\n**🥉 Consider Solana (SOL)**\n• **Why:** Fast, cheap transactions\n• **Amount:** 20% of your balance\n• **Strategy:** High growth potential\n\n**Just say:** \"Buy $500 of Bitcoin\" and I'll execute it!")
+                else:
+                    return ChatResponse(reply=f"**You already have holdings! Here's how to optimize:**\n\n**📊 Current Portfolio Analysis:**\n• **Balance:** ${balance:,.2f}\n• **Holdings:** {len(holdings)} assets\n\n**🎯 Next Steps:**\n• **Diversify** - Add 2-3 more quality assets\n• **Rebalance** - Trim winners, add to losers\n• **Scale up** - Increase position sizes gradually\n\n**What specific crypto are you interested in?**")
+            else:
+                return ChatResponse(reply="**First, fund your account!**\n\n**Recommended starting amount:** $500-1000\n\n**Then I'll recommend:**\n• **Bitcoin** - 50% (stability)\n• **Ethereum** - 30% (growth)\n• **Solana** - 20% (potential)\n\n**Top up your wallet and ask again!**")
+        
+        if any(keyword in user_message.lower() for keyword in ['when to sell', 'when to buy', 'timing', 'market timing']):
+            return ChatResponse(reply="**Market Timing Strategy:**\n\n**🟢 When to BUY:**\n• **Dips:** 5-10% below recent highs\n• **Support levels:** Previous resistance becomes support\n• **Fear:** When everyone's selling (contrarian)\n\n**🔴 When to SELL:**\n• **Take profits:** 20-50% gains\n• **Stop losses:** 5-10% below entry\n• **Greed:** When everyone's buying (contrarian)\n\n**💡 Pro tip:** Don't try to time perfectly - DCA works better!\n\n**What's your current situation?**")
+        
+        if any(keyword in user_message.lower() for keyword in ['risk management', 'how to protect', 'stop loss']):
+            balance = portfolio_data.get("balance", 0)
+            return ChatResponse(reply=f"**Risk Management Rules:**\n\n**🛡️ Position Sizing:**\n• **Never risk more than 2-5% per trade**\n• **With ${balance:,.2f}:** Max $1,000-2,500 per trade\n\n**📉 Stop Losses:**\n• **Set at 5-10% below entry**\n• **Protects your capital**\n• **Emotional discipline**\n\n**📊 Diversification:**\n• **Spread across 3-5 assets**\n• **Don't put all eggs in one basket**\n• **Rebalance monthly**\n\n**🎯 Risk-Reward:**\n• **Aim for 2:1 or 3:1 ratios**\n• **Risk $100 to make $200-300**\n\n**Want me to calculate your position size?**")
+        
+        if any(keyword in user_message.lower() for keyword in ['help', 'what can you do', 'commands']):
+            return ChatResponse(reply="**I can help you with:**\n\n**💰 Trading:**\n• \"Buy $200 of Bitcoin\"\n• \"What should I buy?\"\n• \"When to sell?\"\n\n**📊 Analysis:**\n• \"Analyze my portfolio\"\n• \"Risk management\"\n• \"Market timing\"\n\n**🎓 Education:**\n• \"What is Bitcoin?\"\n• \"How to start trading?\"\n• \"Explain Ethereum\"\n\n**Just ask me anything about crypto trading!**")
+        
+        # If it's a question but not handled above, provide a helpful response
+        if '?' in user_message or any(word in user_message.lower() for word in ['what', 'how', 'why', 'when', 'where', 'which']):
+            return ChatResponse(reply="**I'd be happy to help with that!**\n\n**Can you be more specific?** For example:\n• \"What is Bitcoin?\"\n• \"How do I buy crypto?\"\n• \"When should I sell?\"\n• \"What's my portfolio worth?\"\n\n**Or just ask me to analyze your portfolio!**")
+
         # Market analysis and crypto education
         if any(keyword in user_message.lower() for keyword in ['best crypto', 'which crypto', 'what to buy', 'market analysis', 'crypto recommendation', 'best investment', 'learn about crypto', 'crypto education']):
             try:

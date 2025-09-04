@@ -64,6 +64,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 user = User(
                     username=username,
                     email=f"{username}@bitcoinpro.in",
+                    hashed_password="demo_password_hash",  # Demo users don't need real passwords
                     demo_balance=starting_balance
                 )
                 db.add(user)
@@ -116,6 +117,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 user = User(
                     username=username,
                     email=f"{username}@bitcoinpro.in",
+                    hashed_password="demo_password_hash",  # Demo users don't need real passwords
                     demo_balance=starting_balance
                 )
                 db.add(user)

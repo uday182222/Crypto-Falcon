@@ -126,10 +126,12 @@ async def fetch_user_portfolio_data(user_id: int, db: Session):
                     current_price_data = await price_service.get_price(symbol)
                     if current_price_data:
                         data["current_price"] = float(current_price_data.price_usd)
-                        data["price_change_24h"] = float(getattr(current_price_data, 'change_24h_percent', 0))
+                        data["price_change_24h"] = float(getattr(current_price_data, 'price_change_percentage_24h', 0))
+                        logger.info(f"Successfully fetched price for {symbol}: ${data['current_price']}")
                     else:
                         data["current_price"] = 0.0
                         data["price_change_24h"] = 0.0
+                        logger.warning(f"No price data returned for {symbol}")
                 except Exception as e:
                     logger.error(f"Error fetching current price for {symbol}: {e}")
                     data["current_price"] = 0.0

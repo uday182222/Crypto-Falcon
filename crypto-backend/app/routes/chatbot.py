@@ -96,6 +96,9 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 )
                 db.add(sol_trade)
                 
+                # Commit the trades to database
+                db.commit()
+                
             elif token.startswith("eyJ"):
                 # JWT token users get $50k starting balance
                 starting_balance = 50000.0

@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.trade import Trade
 from app.models.wallet import Wallet
 from app.services.price_service import CoinGeckoService
+from app.auth import get_current_user as auth_get_current_user
 from sqlalchemy.orm import Session
 
 # Set up logging
@@ -37,114 +38,19 @@ def get_db():
     finally:
         db.close()
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    """Get or create user based on token - completely dynamic system"""
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user using real webapp authentication - connects to actual user data"""
     try:
-        token = credentials.credentials
-        
-        if not token or len(token) < 5:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
-        # Create unique user identifier from token
-        import hashlib
-        user_id_hash = hashlib.sha256(token.encode()).hexdigest()[:12]
-        username = f"user_{user_id_hash}"
-        
-        # Try to find existing user
-        user = db.query(User).filter(User.username == username).first()
-        
-        if not user:
-            # Create new user with unique portfolio
-            logger.info(f"Creating new user: {username}")
-            
-            # Determine starting balance based on token type
-            if token == "test-token-123":
-                # Special demo user with your exact portfolio
-                starting_balance = 100000.0
-                user = User(
-                    username=username,
-                    email=f"{username}@bitcoinpro.in",
-                    hashed_password="demo_password_hash",  # Demo users don't need real passwords
-                    demo_balance=starting_balance
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-                
-                # Create wallet
-                wallet = Wallet(user_id=user.id, balance=starting_balance)
-                db.add(wallet)
-                
-                # Add your exact portfolio: 1 BTC + 1 SOL
-                btc_trade = Trade(
-                    user_id=user.id,
-                    coin_symbol="BTC",
-                    trade_type="buy",
-                    quantity=Decimal("1.0000"),
-                    price_at_trade=Decimal("110320.00"),
-                    total_cost=Decimal("110320.00")
-                )
-                db.add(btc_trade)
-                
-                sol_trade = Trade(
-                    user_id=user.id,
-                    coin_symbol="SOL", 
-                    trade_type="buy",
-                    quantity=Decimal("1.0000"),
-                    price_at_trade=Decimal("205.18"),
-                    total_cost=Decimal("205.18")
-                )
-                db.add(sol_trade)
-                
-                # Commit the trades to database
-                db.commit()
-                
-            elif token.startswith("eyJ"):
-                # JWT token users get $50k starting balance
-                starting_balance = 50000.0
-                user = User(
-                    username=username,
-                    email=f"{username}@bitcoinpro.in",
-                    hashed_password="demo_password_hash",  # Demo users don't need real passwords
-                    demo_balance=starting_balance
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-                
-                wallet = Wallet(user_id=user.id, balance=starting_balance)
-                db.add(wallet)
-                
-            else:
-                # Other tokens get $25k starting balance
-                starting_balance = 25000.0
-                user = User(
-                    username=username,
-                    email=f"{username}@bitcoinpro.in",
-                    hashed_password="demo_password_hash",  # Demo users don't need real passwords
-                    demo_balance=starting_balance
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-                
-                wallet = Wallet(user_id=user.id, balance=starting_balance)
-                db.add(wallet)
-            
-            db.commit()
-            logger.info(f"Created user {user.id} with ${starting_balance:,.2f} balance")
+        # Use the real webapp authentication system
+        user = auth_get_current_user(credentials)
         
         # Log current user info
-        wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
-        if wallet:
-            logger.info(f"User {user.id} ({user.username}): ${wallet.balance:,.2f} balance")
-        else:
-            logger.warning(f"User {user.id} has no wallet!")
+        logger.info(f"Chatbot using real user: {user.id} ({user.username})")
         
         return user
         
     except Exception as e:
-        logger.error(f"Error in get_current_user: {e}")
+        logger.error(f"Error in chatbot get_current_user: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
 async def fetch_user_portfolio_data(user_id: int, db: Session):

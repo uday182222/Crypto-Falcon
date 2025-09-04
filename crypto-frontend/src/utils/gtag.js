@@ -11,7 +11,7 @@ export const gtag = (...args) => {
 
 // Function to track page views
 export const trackPageView = (page_path, page_title) => {
-  gtag('config', 'GA_MEASUREMENT_ID', {
+  gtag('config', 'G-8EDTRZRQ05', {
     page_path: page_path,
     page_title: page_title
   });

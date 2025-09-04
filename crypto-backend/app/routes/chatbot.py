@@ -38,37 +38,43 @@ def get_db():
         db.close()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    """Get current user from JWT token"""
+    """Get or create user based on token - completely dynamic system"""
     try:
-        # For now, we'll use a simple token validation
-        # In production, you'd validate the JWT token properly
         token = credentials.credentials
         
-        # Dynamic user identification based on token
-        if token == "test-token-123":
-            # Demo user 1 - matches your portfolio screenshot (1 BTC + 1 SOL)
-            user = db.query(User).filter(User.username == "demo_user_1").first()
-            if not user:
-                # Create demo user 1 with realistic portfolio
+        if not token or len(token) < 5:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Create unique user identifier from token
+        import hashlib
+        user_id_hash = hashlib.sha256(token.encode()).hexdigest()[:12]
+        username = f"user_{user_id_hash}"
+        
+        # Try to find existing user
+        user = db.query(User).filter(User.username == username).first()
+        
+        if not user:
+            # Create new user with unique portfolio
+            logger.info(f"Creating new user: {username}")
+            
+            # Determine starting balance based on token type
+            if token == "test-token-123":
+                # Special demo user with your exact portfolio
+                starting_balance = 100000.0
                 user = User(
-                    username="demo_user_1",
-                    email="demo1@bitcoinpro.in",
-                    demo_balance=100000.0
+                    username=username,
+                    email=f"{username}@bitcoinpro.in",
+                    demo_balance=starting_balance
                 )
                 db.add(user)
                 db.commit()
                 db.refresh(user)
                 
-                # Create wallet for demo user 1
-                wallet = Wallet(
-                    user_id=user.id,
-                    balance=100000.0  # $100k available balance
-                )
+                # Create wallet
+                wallet = Wallet(user_id=user.id, balance=starting_balance)
                 db.add(wallet)
-                db.commit()
                 
-                # Add realistic trades based on your portfolio
-                # 1 BTC at $110,320
+                # Add your exact portfolio: 1 BTC + 1 SOL
                 btc_trade = Trade(
                     user_id=user.id,
                     coin_symbol="BTC",
@@ -79,82 +85,60 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
                 )
                 db.add(btc_trade)
                 
-                # 1 SOL at $205.18
                 sol_trade = Trade(
                     user_id=user.id,
-                    coin_symbol="SOL",
+                    coin_symbol="SOL", 
                     trade_type="buy",
                     quantity=Decimal("1.0000"),
                     price_at_trade=Decimal("205.18"),
                     total_cost=Decimal("205.18")
                 )
                 db.add(sol_trade)
-                db.commit()
                 
-        elif token.startswith("eyJ"):
-            # JWT token - create unique user based on token hash
-            import hashlib
-            token_hash = hashlib.md5(token.encode()).hexdigest()[:8]
-            username = f"user_{token_hash}"
-            
-            user = db.query(User).filter(User.username == username).first()
-            if not user:
-                # Create new user based on token
+            elif token.startswith("eyJ"):
+                # JWT token users get $50k starting balance
+                starting_balance = 50000.0
                 user = User(
                     username=username,
-                    email=f"{username}@bitcoinpro.in",
-                    demo_balance=10000.0
+                    email=f"{username}@bitcoinpro.in", 
+                    demo_balance=starting_balance
                 )
                 db.add(user)
                 db.commit()
                 db.refresh(user)
                 
-                # Create wallet for new user
-                wallet = Wallet(
-                    user_id=user.id,
-                    balance=10000.0  # $10k starting balance
-                )
+                wallet = Wallet(user_id=user.id, balance=starting_balance)
                 db.add(wallet)
-                db.commit()
-        else:
-            # Other tokens - create unique user based on token
-            import hashlib
-            token_hash = hashlib.md5(token.encode()).hexdigest()[:8]
-            username = f"user_{token_hash}"
-            
-            user = db.query(User).filter(User.username == username).first()
-            if not user:
-                # Create new user
+                
+            else:
+                # Other tokens get $25k starting balance
+                starting_balance = 25000.0
                 user = User(
                     username=username,
                     email=f"{username}@bitcoinpro.in",
-                    demo_balance=5000.0
+                    demo_balance=starting_balance
                 )
                 db.add(user)
                 db.commit()
                 db.refresh(user)
                 
-                # Create wallet for new user
-                wallet = Wallet(
-                    user_id=user.id,
-                    balance=5000.0  # $5k starting balance
-                )
+                wallet = Wallet(user_id=user.id, balance=starting_balance)
                 db.add(wallet)
-                db.commit()
+            
+            db.commit()
+            logger.info(f"Created user {user.id} with ${starting_balance:,.2f} balance")
         
-        # Debug logging
-        logger.info(f"Using user: {user.id}, username: {user.username}")
-        
-        # Check if this user has a wallet
+        # Log current user info
         wallet = db.query(Wallet).filter(Wallet.user_id == user.id).first()
         if wallet:
-            logger.info(f"User {user.id} wallet balance: ${wallet.balance:,.2f}")
+            logger.info(f"User {user.id} ({user.username}): ${wallet.balance:,.2f} balance")
         else:
-            logger.info(f"User {user.id} has no wallet")
+            logger.warning(f"User {user.id} has no wallet!")
         
         return user
+        
     except Exception as e:
-        logger.error(f"Error getting current user: {e}")
+        logger.error(f"Error in get_current_user: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
 async def fetch_user_portfolio_data(user_id: int, db: Session):
